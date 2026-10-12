@@ -1,0 +1,9 @@
+[
+  {
+    "model": "product",
+    "docId": "6a62d78fc75f95d7d2089a61",
+    "url": "https://res.cloudinary.com/demo/image/upload/v1/placeholder/no-image-available.png",
+    "error": "Download failed (404): https://res.cloudinary.com/demo/image/upload/v1/placeholder/no-image-available.png",
+    "fallback": true
+  }
+]

@@ -1,0 +1,57 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  serverExternalPackages: ["mongoose", "csv-parser", "xlsx"],
+
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "images.pexels.com" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      // Cloudflare R2 — replace with your actual R2_PUBLIC_URL hostname if
+      // you're using a custom domain instead of the default *.r2.dev one.
+      { protocol: "https", hostname: "pub-f1751cc6619d4c769aceeaffe6043848.r2.dev" },
+    ],
+  },
+
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              // ── PayPal SDK script (www.paypal.com) + sandbox; Vercel
+              // Speed Insights / Web Analytics loader script ──
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com https://va.vercel-scripts.com",
+              // Elms Sans is now self-hosted from /public/fonts, so the
+              // Google Fonts origins are no longer needed here.
+              "style-src 'self' 'unsafe-inline' https://www.paypalobjects.com",
+              "font-src 'self' https://www.paypalobjects.com",
+              // res.cloudinary.com kept temporarily until every doc is confirmed
+              // migrated off Cloudinary — safe to remove after that.
+              "img-src 'self' data: blob: https://res.cloudinary.com https://pub-f1751cc6619d4c769aceeaffe6043848.r2.dev https://images.pexels.com https://images.unsplash.com https://www.paypalobjects.com https://t.paypal.com",
+              // ── PayPal API calls + SDK fingerprinting; Vercel Speed
+              // Insights / Web Analytics beacon endpoints ──
+              "connect-src 'self' https://api-m.paypal.com https://api-m.sandbox.paypal.com https://www.paypal.com https://www.sandbox.paypal.com https://api.postalpincode.in https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+              // ── PayPal renders its buttons in iframes; Google Maps embed on /contact ──
+              "frame-src https://www.paypal.com https://www.sandbox.paypal.com https://www.google.com",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
+  },
+};
+
+export default nextConfig;

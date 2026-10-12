@@ -1,0 +1,594 @@
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+
+// ── Types ────────────────────────────────────────────────────────────────────
+interface HeroSlide {
+  _id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage: string;
+  mobileImage?: string;
+  accent?: string;
+  accentGlow?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  openInNewTab?: boolean;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+interface HeroCarouselProps {
+  initialSlides?: HeroSlide[];
+}
+
+const AUTO_ROTATE_MS = 6000;
+
+// ── Image optimiser ──────────────────────────────────────────────────────────
+// q_auto:good lets Cloudinary pick the smallest byte size that still looks
+// sharp (previously this was hardcoded to q_100 — near-lossless, maximum
+// file size, which was the actual cause of the slow loads). w_<width> stops
+// mobile from downloading the same multi-megapixel image as desktop.
+//
+// Handles both Cloudinary sources (kept on Cloudinary's own transform URL
+// params) and any other absolute URL — importantly, R2 URLs post-migration
+// — by routing those through Next.js's built-in image optimizer instead, so
+// resizing/re-encoding keeps working the same way after the migration.
+const DESKTOP_IMG_WIDTH = 1400;
+const MOBILE_IMG_WIDTH = 900;
+
+function optimiseCloudinaryUrl(src: string, width: number): string {
+  if (!src) return src;
+  if (src.includes("res.cloudinary.com")) {
+    // dpr_auto alone can multiply the requested width by 2x/3x on retina
+    // screens with no ceiling, quietly turning a 1400px request into a
+    // 4200px download. Cap it at 2x so the payload stays predictable.
+    return src.replace("/upload/", `/upload/f_auto,q_auto:good,w_${width},c_limit,dpr_2.0/`);
+  }
+  // NOTE: Next's /_next/image optimizer is currently returning 400 for R2
+  // URLs in production — serving the raw URL directly until that's
+  // root-caused, rather than breaking the hero image entirely.
+  return src;
+}
+
+// Tiny, heavily-compressed, blurred version — a few KB, paints almost
+// instantly, and gives the user something to look at while the real
+// image is still downloading on a slow connection.
+function cloudinaryBlurUrl(src: string): string {
+  if (!src) return src;
+  if (src.includes("res.cloudinary.com")) {
+    return src.replace("/upload/", "/upload/f_auto,q_1,w_32,e_blur:1500/");
+  }
+  // Same as above — no blur placeholder for R2 sources until /_next/image
+  // is working again; returning the full-size src just means no blur-up
+  // effect for these, not a broken image.
+  return src;
+}
+
+// ── Loading skeleton ──────────────────────────────────────────────────────────
+function CarouselSkeleton() {
+  return (
+    <section className="relative w-full select-none" style={{ background: "#FBFBF9" }}>
+      <div
+        className="relative w-full overflow-hidden animate-pulse flex flex-col sm:flex-row"
+        style={{ height: "var(--stage-h)", minHeight: 320 }}
+      >
+        <div className="w-full sm:w-[44%] h-full flex items-center" style={{ background: "#F1EFE8", paddingLeft: "clamp(24px,5vw,72px)" }}>
+          <div className="flex flex-col gap-3">
+            <div className="h-3 w-24 rounded-sm bg-black/10" />
+            <div className="h-10 w-56 rounded-sm bg-black/10" />
+            <div className="h-10 w-48 rounded-sm bg-black/10" />
+            <div className="h-1 w-14 rounded-sm bg-black/10" />
+            <div className="h-8 w-32 rounded-sm bg-black/10" />
+          </div>
+        </div>
+        <div className="w-full sm:w-[56%] h-full bg-[#E7E4DB]" />
+      </div>
+    </section>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+function CarouselEmpty() {
+  return (
+    <section
+      className="relative w-full flex items-center justify-center select-none"
+      style={{ background: "#FBFBF9", height: "var(--stage-h)", minHeight: 320 }}
+    >
+      <div className="flex flex-col items-center gap-3 text-center px-6">
+        <ImageOff size={32} strokeWidth={1} className="text-[#14171C]/25" />
+        <p className="hc-mono" style={{ fontWeight: 500, fontSize: 12, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(20,23,28,0.4)" }}>
+          Nothing here yet
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// ── Main carousel ─────────────────────────────────────────────────────────────
+export default function HeroCarousel({ initialSlides }: HeroCarouselProps) {
+  const [slides, setSlides] = useState<HeroSlide[]>(initialSlides ?? []);
+  const [loading, setLoading] = useState(!initialSlides);
+  const [error, setError] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 639px)");
+    setIsMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (initialSlides) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    fetch("/api/hero-slides")
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load");
+        return r.json();
+      })
+      .then((json) => {
+        if (!cancelled) {
+          setSlides(json.data ?? []);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSlides]);
+
+  const go = useCallback((index: number) => setCurrent((index + slides.length) % slides.length), [slides.length]);
+  const next = useCallback(() => setCurrent((c) => (c + 1) % slides.length), [slides.length]);
+  const prev = useCallback(() => setCurrent((c) => (c - 1 + slides.length) % slides.length), [slides.length]);
+
+useEffect(() => {
+    setImgLoaded(false);
+  }, [current]);
+
+  useEffect(() => {
+    if (isPaused || slides.length <= 1) return;
+    const id = setInterval(next, AUTO_ROTATE_MS);
+    return () => clearInterval(id);
+  }, [isPaused, next, slides.length]);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [next, prev, slides.length]);
+
+  // Preload next slide image
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const nextIndex = (current + 1) % slides.length;
+    const nextSlide = slides[nextIndex];
+    if (!nextSlide) return;
+    const width = isMobile ? MOBILE_IMG_WIDTH : DESKTOP_IMG_WIDTH;
+    const raw = isMobile && nextSlide.mobileImage ? nextSlide.mobileImage : nextSlide.desktopImage;
+    const img = new Image();
+    img.src = optimiseCloudinaryUrl(raw, width);
+  }, [current, slides, isMobile]);
+
+  // Reset the "loaded" flag whenever the visible slide/breakpoint changes,
+  // so the blur placeholder shows again until the new image finishes.
+  useEffect(() => {
+    setImgLoaded(false);
+  }, [current, isMobile]);
+
+  // Gentle parallax drift on the product image — a soft, controlled pan,
+  // not a gimmick. Skipped on touch devices.
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || isMobile) return;
+    const isFine = window.matchMedia("(pointer: fine)").matches;
+    if (!isFine) return;
+
+    const handleMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const nx = (e.clientX - rect.left) / rect.width - 0.5;
+      const ny = (e.clientY - rect.top) / rect.height - 0.5;
+      if (imageRef.current) {
+        imageRef.current.style.transform = `scale(1.05) translate(${-nx * 10}px, ${-ny * 8}px)`;
+      }
+    };
+    const handleLeave = () => {
+      if (imageRef.current) imageRef.current.style.transform = "scale(1.03) translate(0,0)";
+    };
+
+    el.addEventListener("mousemove", handleMove);
+    el.addEventListener("mouseleave", handleLeave);
+    return () => {
+      el.removeEventListener("mousemove", handleMove);
+      el.removeEventListener("mouseleave", handleLeave);
+    };
+  }, [isMobile, current]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.changedTouches[0].clientX;
+    touchStartY.current = e.changedTouches[0].clientY;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 44) dx < 0 ? next() : prev();
+  };
+
+  if (loading) return <CarouselSkeleton />;
+  if (error || slides.length === 0) return <CarouselEmpty />;
+
+  const b = slides[current];
+  const signal = b.accent || "#2F5DFF";
+  const sand = b.accentGlow || "#F1EFE8";
+
+  const desktopSrc = optimiseCloudinaryUrl(b.desktopImage, DESKTOP_IMG_WIDTH);
+  const mobileSrc = b.mobileImage
+    ? optimiseCloudinaryUrl(b.mobileImage, MOBILE_IMG_WIDTH)
+    : optimiseCloudinaryUrl(b.desktopImage, MOBILE_IMG_WIDTH);
+  const bgImage = isMobile ? mobileSrc : desktopSrc;
+  const blurImage = cloudinaryBlurUrl(isMobile ? (b.mobileImage ?? b.desktopImage) : b.desktopImage);
+
+  return (
+    <>
+      {initialSlides?.[0] && (
+        <>
+          <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+          <link
+            rel="preload"
+            as="image"
+            media="(max-width: 639px)"
+            fetchPriority="high"
+            href={optimiseCloudinaryUrl(
+              initialSlides[0].mobileImage || initialSlides[0].desktopImage,
+              MOBILE_IMG_WIDTH,
+            )}
+          />
+          <link
+            rel="preload"
+            as="image"
+            media="(min-width: 640px)"
+            fetchPriority="high"
+            href={optimiseCloudinaryUrl(initialSlides[0].desktopImage, DESKTOP_IMG_WIDTH)}
+          />
+        </>
+      )}
+      <style>{`
+       
+        .hc-display, .hc-body, .hc-mono { font-family: "Elms Sans", sans-serif; }
+        /* Mobile stacks image + text vertically (flex-col), so the stage
+           must size to its content -- forcing a fixed svh height here (as
+           this used to do) squeezes both children to fit inside a box that's
+           too short for the stack, which is what was crushing the product
+           image down to a thin sliver. Desktop lays image + text out as a
+           row sharing one height, so a fixed vh height is correct there. */
+        :root { --stage-h: auto; }
+        @media (min-width: 640px) { :root { --stage-h: 78vh; } }
+        @keyframes hc-rise {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes hc-tag-in {
+          from { opacity: 0; transform: rotate(-9deg) translateY(14px) scale(0.94); }
+          to   { opacity: 1; transform: rotate(-6deg) translateY(0) scale(1); }
+        }
+        @keyframes hc-swing {
+          0%, 100% { transform: rotate(-6deg); }
+          50%      { transform: rotate(-3deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hc-swing, [style*="hc-rise"], [style*="hc-tag-in"] { animation: none !important; }
+        }
+      `}</style>
+
+      <section
+        className="relative w-full select-none"
+        aria-label="Featured products"
+        aria-roledescription="carousel"
+        style={{ background: "#ffffff", isolation: "isolate", zIndex: 0 }}
+      >
+        <div
+          ref={stageRef}
+          className="relative w-full overflow-hidden flex flex-col sm:flex-row"
+          style={{ height: "var(--stage-h)", minHeight: 320 }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: "easeInOut" }}
+              className="relative w-full h-auto flex flex-col sm:absolute sm:inset-0 sm:w-full sm:h-full sm:flex-row"
+              aria-roledescription="slide"
+              aria-label={`Product ${current + 1} of ${slides.length}`}
+            >
+              {/* ── Text column — bright paper ground ── */}
+              <div className="relative w-full sm:w-[44%] h-auto sm:h-full flex items-center order-2 sm:order-1" style={{ background: "#FBFBF9" }}>
+                <div
+                  className="flex flex-col"
+                  style={{
+                    paddingLeft: "clamp(24px, 5vw, 72px)",
+                    paddingRight: "clamp(20px, 3vw, 48px)",
+                    paddingTop: "clamp(28px, 3vh, 40px)",
+                    paddingBottom: "clamp(28px, 3vh, 40px)",
+                    maxWidth: 460,
+                  }}
+                >
+                  {b.subtitle && (
+                    <div className="flex items-center gap-3 mb-4" style={{ opacity: 0, animation: "hc-rise 0.7s cubic-bezier(.16,1,.3,1) 0.05s forwards" }}>
+                      <span
+                        className="hc-mono"
+                        style={{
+                          fontWeight: 500,
+                          fontSize: 11,
+                          letterSpacing: "0.24em",
+                          textTransform: "uppercase",
+                          color: signal,
+                          padding: "3px 9px",
+                          border: `1px solid ${signal}40`,
+                          background: `${signal}0d`,
+                        }}
+                      >
+                        {b.subtitle}
+                      </span>
+                    </div>
+                  )}
+
+                  <h2
+                    className="hc-display"
+                    style={{
+                      color: "#14171C",
+                      fontWeight: 600,
+                      fontSize: "clamp(32px, 3.6vw, 58px)",
+                      lineHeight: 1.05,
+                      letterSpacing: "-0.02em",
+                      margin: 0,
+                      opacity: 0,
+                      animation: "hc-rise 0.8s cubic-bezier(.16,1,.3,1) 0.15s forwards",
+                    }}
+                  >
+                    {b.title}
+                  </h2>
+
+                  {b.description && (
+                    <p
+                      className="hc-body"
+                      style={{
+                        fontWeight: 400,
+                        fontSize: "clamp(14px, 1.05vw, 16.5px)",
+                        lineHeight: 1.7,
+                        color: "rgba(20,23,28,0.62)",
+                        marginTop: "clamp(14px, 2vh, 22px)",
+                        marginBottom: "clamp(18px, 2.5vh, 30px)",
+                        maxWidth: 380,
+                        opacity: 0,
+                        animation: "hc-rise 0.8s cubic-bezier(.16,1,.3,1) 0.28s forwards",
+                      }}
+                    >
+                      {b.description}
+                    </p>
+                  )}
+
+                  {!b.description && (
+                    <div
+                      style={{
+                        width: 40,
+                        height: 2,
+                        background: signal,
+                        marginTop: "clamp(14px, 2vh, 22px)",
+                        marginBottom: "clamp(18px, 2.5vh, 30px)",
+                        opacity: 0,
+                        animation: "hc-rise 0.8s cubic-bezier(.16,1,.3,1) 0.28s forwards",
+                      }}
+                    />
+                  )}
+
+                  {b.buttonText && b.buttonLink && (
+                    <div style={{ opacity: 0, animation: "hc-rise 0.8s cubic-bezier(.16,1,.3,1) 0.4s forwards" }}>
+                      <Link
+                        href={b.buttonLink}
+                        target={b.openInNewTab ? "_blank" : undefined}
+                        rel={b.openInNewTab ? "noopener noreferrer" : undefined}
+                        className="hc-body group inline-flex items-center gap-2"
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "clamp(13px, 0.95vw, 14px)",
+                          color: "#FBFBF9",
+                          textDecoration: "none",
+                          padding: "12px 22px",
+                          background: signal,
+                          transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                          boxShadow: `0 6px 20px ${signal}40`,
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
+                        }}
+                      >
+                        {b.buttonText}
+                        <ChevronRight size={14} strokeWidth={2} className="transition-transform duration-300 group-hover:translate-x-1" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Product image ── */}
+              <div className="relative w-full sm:w-[56%] h-[46vh] sm:h-full order-1 sm:order-2 overflow-hidden" style={{ background: sand }}>
+                {/* Blurred placeholder — a few KB, paints instantly so slow
+                    connections see a soft preview instead of flat color. */}
+                <div
+                  className="absolute inset-0"
+                  aria-hidden="true"
+                  style={{
+                    backgroundImage: `url(${blurImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    transform: "scale(1.1)",
+                    opacity: imgLoaded ? 0 : 1,
+                    transition: "opacity 0.4s ease",
+                  }}
+                />
+                <div
+                  ref={imageRef}
+                  className="absolute inset-0"
+                  style={{
+                    transform: "scale(1.03)",
+                    transition: "transform 0.6s cubic-bezier(.16,1,.3,1)",
+                  }}
+                >
+                  {/* Real, visible <img>: discoverable by the preload scanner and
+                      never hidden behind a JS-driven opacity gate, so it can paint
+                      as the LCP element as soon as the bytes arrive. */}
+                  <img
+                    src={bgImage}
+                    alt={b.title || ""}
+                    width={1400}
+                    height={900}
+                    fetchPriority={current === 0 ? "high" : "auto"}
+                    loading={current === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    onLoad={() => setImgLoaded(true)}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* ── Arrows ── */}
+          {slides.length > 1 &&
+            (["prev", "next"] as const).map((dir) => (
+              <button
+                key={dir}
+                onClick={dir === "prev" ? prev : next}
+                aria-label={dir === "prev" ? "Previous product" : "Next product"}
+                className="hidden sm:flex absolute top-1/2 -translate-y-1/2 z-30 items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]"
+                style={{
+                  [dir === "prev" ? "left" : "right"]: "clamp(12px, 2.5vw, 32px)",
+                  width: "clamp(38px, 3vw, 46px)",
+                  height: "clamp(38px, 3vw, 46px)",
+                  background: "rgba(251,251,249,0.9)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(20,23,28,0.1)",
+                  boxShadow: "0 4px 16px rgba(20,23,28,0.1)",
+                  color: "#14171C",
+                  transition: "all 0.25s",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.background = "#14171C";
+                  el.style.color = "#FBFBF9";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLButtonElement;
+                  el.style.background = "rgba(251,251,249,0.9)";
+                  el.style.color = "#14171C";
+                }}
+              >
+                {dir === "prev" ? <ChevronLeft size={16} strokeWidth={2} /> : <ChevronRight size={16} strokeWidth={2} />}
+              </button>
+            ))}
+
+          {/* ── Vertical tick nav ── */}
+          {slides.length > 1 && (
+            <div className="absolute right-5 bottom-16 z-30 hidden sm:flex flex-col items-center gap-0">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => go(i)}
+                  aria-label={`View product ${i + 1}`}
+                  style={{
+                    width: 2,
+                    height: i === current ? 30 : 10,
+                    backgroundColor: i === current ? "#14171C" : "rgba(20,23,28,0.22)",
+                    backgroundClip: "content-box",
+                    boxSizing: "content-box",
+                    border: "none",
+                    padding: "7px 11px",
+                    cursor: "pointer",
+                    transition: "all 0.4s ease",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Progress bar ── */}
+        {slides.length > 1 && (
+          <div className="relative w-full overflow-hidden" style={{ height: 2, background: "rgba(20,23,28,0.08)" }}>
+            {!isPaused && (
+              <motion.div
+                key={`progress-${current}`}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: AUTO_ROTATE_MS / 1000, ease: "linear" }}
+                className="absolute inset-0 origin-left"
+                style={{ background: signal }}
+              />
+            )}
+          </div>
+        )}
+
+        {/* ── Dot nav — mobile ── */}
+        {slides.length > 1 && (
+          <div className="flex sm:hidden items-center justify-center gap-0 py-3" style={{ background: "#FBFBF9" }} role="tablist" aria-label="Product navigation">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                role="tab"
+                aria-selected={i === current}
+                aria-label={`View product ${i + 1}`}
+                onClick={() => go(i)}
+                className="focus:outline-none"
+                style={{
+                  height: 2,
+                  width: i === current ? 26 : 8,
+                  backgroundColor: i === current ? "#14171C" : "rgba(20,23,28,0.2)",
+                  backgroundClip: "content-box",
+                  boxSizing: "content-box",
+                  border: "none",
+                  padding: "11px 8px",
+                  cursor: "pointer",
+                  transition: "all 0.4s ease",
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}

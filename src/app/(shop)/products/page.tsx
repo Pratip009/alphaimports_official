@@ -1,0 +1,482 @@
+import { connectDB } from "@/lib/db";
+import { listProducts, listProductsWithCategoryFilters, getProductFacets } from "@/services/product.service";
+import { ProductFilterParams } from "@/services/productFilter.service";
+import { parseCategoryFilterSelectionFromObject } from "@/services/categoryFilter.service";
+import ProductCard from "@/components/products/ProductCard";
+import FilterBar from "@/components/filters/FilterBar";
+import DynamicCategoryFilters from "@/components/filters/DynamicCategoryFilters";
+import SortBar from "@/components/products/SortBar";
+import Pagination from "@/components/ui/Pagination";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+
+type ProductType = "watch" | "diamond" | "gemstone";
+interface PageProps {
+  searchParams: Promise<Record<string, string>>;
+}
+
+// Watch-specific filter params — if any of these are present the page is in watch mode
+const WATCH_FILTER_PARAMS = [
+  "watchBrand","watchMovement","watchGender","watchStyle",
+  "watchStrapType","watchCaseMaterial","watchDialColor",
+  "watchFeatures","watchCaseSize",
+  // Also catch the attribute param names used by SearchBar chips
+  "brand","movement","strapType","caseMaterial","dialColor",
+  "feature","style","gender","caseSize",
+] as const;
+
+/**
+ * Determine whether the current page should show the Watch, Diamond, or
+ * Gemstone view.
+ *
+ * Gemstones don't live under one category slug — they're spread across
+ * "Precious Gems", "Semi Precious", "Specials", etc, each with a
+ * per-gem subcategory (Emerald, Amethyst, …). So the category slug alone
+ * can't tell us "this is a gemstone". Instead we trust the actual
+ * `productKind` field on the fetched product, which every product
+ * carries regardless of which category/subcategory it's filed under.
+ *
+ * Priority order:
+ *  1. The real productKind on the first matched product (ground truth)
+ *  2. No results to inspect yet — fall back to URL signals (watch only,
+ *     since that's the one category we can identify by slug alone)
+ */
+function resolveProductType(
+  sp: Record<string, string>,
+  firstProduct: Record<string, unknown> | undefined,
+): ProductType {
+  const kind = firstProduct?.productKind as string | undefined;
+  if (kind === "watch")    return "watch";
+  if (kind === "gemstone") return "gemstone";
+  if (kind === "diamond")  return "diamond";
+
+  // No product to inspect (e.g. empty result set) — fall back to the URL.
+  if (sp.category === "watches") return "watch";
+  if (WATCH_FILTER_PARAMS.some((k) => sp[k])) return "watch";
+
+  return "diamond";
+}
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+
+// Query params that define a genuinely distinct, worth-indexing landing
+// page (a category/subcategory combo). Everything else (price sliders,
+// shape/color/clarity facets, sort order, search terms, pagination beyond
+// page 1) multiplies into thousands of near-duplicate URLs that would
+// otherwise flood the index with thin content — those get a self-canonical
+// back to the clean landing page and a noindex,follow so link equity still
+// flows but the combination itself never competes for a SERP slot.
+const CORE_PARAMS = ["category", "subcategory", "subSubcategory"] as const;
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const sp = await searchParams;
+
+  // Reuse the same resolution logic the page already uses, minus the
+  // first-product fallback (no DB call needed just for a title — if no
+  // explicit signal is in the URL, default to "Diamonds").
+  const isWatch =
+    sp.category === "watches" ||
+    (!sp.category && WATCH_FILTER_PARAMS.some((k) => sp[k]));
+  // Metadata runs before any DB query, so there's no product to check
+  // productKind on yet — approximate off the category slug instead.
+  const isAlternative = /alternative|moissanite|simulat|\bcz\b/i.test(sp.category || "");
+  const isJewelry = /jewel/i.test(sp.category || "");
+  const isGemstone = /gem|precious|special/i.test(sp.category || "");
+
+  const label = isWatch
+    ? "Timepieces"
+    : isAlternative
+      ? "Diamond Alternatives"
+      : isJewelry
+        ? "Jewelry"
+        : isGemstone
+          ? "Gemstones"
+          : "Diamonds";
+
+  const filterBits = [sp.shape, sp.subcategory, sp.subSubcategory, sp.q ?? sp.search].filter(Boolean);
+  const title = filterBits.length
+    ? `${filterBits.join(" ")} ${label} | Alpha Gemstone`
+    : `${label} | Alpha Gemstone`;
+
+  const description = isWatch
+    ? "Shop luxury timepieces at Alpha Gemstone — exceptional horological craftsmanship."
+    : isAlternative
+      ? "Shop moissanite, cubic zirconia, simulated and lab-created stones at Alpha Gemstone."
+      : isJewelry
+        ? "Shop fine jewelry at Alpha Gemstone."
+        : isGemstone
+          ? "Shop natural gemstones at Alpha Gemstone."
+          : "Shop diamonds at Alpha Gemstone, with lab reports on applicable stones.";
+
+  // Build the canonical URL from only the core taxonomy params, in a fixed
+  // order, so /products?category=diamonds&subcategory=round and
+  // /products?subcategory=round&category=diamonds canonicalize identically.
+  const coreQuery = new URLSearchParams();
+  for (const key of CORE_PARAMS) {
+    if (sp[key]) coreQuery.set(key, sp[key]);
+  }
+  const coreQueryString = coreQuery.toString();
+  const canonical = coreQueryString
+    ? `${SITE_URL}/products?${coreQueryString}`
+    : `${SITE_URL}/products`;
+
+  // Any param outside the core set (a facet, a sort, a search term, page
+  // beyond 1) makes this a filtered view worth crawling but not indexing.
+  const hasNonCoreParams = Object.keys(sp).some(
+    (key) => !(CORE_PARAMS as readonly string[]).includes(key) && sp[key],
+  );
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    robots: hasNonCoreParams
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      url: canonical,
+      title,
+      description,
+      siteName: "Alpha Gemstone",
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
+export default async function ProductsPage({ searchParams }: PageProps) {
+  await connectDB();
+
+  const sp = await searchParams;
+
+  const params: ProductFilterParams = {
+    category:           sp.category,
+    subcategory:        sp.subcategory,
+    subSubcategory:     sp.subSubcategory,
+    shape:              sp.shape,
+    color:              sp.color,
+    clarity:            sp.clarity,
+    certification:      sp.certification,
+    priceMin:           sp.priceMin,
+    priceMax:           sp.priceMax,
+    sizeMin:            sp.sizeMin,
+    sizeMax:            sp.sizeMax,
+    size:               sp.size,
+    approxWeight:       sp.approxWeight,
+    numberOfStones:     sp.numberOfStones,
+    watchGender:        sp.watchGender   ?? sp.gender,
+    watchBrand:         sp.watchBrand    ?? sp.brand,
+    watchMovement:      sp.watchMovement ?? sp.movement,
+    watchStrapType:     sp.watchStrapType  ?? sp.strapType,
+    watchCaseMaterial:  sp.watchCaseMaterial ?? sp.caseMaterial,
+    watchDialColor:     sp.watchDialColor  ?? sp.dialColor,
+    watchFeatures:      sp.watchFeatures  ?? sp.feature,
+    watchStyle:         sp.watchStyle     ?? sp.style,
+    watchCaseSize:      sp.watchCaseSize  ?? sp.caseSize,
+    inStock:            sp.inStock,
+    q:                  sp.q ?? sp.search,   // support both ?q= and ?search=
+    sortBy:             sp.sortBy as ProductFilterParams["sortBy"],
+    page:               sp.page || 1,
+    limit:              24,
+  };
+
+  // Only the product list is awaited here. It's a single indexed query
+  // capped at `limit` (24), so it resolves quickly and lets the page start
+  // streaming right away. Facets (the ~10-16-branch aggregation) used to be
+  // awaited in the same Promise.all, which meant the route's loading.tsx
+  // full-page skeleton stayed up until BOTH finished — in practice, until
+  // the much slower facets query finished. That work now happens inside
+  // <FacetedFilterBar>, in its own Suspense boundary below.
+  // CSV-driven, category-specific filters (final_category_filters.csv) —
+  // only meaningfully scoped once a subcategory (or category) is selected,
+  // but harmless/no-op otherwise since getApplicableFilterDefinitions
+  // returns [] with no category/subcategory in scope.
+  const categorySelection = parseCategoryFilterSelectionFromObject(sp);
+  const { products, total, page, limit, categoryFilters } =
+    await listProductsWithCategoryFilters(params, categorySelection);
+
+  const totalPages = Math.ceil(total / limit);
+
+  // Robust product type resolution — URL params take priority over data
+  const productType = resolveProductType(sp, products[0] as Record<string, unknown> | undefined);
+
+  return (
+    <>
+      <style>{`
+        
+
+        body, .products-page *:not(.pc6, .pc6 *) { font-family: 'Elms Sans', sans-serif !important; }
+      `}</style>
+
+      <div
+        className="products-page min-h-screen bg-[#ffffff]"
+        style={{ fontFamily: "'Elms Sans', sans-serif" }}
+      >
+        {/* ── Top accent line ── */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#B8975A] to-transparent" />
+
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+
+          {/* ── Filter bar: horizontal, sticky, shown on every screen size ──
+              Watches only — diamonds/gemstones use the CSV-driven
+              DynamicCategoryFilters dropdown bar above the grid instead,
+              so there's nothing to render (and no facets query to run)
+              for those product types. */}
+          {productType === "watch" && (
+            <div className="-mx-4 sm:-mx-8 mb-8">
+              <Suspense fallback={<SidebarSkeleton />}>
+                <FacetedFilterBar params={params} productType={productType} />
+              </Suspense>
+            </div>
+          )}
+
+          <main className="min-w-0">
+
+              {/* Page heading */}
+              <div className="mb-6 pb-5 border-b border-[#EDE3D0] flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                <div>
+                  <h1
+                    className="text-3xl sm:text-4xl font-normal text-[#1A1612] leading-tight"
+                    style={{ fontFamily: '"Elms Sans", sans-serif' }}
+                  >
+                    {productType === "watch" ? "Timepieces" : productType === "gemstone" ? "Gemstones" : "Diamonds"}
+                  </h1>
+                  <p className="mt-1.5 text-[10px] tracking-[0.25em] uppercase text-[#B8975A] font-medium">
+                    {(() => {
+                      // If a sub-subcategory ("type") is in scope, surface its
+                      // resolved name (from the populated field on the first
+                      // matched product) instead of the generic tagline —
+                      // confirms to the shopper the exact type they drilled
+                      // into (e.g. "Oval Tanzanite").
+                      const firstProduct = products[0] as Record<string, unknown> | undefined;
+                      const subSubName = (firstProduct?.subSubcategory as { name?: string } | undefined)?.name;
+                      if (sp.subSubcategory && subSubName) return subSubName;
+                      return productType === "watch"
+                        ? "Exceptional horological craftsmanship"
+                        : productType === "gemstone"
+                          ? "Natural gemstones"
+                          : "Certification available on applicable stones";
+                    })()}
+                  </p>
+                </div>
+
+                <SortBar
+                  total={total}
+                  currentSort={sp.sortBy}
+                  query={sp.q ?? sp.search}
+                />
+              </div>
+
+              {/* ── CSV-driven category filters (final_category_filters.csv) ──
+                  Horizontal dropdown bar shown above the grid — only
+                  renders once a category/subcategory is in scope and has
+                  applicable filter definitions — empty otherwise. */}
+              {categoryFilters.length > 0 && (
+                <DynamicCategoryFilters groups={categoryFilters} />
+              )}
+
+              {/* Active filter chips */}
+              <ActiveFilterChips searchParams={sp} />
+
+              {/* Products grid or empty state */}
+              {products.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                    {products.map((p: Record<string, unknown>) => {
+                      const serialized = {
+                        _id:               String(p._id),
+                        name:              p.name              as string,
+                        price:             p.price             as number,
+                        // gem / diamond fields
+                        shape:             p.shape             as string | string[] | undefined,
+                        size:              p.size              as number | undefined,
+                        color:             p.color             as string | string[] | undefined,
+                        clarity:           p.clarity           as string | string[] | undefined,
+                        certification:     p.certification     as string | string[] | undefined,
+                        gemstoneName:      p.gemstoneName      as string | undefined,
+                        shapeRaw:          p.shapeRaw          as string | undefined,
+                        colorRaw:          p.colorRaw          as string | undefined,
+                        clarityRaw:        p.clarityRaw        as string | undefined,
+                        gradeRaw:          p.gradeRaw          as string | undefined,
+                        // watch fields
+                        watchBrand:        p.watchBrand        as string | undefined,
+                        watchModel:        p.watchModel        as string | undefined,
+                        watchMovement:     p.watchMovement     as string | undefined,
+                        watchGender:       p.watchGender       as string | undefined,
+                        watchStyle:        p.watchStyle        as string | undefined,
+                        watchCaseMaterial: p.watchCaseMaterial as string | undefined,
+                        watchDialColor:    p.watchDialColor    as string | undefined,
+                        watchStrapType:    p.watchStrapType    as string | undefined,
+                        watchCaseSize:     p.watchCaseSize     as string | undefined,
+                        watchFeatures:     p.watchFeatures     as string[] | undefined,
+                        images:            p.images            as string[],
+                        stock:             p.stock             as number,
+                      };
+                      return (
+                        <ProductCard
+                          key={serialized._id}
+                          product={serialized}
+                          productType={productType}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-12 sm:mt-16">
+                    <Pagination page={page} totalPages={totalPages} searchParams={sp} />
+                  </div>
+                </>
+              )}
+          </main>
+        </div>
+
+        {/* ── Bottom accent line ── */}
+        <div className="h-px w-full bg-[#EDE3D0] mt-12" />
+        <div className="max-w-screen-2xl mx-auto px-8 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 bg-[#B8975A] rotate-45 rounded-[1px]" />
+            <span
+              className="text-[11px] tracking-[0.2em] uppercase text-[#8A7F72]"
+              style={{ fontFamily: '"Elms Sans", sans-serif' }}
+            >
+              Alpha Gemstone
+            </span>
+          </div>
+          <p className="text-[10px] tracking-[0.15em] uppercase text-[#C4B8A8]">
+            Free insured shipping on all orders
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Faceted filter bar ────────────────────────────────────────────────────────
+// Dedicated async Server Component so the (comparatively expensive) facets
+// aggregation runs behind its own Suspense boundary instead of blocking the
+// whole page. Next streams this in as soon as it resolves; everything else
+// on the page — the product grid, pagination, etc. — is already visible by
+// then since it only depended on the fast listProducts() query.
+async function FacetedFilterBar({
+  params,
+  productType,
+}: {
+  params: ProductFilterParams;
+  productType: ProductType;
+}) {
+  // Only called for watches now — see the productType === "watch" guard
+  // around its call site above. Diamonds/gemstones use the CSV-driven
+  // DynamicCategoryFilters panel instead of a facets dropdown bar.
+  const facets = await getProductFacets(params, productType);
+  return <FilterBar productType={productType} facets={facets} />;
+}
+
+// ─── Active filter chips ──────────────────────────────────────────────────────
+function ActiveFilterChips({ searchParams }: { searchParams: Record<string, string> }) {
+  const chipKeys = [
+    "shape","color","clarity","size","approxWeight","numberOfStones",
+    "watchBrand","brand",
+    "watchMovement","movement",
+    "watchGender","gender",
+    "watchStyle","style",
+    "watchStrapType","strapType",
+    "watchCaseMaterial","caseMaterial",
+    "watchDialColor","dialColor",
+    "watchFeatures","feature",
+    "watchCaseSize","caseSize",
+    "inStock",
+  ];
+
+  // De-dupe: prefer the watch-prefixed key if both are present
+  const seen = new Set<string>();
+  const chips: { key: string; label: string }[] = [];
+
+  chipKeys.forEach((key) => {
+    const val = searchParams[key];
+    if (!val) return;
+    val.split(",").filter(Boolean).forEach((v) => {
+      const dedupeKey = `${v.toLowerCase()}`;
+      if (seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      chips.push({ key, label: key === "inStock" ? "In Stock" : v });
+    });
+  });
+
+  if (searchParams.priceMin || searchParams.priceMax) {
+    const min = searchParams.priceMin ? `$${Number(searchParams.priceMin).toLocaleString()}` : "";
+    const max = searchParams.priceMax ? `$${Number(searchParams.priceMax).toLocaleString()}` : "";
+    chips.push({ key: "price", label: min && max ? `${min} – ${max}` : min || `Under ${max}` });
+  }
+
+  if (searchParams.sizeMin || searchParams.sizeMax) {
+    const label = [
+      searchParams.sizeMin && `${searchParams.sizeMin}ct`,
+      searchParams.sizeMax && `${searchParams.sizeMax}ct`,
+    ].filter(Boolean).join(" – ");
+    chips.push({ key: "size", label });
+  }
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-5">
+      {chips.map((chip, i) => (
+        <span
+          key={`${chip.key}-${chip.label}-${i}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium tracking-wide bg-[#F5EDD6] text-[#8A6C38] border border-[#D4C4A0]"
+          style={{ fontFamily: '"Elms Sans", sans-serif' }}
+        >
+          {chip.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-28 sm:py-40 text-center">
+      <div className="mb-6 relative">
+        <div className="w-16 h-16 border border-[#EDE3D0] rounded-2xl flex items-center justify-center bg-white shadow-[0_2px_16px_rgba(184,151,90,0.06)]">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#D4C4A0]">
+            <path d="M12 22L3 10l2.5-6h13L21 10z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+            <path d="M3 10h18M12 22L8 10l4-6 4 6z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#B8975A] rotate-45 rounded-[2px] opacity-60" />
+      </div>
+      <p
+        className="text-lg font-normal text-[#1A1612] mb-2"
+        style={{ fontFamily: '"Elms Sans", sans-serif' }}
+      >
+        No results found
+      </p>
+      <p className="text-[11px] tracking-[0.2em] uppercase font-medium text-[#C4B8A8] mb-6">
+        Try adjusting your filters
+      </p>
+      <div className="w-12 h-px bg-[#D4C4A0]" />
+    </div>
+  );
+}
+
+// ─── Sidebar skeleton ─────────────────────────────────────────────────────────
+function SidebarSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-4 bg-neutral-200 rounded w-3/4 mx-auto" />
+      <div className="h-8 bg-neutral-100 rounded-lg" />
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="space-y-2 pt-3 border-t border-neutral-100">
+          <div className="h-3 bg-neutral-200 rounded w-1/2" />
+          <div className="h-2.5 bg-neutral-100 rounded w-3/4" />
+          <div className="h-2.5 bg-neutral-100 rounded w-2/3" />
+          <div className="h-2.5 bg-neutral-100 rounded w-4/5" />
+        </div>
+      ))}
+    </div>
+  );
+}
