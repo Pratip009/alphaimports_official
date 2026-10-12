@@ -28,7 +28,7 @@ const ROUTES = [
 
 export default function FooterSitemap() {
   return (
-    <section className="border-t border-[#e8e2d9] py-14">
+    <section id="site-map" className="border-t border-[#e8e2d9] py-14 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6">
 
         <div className="mb-8">

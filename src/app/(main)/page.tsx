@@ -44,23 +44,23 @@ export default async function HomePage() {
 
   return (
     <main className="w-full">
-      <section className="overflow-hidden">
+      {/* <section className="overflow-hidden">
         <HeroCarousel initialSlides={initialSlides} />
-      </section>
-      <CompleteSource />
-      <TrustBadges />
-      <CertificationMarquee/>
+      </section> */}
+      {/* <CompleteSource /> */}
+      {/* <TrustBadges />
+      <CertificationMarquee/> */}
       <ShopByCategory />
-      <WorldShipping/>
+      {/* <WorldShipping/>
       <GemsPromise />
-      <BirthstoneCarousel/>
+      <BirthstoneCarousel/> */}
       {/* <AwardsAccolades/> */}
-      <SpecialsMarquee />
-      <OurCollectionSection videoSrc="/video/shop.mp4" />
+      {/* <SpecialsMarquee /> */}
+      {/* <OurCollectionSection videoSrc="/video/shop.mp4" /> */}
       {/* <Testimonials /> */}
       {/* <FeaturedInNews /> */}
-      <JewelryModal />
-      <MetalPriceTicker/>
+      {/* <JewelryModal /> */}
+      {/* <MetalPriceTicker/> */}
     </main>
   );
 }

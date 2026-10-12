@@ -12,7 +12,7 @@ import { cartEvents } from "@/hooks/useCart";
 import { buildProductSpecs, type ProductKind } from "@/lib/productSpecs";
 import { isDiamondAlternative } from "@/lib/diamondAlternatives"
 
-interface ProductCardProps {
+export interface ProductCardProps {
   productType?: "watch" | "diamond" | "gemstone";
   product: {
     _id: string;
@@ -88,7 +88,7 @@ function certDisplay(val?: string | string[]): string {
   const arr = Array.isArray(val) ? val : [val];
   return arr.filter((c) => c !== "none").join(" · ");
 }
-function isWatch(p: ProductCardProps["product"]): boolean {
+export function isWatch(p: ProductCardProps["product"]): boolean {
   return !!(
     p.watchBrand ||
     p.watchMovement ||
@@ -107,7 +107,7 @@ function isWatch(p: ProductCardProps["product"]): boolean {
 // getProductKind(). ProductCard never deals with plain "jewelry" items
 // today, so anything non-watch falls back to gemstone-or-diamond exactly
 // like the rest of this file already does (buildKicker, etc).
-function deriveKind(
+export function deriveKind(
   product: ProductCardProps["product"],
   watch: boolean,
 ): ProductKind {
@@ -146,9 +146,9 @@ function possessive(g?: string): string {
   return map[g] || g;
 }
 
-const WATCH_PLACEHOLDER =
+export const WATCH_PLACEHOLDER =
   "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&q=80&fit=crop";
-const DIAMOND_PLACEHOLDER =
+export const DIAMOND_PLACEHOLDER =
   "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&q=80&fit=crop";
 
 const COLOR_HEX: Record<string, string> = {
@@ -204,7 +204,7 @@ function lotNumber(id: string): string {
   return tail || "0000";
 }
 
-function buildKicker(
+export function buildKicker(
   product: ProductCardProps["product"],
   watch: boolean,
 ): string {
@@ -222,7 +222,7 @@ function buildKicker(
   return [shapePart, stone].filter(Boolean).join(" ");
 }
 
-function buildSubtitle(
+export function buildSubtitle(
   product: ProductCardProps["product"],
   watch: boolean,
 ): string | undefined {
@@ -421,7 +421,7 @@ function ProductImage({
 // to <body> so it isn't clipped/relatively-positioned by the card's own
 // `overflow: hidden`, and so it never ends up nested inside the card's
 // <Link>.
-function QuickViewModal({
+export function QuickViewModal({
   product,
   watch,
   kind,
@@ -573,41 +573,9 @@ function QuickViewModal({
   );
 }
 
-export default function ProductCard({
-  product,
-  productType,
-}: ProductCardProps) {
-  const watch = productType ? productType === "watch" : isWatch(product);
-  const isAvailable = product.stock > 0;
-  const lowStock = isAvailable && product.stock <= 3;
-  const placeholder = watch ? WATCH_PLACEHOLDER : DIAMOND_PLACEHOLDER;
-
-  const kicker = buildKicker(product, watch);
-  const subtitle = buildSubtitle(product, watch);
-  const badge = categoryBadge(product);
-  const particulars = buildParticulars(product, watch);
-  const lot = lotNumber(product._id);
-
-  // Same "only show a comparison when it's real" rule as the product-detail
-  // page: an original price only renders (struck through) when msrp is set
-  // and genuinely higher than the selling price.
-  const hasMsrpSavings =
-    typeof product.msrp === "number" && product.msrp > product.price;
-  const savingsPct = hasMsrpSavings
-    ? Math.round(
-        (((product.msrp as number) - product.price) /
-          (product.msrp as number)) *
-          100,
-      )
-    : 0;
-
-  const [quickViewOpen, setQuickViewOpen] = useState(false);
-
-  return (
-    <>
-      <style>{`
-        
-
+// Card + Quick View styles, exported so other card layouts (e.g. the classic
+// listing card) can reuse the Quick View modal and still get its styling.
+const PRODUCT_CARD_CSS = `
         .apc {
           --paper: #ffffff;
           --paper-soft: #fafaf9;
@@ -1299,7 +1267,45 @@ export default function ProductCard({
           .apc-qv-media .apc-photo { max-height: 220px; }
           .apc-qv-info { padding: 20px 18px; }
         }
-      `}</style>
+      `;
+
+export function ProductCardStyles() {
+  return <style>{PRODUCT_CARD_CSS}</style>;
+}
+
+export default function ProductCard({
+  product,
+  productType,
+}: ProductCardProps) {
+  const watch = productType ? productType === "watch" : isWatch(product);
+  const isAvailable = product.stock > 0;
+  const lowStock = isAvailable && product.stock <= 3;
+  const placeholder = watch ? WATCH_PLACEHOLDER : DIAMOND_PLACEHOLDER;
+
+  const kicker = buildKicker(product, watch);
+  const subtitle = buildSubtitle(product, watch);
+  const badge = categoryBadge(product);
+  const particulars = buildParticulars(product, watch);
+  const lot = lotNumber(product._id);
+
+  // Same "only show a comparison when it's real" rule as the product-detail
+  // page: an original price only renders (struck through) when msrp is set
+  // and genuinely higher than the selling price.
+  const hasMsrpSavings =
+    typeof product.msrp === "number" && product.msrp > product.price;
+  const savingsPct = hasMsrpSavings
+    ? Math.round(
+        (((product.msrp as number) - product.price) /
+          (product.msrp as number)) *
+          100,
+      )
+    : 0;
+
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+
+  return (
+    <>
+      <ProductCardStyles />
 
       <Link href={`/products/${product.slug ?? product._id}`} className="apc">
         <article className="apc-card">

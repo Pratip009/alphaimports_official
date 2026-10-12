@@ -2,11 +2,17 @@ import { connectDB } from "@/lib/db";
 import { listProducts, listProductsWithCategoryFilters, getProductFacets } from "@/services/product.service";
 import { ProductFilterParams } from "@/services/productFilter.service";
 import { parseCategoryFilterSelectionFromObject } from "@/services/categoryFilter.service";
-import ProductCard from "@/components/products/ProductCard";
 import FilterBar from "@/components/filters/FilterBar";
-import DynamicCategoryFilters from "@/components/filters/DynamicCategoryFilters";
-import SortBar from "@/components/products/SortBar";
-import Pagination from "@/components/ui/Pagination";
+import ClassicSidebar from "@/components/classic/ClassicSidebar";
+import ClassicProductCard from "@/components/classic/listing/ClassicProductCard";
+import ClassicFilterPanel from "@/components/classic/listing/ClassicFilterPanel";
+import ClassicResultsBar from "@/components/classic/listing/ClassicResultsBar";
+import ShareButton from "@/components/classic/listing/ShareButton";
+import { ProductCardStyles } from "@/components/products/ProductCard";
+import { getNavCategories } from "@/lib/getNavCategories";
+import { sanitizeHtml, looksLikeHtml } from "@/lib/sanitizeHtml";
+import CategoryModel from "@/models/Category";
+import SubcategoryModel from "@/models/Subcategory";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 
@@ -27,19 +33,8 @@ const WATCH_FILTER_PARAMS = [
 
 /**
  * Determine whether the current page should show the Watch, Diamond, or
- * Gemstone view.
- *
- * Gemstones don't live under one category slug — they're spread across
- * "Precious Gems", "Semi Precious", "Specials", etc, each with a
- * per-gem subcategory (Emerald, Amethyst, …). So the category slug alone
- * can't tell us "this is a gemstone". Instead we trust the actual
- * `productKind` field on the fetched product, which every product
- * carries regardless of which category/subcategory it's filed under.
- *
- * Priority order:
- *  1. The real productKind on the first matched product (ground truth)
- *  2. No results to inspect yet — fall back to URL signals (watch only,
- *     since that's the one category we can identify by slug alone)
+ * Gemstone view. Trusts the real productKind on the first matched product,
+ * falling back to URL signals when there are no results.
  */
 function resolveProductType(
   sp: Record<string, string>,
@@ -50,7 +45,6 @@ function resolveProductType(
   if (kind === "gemstone") return "gemstone";
   if (kind === "diamond")  return "diamond";
 
-  // No product to inspect (e.g. empty result set) — fall back to the URL.
   if (sp.category === "watches") return "watch";
   if (WATCH_FILTER_PARAMS.some((k) => sp[k])) return "watch";
 
@@ -59,13 +53,7 @@ function resolveProductType(
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
 
-// Query params that define a genuinely distinct, worth-indexing landing
-// page (a category/subcategory combo). Everything else (price sliders,
-// shape/color/clarity facets, sort order, search terms, pagination beyond
-// page 1) multiplies into thousands of near-duplicate URLs that would
-// otherwise flood the index with thin content — those get a self-canonical
-// back to the clean landing page and a noindex,follow so link equity still
-// flows but the combination itself never competes for a SERP slot.
+// Core taxonomy params get indexed; everything else is noindex,follow.
 const CORE_PARAMS = ["category", "subcategory", "subSubcategory"] as const;
 
 export async function generateMetadata({
@@ -73,14 +61,9 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const sp = await searchParams;
 
-  // Reuse the same resolution logic the page already uses, minus the
-  // first-product fallback (no DB call needed just for a title — if no
-  // explicit signal is in the URL, default to "Diamonds").
   const isWatch =
     sp.category === "watches" ||
     (!sp.category && WATCH_FILTER_PARAMS.some((k) => sp[k]));
-  // Metadata runs before any DB query, so there's no product to check
-  // productKind on yet — approximate off the category slug instead.
   const isAlternative = /alternative|moissanite|simulat|\bcz\b/i.test(sp.category || "");
   const isJewelry = /jewel/i.test(sp.category || "");
   const isGemstone = /gem|precious|special/i.test(sp.category || "");
@@ -110,9 +93,6 @@ export async function generateMetadata({
           ? "Shop natural gemstones at Alpha Gemstone."
           : "Shop diamonds at Alpha Gemstone, with lab reports on applicable stones.";
 
-  // Build the canonical URL from only the core taxonomy params, in a fixed
-  // order, so /products?category=diamonds&subcategory=round and
-  // /products?subcategory=round&category=diamonds canonicalize identically.
   const coreQuery = new URLSearchParams();
   for (const key of CORE_PARAMS) {
     if (sp[key]) coreQuery.set(key, sp[key]);
@@ -122,8 +102,6 @@ export async function generateMetadata({
     ? `${SITE_URL}/products?${coreQueryString}`
     : `${SITE_URL}/products`;
 
-  // Any param outside the core set (a facet, a sort, a search term, page
-  // beyond 1) makes this a filtered view worth crawling but not indexing.
   const hasNonCoreParams = Object.keys(sp).some(
     (key) => !(CORE_PARAMS as readonly string[]).includes(key) && sp[key],
   );
@@ -145,6 +123,69 @@ export async function generateMetadata({
     twitter: { card: "summary_large_image", title, description },
   };
 }
+
+// Fields the classic card + its Quick View modal read. Picking them keeps the
+// RSC payload small and turns ObjectIds / Dates into plain JSON.
+const CARD_FIELDS = [
+  "_id", "slug", "name", "price", "msrp", "description", "legacySku", "images", "stock",
+  "shape", "size", "color", "clarity", "certification", "gemstoneName", "productKind",
+  "shapeRaw", "colorRaw", "clarityRaw", "gradeRaw",
+  "watchBrand", "watchModel", "watchMovement", "watchGender", "watchStyle",
+  "watchCaseMaterial", "watchDialColor", "watchStrapType", "watchCaseSize", "watchFeatures",
+  "legacyAttributes", "cutType", "luster", "hardness", "treatment", "origin",
+  "caratWeight", "dimensions", "approxWeight", "numberOfStones", "weight",
+  "manufacturerId", "minOrder", "makeAnOffer", "category", "subcategory",
+] as const;
+
+function serializeProduct(p: Record<string, unknown>) {
+  const picked: Record<string, unknown> = {};
+  for (const k of CARD_FIELDS) if (p[k] !== undefined) picked[k] = p[k];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return JSON.parse(JSON.stringify(picked)) as any;
+}
+
+function prettySlug(slug?: string) {
+  return (slug || "").replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Names, description and sibling subcategories for the current listing. */
+async function getListingInfo(categorySlug?: string, subSlug?: string) {
+  const nav = await getNavCategories();
+  const cat = nav.find((c) => c.slug === categorySlug);
+  const sub = cat?.subcategories.find((s) => s.slug === subSlug);
+
+  let description = "";
+  try {
+    if (sub && !sub._id.startsWith("virtual-")) {
+      const doc = (await SubcategoryModel.findById(sub._id).select("description").lean()) as
+        | { description?: string }
+        | null;
+      description = doc?.description ?? "";
+    }
+    if (!description && cat) {
+      const doc = (await CategoryModel.findById(cat._id).select("description").lean()) as
+        | { description?: string }
+        | null;
+      description = doc?.description ?? "";
+    }
+  } catch {
+    /* description is optional */
+  }
+
+  return {
+    categoryName: cat?.name ?? prettySlug(categorySlug),
+    subName: sub?.name ?? (subSlug ? prettySlug(subSlug) : ""),
+    description,
+    siblings: (cat?.subcategories ?? []).map((s) => ({
+      name: s.name,
+      slug: s.slug,
+      href: s.hasChildren
+        ? `/category/${cat!.slug}/${s.slug}`
+        : `/products?category=${cat!.slug}&subcategory=${s.slug}`,
+    })),
+  };
+}
+
 export default async function ProductsPage({ searchParams }: PageProps) {
   await connectDB();
 
@@ -181,185 +222,126 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     limit:              24,
   };
 
-  // Only the product list is awaited here. It's a single indexed query
-  // capped at `limit` (24), so it resolves quickly and lets the page start
-  // streaming right away. Facets (the ~10-16-branch aggregation) used to be
-  // awaited in the same Promise.all, which meant the route's loading.tsx
-  // full-page skeleton stayed up until BOTH finished — in practice, until
-  // the much slower facets query finished. That work now happens inside
-  // <FacetedFilterBar>, in its own Suspense boundary below.
-  // CSV-driven, category-specific filters (final_category_filters.csv) —
-  // only meaningfully scoped once a subcategory (or category) is selected,
-  // but harmless/no-op otherwise since getApplicableFilterDefinitions
-  // returns [] with no category/subcategory in scope.
   const categorySelection = parseCategoryFilterSelectionFromObject(sp);
-  const { products, total, page, limit, categoryFilters } =
-    await listProductsWithCategoryFilters(params, categorySelection);
+
+  // Product list, page info and the "New Products" strip run in parallel.
+  const [{ products, total, page, limit, categoryFilters }, info, newest] = await Promise.all([
+    listProductsWithCategoryFilters(params, categorySelection),
+    getListingInfo(sp.category, sp.subcategory),
+    listProducts({
+      category: sp.category,
+      subcategory: sp.subcategory,
+      subSubcategory: sp.subSubcategory,
+      sortBy: "newest",
+      page: 1,
+      limit: 3,
+    }).catch(() => ({ products: [] as Record<string, unknown>[] })),
+  ]);
 
   const totalPages = Math.ceil(total / limit);
-
-  // Robust product type resolution — URL params take priority over data
   const productType = resolveProductType(sp, products[0] as Record<string, unknown> | undefined);
+
+  const query = sp.q ?? sp.search;
+  const firstProduct = products[0] as Record<string, unknown> | undefined;
+  const subSubName = (firstProduct?.subSubcategory as { name?: string } | undefined)?.name;
+  const fallbackTitle =
+    productType === "watch" ? "Timepieces" : productType === "gemstone" ? "Gemstones" : "Diamonds";
+  const title =
+    (sp.subSubcategory && subSubName) ||
+    info.subName ||
+    (sp.category ? info.categoryName : "") ||
+    (query ? `Search results for "${query}"` : fallbackTitle);
+
+  const month = new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "America/New_York" }).format(new Date());
+  const newProducts = (newest.products as Record<string, unknown>[]).map(serializeProduct);
 
   return (
     <>
-      <style>{`
-        
+      <style>{CLASSIC_LISTING_CSS}</style>
+      {/* Styles for the Quick View modal the classic cards open. */}
+      <ProductCardStyles />
 
-        body, .products-page *:not(.pc6, .pc6 *) { font-family: 'Elms Sans', sans-serif !important; }
-      `}</style>
+      <div className="cl">
+        <ClassicSidebar activeCategorySlug={sp.category} activeSubSlug={sp.subcategory} />
 
-      <div
-        className="products-page min-h-screen bg-[#ffffff]"
-        style={{ fontFamily: "'Elms Sans', sans-serif" }}
-      >
-        {/* ── Top accent line ── */}
-        <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#B8975A] to-transparent" />
+        <main className="cl-main">
+          <h1 className="cl-title-sm">{title}</h1>
 
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+          {info.description ? (
+            looksLikeHtml(info.description) ? (
+              // Admin-written rich text (e.g. pasted from Word), cleaned server-side.
+              <div
+                className="cl-desc cl-desc-html"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(info.description) }}
+              />
+            ) : (
+              <div className="cl-desc">
+                {info.description.split(/\n{2,}/).map((para, i) => (
+                  <p key={i}>{para}</p>
+                ))}
+              </div>
+            )
+          ) : null}
 
-          {/* ── Filter bar: horizontal, sticky, shown on every screen size ──
-              Watches only — diamonds/gemstones use the CSV-driven
-              DynamicCategoryFilters dropdown bar above the grid instead,
-              so there's nothing to render (and no facets query to run)
-              for those product types. */}
+          <div className="cl-headbar">
+            <ShareButton title={title} />
+            <span className="cl-title-lg">{title}</span>
+          </div>
+
+          {/* Watches keep their faceted filter bar (brand, movement, ...). */}
           {productType === "watch" && (
-            <div className="-mx-4 sm:-mx-8 mb-8">
-              <Suspense fallback={<SidebarSkeleton />}>
+            <div className="cl-watch-filters">
+              <Suspense fallback={<div className="cl-skel" />}>
                 <FacetedFilterBar params={params} productType={productType} />
               </Suspense>
             </div>
           )}
 
-          <main className="min-w-0">
+          <ClassicFilterPanel
+            groups={categoryFilters}
+            subcategories={info.siblings}
+            activeSubSlug={sp.subcategory}
+            currentSort={sp.sortBy}
+          />
 
-              {/* Page heading */}
-              <div className="mb-6 pb-5 border-b border-[#EDE3D0] flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-                <div>
-                  <h1
-                    className="text-3xl sm:text-4xl font-normal text-[#1A1612] leading-tight"
-                    style={{ fontFamily: '"Elms Sans", sans-serif' }}
-                  >
-                    {productType === "watch" ? "Timepieces" : productType === "gemstone" ? "Gemstones" : "Diamonds"}
-                  </h1>
-                  <p className="mt-1.5 text-[10px] tracking-[0.25em] uppercase text-[#B8975A] font-medium">
-                    {(() => {
-                      // If a sub-subcategory ("type") is in scope, surface its
-                      // resolved name (from the populated field on the first
-                      // matched product) instead of the generic tagline —
-                      // confirms to the shopper the exact type they drilled
-                      // into (e.g. "Oval Tanzanite").
-                      const firstProduct = products[0] as Record<string, unknown> | undefined;
-                      const subSubName = (firstProduct?.subSubcategory as { name?: string } | undefined)?.name;
-                      if (sp.subSubcategory && subSubName) return subSubName;
-                      return productType === "watch"
-                        ? "Exceptional horological craftsmanship"
-                        : productType === "gemstone"
-                          ? "Natural gemstones"
-                          : "Certification available on applicable stones";
-                    })()}
-                  </p>
-                </div>
+          <ActiveFilterChips searchParams={sp} />
 
-                <SortBar
-                  total={total}
-                  currentSort={sp.sortBy}
-                  query={sp.q ?? sp.search}
-                />
+          <section className="cl-results" aria-label="Products">
+            <ClassicResultsBar page={page} totalPages={totalPages} total={total} limit={limit} searchParams={sp} />
+
+            {products.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="cl-grid">
+                {products.map((p: Record<string, unknown>) => {
+                  const product = serializeProduct(p);
+                  return <ClassicProductCard key={product._id} product={product} productType={productType} />;
+                })}
               </div>
+            )}
 
-              {/* ── CSV-driven category filters (final_category_filters.csv) ──
-                  Horizontal dropdown bar shown above the grid — only
-                  renders once a category/subcategory is in scope and has
-                  applicable filter definitions — empty otherwise. */}
-              {categoryFilters.length > 0 && (
-                <DynamicCategoryFilters groups={categoryFilters} />
-              )}
+            {products.length > 0 && (
+              <ClassicResultsBar page={page} totalPages={totalPages} total={total} limit={limit} searchParams={sp} />
+            )}
+          </section>
 
-              {/* Active filter chips */}
-              <ActiveFilterChips searchParams={sp} />
-
-              {/* Products grid or empty state */}
-              {products.length === 0 ? (
-                <EmptyState />
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-                    {products.map((p: Record<string, unknown>) => {
-                      const serialized = {
-                        _id:               String(p._id),
-                        name:              p.name              as string,
-                        price:             p.price             as number,
-                        // gem / diamond fields
-                        shape:             p.shape             as string | string[] | undefined,
-                        size:              p.size              as number | undefined,
-                        color:             p.color             as string | string[] | undefined,
-                        clarity:           p.clarity           as string | string[] | undefined,
-                        certification:     p.certification     as string | string[] | undefined,
-                        gemstoneName:      p.gemstoneName      as string | undefined,
-                        shapeRaw:          p.shapeRaw          as string | undefined,
-                        colorRaw:          p.colorRaw          as string | undefined,
-                        clarityRaw:        p.clarityRaw        as string | undefined,
-                        gradeRaw:          p.gradeRaw          as string | undefined,
-                        // watch fields
-                        watchBrand:        p.watchBrand        as string | undefined,
-                        watchModel:        p.watchModel        as string | undefined,
-                        watchMovement:     p.watchMovement     as string | undefined,
-                        watchGender:       p.watchGender       as string | undefined,
-                        watchStyle:        p.watchStyle        as string | undefined,
-                        watchCaseMaterial: p.watchCaseMaterial as string | undefined,
-                        watchDialColor:    p.watchDialColor    as string | undefined,
-                        watchStrapType:    p.watchStrapType    as string | undefined,
-                        watchCaseSize:     p.watchCaseSize     as string | undefined,
-                        watchFeatures:     p.watchFeatures     as string[] | undefined,
-                        images:            p.images            as string[],
-                        stock:             p.stock             as number,
-                      };
-                      return (
-                        <ProductCard
-                          key={serialized._id}
-                          product={serialized}
-                          productType={productType}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-12 sm:mt-16">
-                    <Pagination page={page} totalPages={totalPages} searchParams={sp} />
-                  </div>
-                </>
-              )}
-          </main>
-        </div>
-
-        {/* ── Bottom accent line ── */}
-        <div className="h-px w-full bg-[#EDE3D0] mt-12" />
-        <div className="max-w-screen-2xl mx-auto px-8 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 bg-[#B8975A] rotate-45 rounded-[1px]" />
-            <span
-              className="text-[11px] tracking-[0.2em] uppercase text-[#8A7F72]"
-              style={{ fontFamily: '"Elms Sans", sans-serif' }}
-            >
-              Alpha Gemstone
-            </span>
-          </div>
-          <p className="text-[10px] tracking-[0.15em] uppercase text-[#C4B8A8]">
-            Free insured shipping on all orders
-          </p>
-        </div>
+          {newProducts.length > 0 && (
+            <section className="cl-new" aria-label={`New products for ${month}`}>
+              <h2 className="cl-new-head">New Products For {month}</h2>
+              <div className="cl-grid cl-grid-new">
+                {newProducts.map((p) => (
+                  <ClassicProductCard key={p._id} product={p} productType={productType} compact />
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
       </div>
     </>
   );
 }
 
-// ─── Faceted filter bar ────────────────────────────────────────────────────────
-// Dedicated async Server Component so the (comparatively expensive) facets
-// aggregation runs behind its own Suspense boundary instead of blocking the
-// whole page. Next streams this in as soon as it resolves; everything else
-// on the page — the product grid, pagination, etc. — is already visible by
-// then since it only depended on the fast listProducts() query.
+// ─── Faceted filter bar (watches only) ────────────────────────────────────────
 async function FacetedFilterBar({
   params,
   productType,
@@ -367,9 +349,6 @@ async function FacetedFilterBar({
   params: ProductFilterParams;
   productType: ProductType;
 }) {
-  // Only called for watches now — see the productType === "watch" guard
-  // around its call site above. Diamonds/gemstones use the CSV-driven
-  // DynamicCategoryFilters panel instead of a facets dropdown bar.
   const facets = await getProductFacets(params, productType);
   return <FilterBar productType={productType} facets={facets} />;
 }
@@ -390,93 +369,189 @@ function ActiveFilterChips({ searchParams }: { searchParams: Record<string, stri
     "inStock",
   ];
 
-  // De-dupe: prefer the watch-prefixed key if both are present
   const seen = new Set<string>();
-  const chips: { key: string; label: string }[] = [];
+  const chips: string[] = [];
 
   chipKeys.forEach((key) => {
     const val = searchParams[key];
     if (!val) return;
     val.split(",").filter(Boolean).forEach((v) => {
-      const dedupeKey = `${v.toLowerCase()}`;
-      if (seen.has(dedupeKey)) return;
-      seen.add(dedupeKey);
-      chips.push({ key, label: key === "inStock" ? "In Stock" : v });
+      if (seen.has(v.toLowerCase())) return;
+      seen.add(v.toLowerCase());
+      chips.push(key === "inStock" ? "In Stock" : v);
     });
+  });
+
+  // CSV category filters: filter[SHAPE]=Marquise,Pear
+  Object.entries(searchParams).forEach(([key, val]) => {
+    const m = key.match(/^filter\[(.+)\]$/);
+    if (!m || !val) return;
+    chips.push(`${m[1]}: ${val.split(",").join(", ")}`);
   });
 
   if (searchParams.priceMin || searchParams.priceMax) {
     const min = searchParams.priceMin ? `$${Number(searchParams.priceMin).toLocaleString()}` : "";
     const max = searchParams.priceMax ? `$${Number(searchParams.priceMax).toLocaleString()}` : "";
-    chips.push({ key: "price", label: min && max ? `${min} – ${max}` : min || `Under ${max}` });
+    chips.push(min && max ? `${min} – ${max}` : min || `Under ${max}`);
   }
 
   if (searchParams.sizeMin || searchParams.sizeMax) {
-    const label = [
-      searchParams.sizeMin && `${searchParams.sizeMin}ct`,
-      searchParams.sizeMax && `${searchParams.sizeMax}ct`,
-    ].filter(Boolean).join(" – ");
-    chips.push({ key: "size", label });
+    chips.push(
+      [searchParams.sizeMin && `${searchParams.sizeMin}ct`, searchParams.sizeMax && `${searchParams.sizeMax}ct`]
+        .filter(Boolean)
+        .join(" – "),
+    );
   }
 
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2 mb-5">
-      {chips.map((chip, i) => (
-        <span
-          key={`${chip.key}-${chip.label}-${i}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium tracking-wide bg-[#F5EDD6] text-[#8A6C38] border border-[#D4C4A0]"
-          style={{ fontFamily: '"Elms Sans", sans-serif' }}
-        >
-          {chip.label}
-        </span>
-      ))}
-    </div>
+    <p className="cl-chips">
+      <b>Filtered by:</b> {chips.join(" · ")}
+    </p>
   );
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-28 sm:py-40 text-center">
-      <div className="mb-6 relative">
-        <div className="w-16 h-16 border border-[#EDE3D0] rounded-2xl flex items-center justify-center bg-white shadow-[0_2px_16px_rgba(184,151,90,0.06)]">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#D4C4A0]">
-            <path d="M12 22L3 10l2.5-6h13L21 10z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-            <path d="M3 10h18M12 22L8 10l4-6 4 6z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round"/>
-          </svg>
-        </div>
-        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#B8975A] rotate-45 rounded-[2px] opacity-60" />
-      </div>
-      <p
-        className="text-lg font-normal text-[#1A1612] mb-2"
-        style={{ fontFamily: '"Elms Sans", sans-serif' }}
-      >
-        No results found
-      </p>
-      <p className="text-[11px] tracking-[0.2em] uppercase font-medium text-[#C4B8A8] mb-6">
-        Try adjusting your filters
-      </p>
-      <div className="w-12 h-px bg-[#D4C4A0]" />
+    <div className="cl-empty">
+      <p><b>No products found.</b></p>
+      <p>Try a different choice in the filters above, or click <b>Reset Search</b>.</p>
     </div>
   );
 }
 
-// ─── Sidebar skeleton ─────────────────────────────────────────────────────────
-function SidebarSkeleton() {
-  return (
-    <div className="space-y-4 animate-pulse">
-      <div className="h-4 bg-neutral-200 rounded w-3/4 mx-auto" />
-      <div className="h-8 bg-neutral-100 rounded-lg" />
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="space-y-2 pt-3 border-t border-neutral-100">
-          <div className="h-3 bg-neutral-200 rounded w-1/2" />
-          <div className="h-2.5 bg-neutral-100 rounded w-3/4" />
-          <div className="h-2.5 bg-neutral-100 rounded w-2/3" />
-          <div className="h-2.5 bg-neutral-100 rounded w-4/5" />
-        </div>
-      ))}
-    </div>
-  );
-}
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const CLASSIC_LISTING_CSS = `
+  .cl {
+    font-family: Verdana, Geneva, Tahoma, sans-serif; font-size: 11px; color: #000; background: #fff;
+    display: grid; grid-template-columns: 175px minmax(0, 1fr); gap: 14px;
+    padding: 6px 24px 30px; align-items: start;
+  }
+  .cl a { text-decoration: none; }
+  .cl-main { min-width: 0; }
+  .cl-title-sm { font-size: 11px; font-weight: bold; color: #7f7f7f; margin: 4px 0 12px; }
+    .cl-desc { color: #878790; font-size: 11px; line-height: 16px; margin-bottom: 18px; max-width: none; width: 100%; }
+  .cl-desc p { margin: 0 0 10px; }
+    .cl-desc b, .cl-desc strong { color: #000; }
+  /* Rich-text descriptions keep their own inline colours/sizes (old-site copy
+     uses grey text with navy keywords); just normalise the spacing. */
+  .cl-desc-html p { margin: 0 0 12px; }
+  .cl-desc-html p:last-child { margin-bottom: 0; }
+  .cl-desc-html a { color: #000066; text-decoration: underline; }
+  .cl-desc-html ul, .cl-desc-html ol { margin: 0 0 12px 20px; }
+
+  .cl-headbar {
+    display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+    border-top: 2px solid #bbb; padding-top: 4px; margin-bottom: 2px;
+  }
+  .cl-title-lg { color: #a6aec5; font: bold 15px Verdana, Geneva, sans-serif; }
+  .csh {
+    display: inline-flex; align-items: center; gap: 4px; background: #fff; cursor: pointer;
+    border: 1px solid #999; padding: 0 6px; height: 16px; font: bold 9px Verdana, sans-serif; letter-spacing: 1px; color: #333;
+  }
+  .csh-plus { background: #f60; color: #fff; width: 10px; height: 10px; line-height: 10px; text-align: center; font-size: 10px; }
+  .csh:hover { border-color: #003366; }
+
+  .cl-watch-filters { margin-bottom: 6px; }
+  .cl-skel { height: 40px; background: #eef0f5; }
+
+  /* Quick View modal is portaled to <body>, outside .apc, so give it the
+     card's colour variables too. */
+  .apc-qv-overlay {
+    --paper: #ffffff; --paper-soft: #fafaf9; --ink: #1a1a1c; --ink-soft: #4a4a50; --muted: #9a9aa0;
+    --line: #ebebea; --line-strong: #d4d4d2; --accent: #b08d4a; --accent-soft: #f7f2e8;
+    --oxblood: #9c3b45; --avail: #2d7a52;
+  }
+
+  /* Filter panel */
+  .cfp { background: #dfe2ea; border: 1px solid #a6aec5; padding: 10px 12px 12px; transition: opacity .15s; }
+  .cfp.is-pending { opacity: .6; }
+  .cfp-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding-top: 6px; }
+  .cfp-cat { display: flex; flex-direction: column; gap: 1px; }
+  .cfp-cat span { color: #7f7f7f; font-size: 12px; }
+  .cfp select {
+    font: 11px Verdana, Geneva, sans-serif; color: #000; background: #fff;
+    border: 1px solid #333; height: 18px; padding: 0 2px; border-radius: 0;
+  }
+  .cfp-cat select { width: 210px; }
+  .cfp-reset {
+    background: #c9cedc; border: 1px solid #7f8aa8; color: #555; cursor: pointer;
+    font: 11px Verdana, Geneva, sans-serif; padding: 2px 10px; margin-right: 40px; word-spacing: 4px;
+  }
+  .cfp-reset:hover:not(:disabled) { color: #000; border-color: #003366; }
+  .cfp-reset:disabled { cursor: default; }
+  .cfp-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 180px)); gap: 6px 10px; margin-top: 10px; }
+  .cfp-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .cfp-group > span { color: #8a8a8a; font-size: 10px; text-transform: uppercase; display: flex; gap: 6px; }
+  .cfp-group select { width: 100%; }
+  .cfp-clear { background: none; border: 0; padding: 0; cursor: pointer; color: #003366; font-size: 9px; text-transform: none; text-decoration: underline; }
+  .cfp-sort { margin: 4px 0 2px; }
+  .cfp-sort label { display: inline-flex; align-items: center; gap: 8px; }
+  .cfp-sort span { color: #7f7f7f; font: bold 13px Verdana, Geneva, sans-serif; }
+  .cfp-sort select { font: 11px Verdana, Geneva, sans-serif; border: 1px solid #333; height: 18px; width: 145px; border-radius: 0; }
+
+  .cl-chips { color: #555; font-size: 10px; margin: 4px 0; }
+
+  /* Results frame */
+  .cl-results { border: 1px solid #a6aec5; padding: 6px 6px 8px; }
+  .crb { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 4px 2px 6px; color: #7f7f7f; font-size: 10px; }
+  .crb b { color: #333; }
+  .crb-pages { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .crb-pages a { color: #0000ee; text-decoration: underline !important; }
+  .crb-pages a:hover { color: #003366; }
+
+  .cl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid #a6aec5; padding: 14px 4px 6px; row-gap: 18px; }
+  .cl-empty { border: 1px solid #a6aec5; padding: 30px 12px; text-align: center; color: #7f7f7f; line-height: 18px; }
+
+  /* Product tile */
+  .cpc { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 6px; min-width: 0; }
+  .cpc-img { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 150px; aspect-ratio: 1; margin-bottom: 4px; }
+  .cpc-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .cpc.is-out .cpc-img img { opacity: .55; }
+  .cpc-sku { color: #888; font-size: 10px; line-height: 13px; }
+  .cpc-name { color: #cc6633; font-size: 10px; line-height: 13px; }
+  .cpc-name:hover { text-decoration: underline !important; }
+  .cpc-price { color: #555; font-size: 10px; line-height: 13px; }
+  .cpc-price s { color: #990000; margin-right: 5px; }
+  .cpc-price em { color: #990000; font-style: normal; }
+  .cpc-stock { font-size: 10px; font-weight: bold; }
+  .cpc-stock.low { color: #c75000; }
+  .cpc-stock.out { color: #990000; }
+  .cpc-buy {
+    margin-top: 3px; background: #ccd6e3; border: 1px solid #7f8aa8; color: #333; cursor: pointer;
+    font: 10px Verdana, Geneva, sans-serif; padding: 1px 10px; min-width: 64px;
+  }
+  .cpc-buy:hover:not(:disabled) { background: #b8c5d8; color: #000; }
+  .cpc-buy:disabled { opacity: .6; cursor: default; }
+  .cpc-actions { display: flex; gap: 5px; margin-top: 3px; font-size: 9px; color: #aaa; }
+  .cpc-actions button { background: none; border: 0; padding: 0; cursor: pointer; font: 9px Verdana, Geneva, sans-serif; color: #7f7f7f; }
+  .cpc-actions button:hover { color: #003366; text-decoration: underline; }
+  .cpc-actions .is-saved { color: #cc3333; }
+  .cpc-compact .cpc-name, .cpc-compact .cpc-price { color: #7f7f7f; }
+
+  /* New products */
+  .cl-new { margin-top: 30px; border: 1px solid #a6aec5; }
+  .cl-new-head {
+    margin: 0; padding: 6px 22px 7px; color: #fff; font: bold 11px Verdana, Geneva, sans-serif;
+    font-variant: small-caps; letter-spacing: .3px;
+    background: linear-gradient(to bottom, #7d90c5 0, #bec9e4 2px, #a9b4d3 100%);
+  }
+  .cl-grid-new { border: 0; padding: 20px 4px 14px; }
+
+  @media (max-width: 900px) {
+    .cl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .cl { grid-template-columns: minmax(0, 1fr); padding: 6px 8px 20px; }
+    .cl-desc, .crb { font-size: 12px; line-height: 17px; }
+    .cfp-cat select { width: 100%; }
+    .cfp-reset { margin-right: 0; }
+    .cfp select, .cfp-sort select { height: 30px; font-size: 14px; }
+    .cfp-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cpc-name, .cpc-price, .cpc-sku { font-size: 12px; line-height: 16px; }
+    .cpc-buy { padding: 6px 14px; font-size: 12px; }
+    .cpc-actions, .cpc-actions button { font-size: 11px; }
+  }
+`;
