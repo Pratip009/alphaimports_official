@@ -3,6 +3,7 @@ import AlphaImportsSection from '@/components/ui/AlphaImportsSection'
 import FAQSection from '@/components/ui/FAQSection'
 import FoundersMessage from '@/components/ui/Foundersmessage'
 import React from 'react'
+import ClassicPageShell from '@/components/ui/ClassicPageShell'
 import type { Metadata } from "next";
 
 const SITE_URL =
@@ -27,12 +28,12 @@ export const metadata: Metadata = {
 
 const page = () => {
   return (
-    <>
-    <AboutBanner/>
-    <AlphaImportsSection/>
-    <FoundersMessage/>
-    <FAQSection/>
-    </>
+    <ClassicPageShell withSiteChrome={false}>
+      <AboutBanner />
+      <AlphaImportsSection />
+      <FoundersMessage />
+      <FAQSection />
+    </ClassicPageShell>
   )
 }
 

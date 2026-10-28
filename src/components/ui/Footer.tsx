@@ -1,18 +1,9 @@
 "use client";
-import {
-  Gem,
-  Mail,
-  Phone,
-  MapPin,
-  ArrowUpRight,
-  Heart,
-  Loader2,
-  CheckCircle2,
-} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import FooterSitemap from "../sitemap/FooterSitemap";
 import Image from "next/image";
+
 const FOOTER_COLUMNS = [
   {
     title: "Help & Policies",
@@ -129,6 +120,85 @@ const FOOTER_COLUMNS = [
 
 const DISCLAIMER = `All our colored gemstones & Color Diamonds, except Tsavorite, Garnet etc., are "E" (Enhanced) and/or "T" (Treated). Enhancement methods may include heating, oiling, filling with resin agents, coating, diffusion, dyeing, glass filling, irradiation, and lasering. All Diamond weights shown in fractions are approximate: ¼ ct. (0.23–0.27), ⅓ ct. (0.31–0.35), ½ ct. (0.48–0.52), ¾ ct. (0.73–0.77). Products shown are subject to availability. Alphaimports.com is not responsible for typographical or pricing errors.`;
 
+const FOOTER_CSS = `
+  @keyframes ftSpin { to { transform: rotate(360deg); } }
+  .ft { margin-top: 24px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; color: #6b6b6b; background: #fff; }
+  .ft *, .ft *::before, .ft *::after { box-sizing: border-box; }
+  .ft p { margin: 0; }
+  .ft-inner { padding: 0 24px; }
+  .ft-rule { border: 0; border-top: 2px solid #1c4874; margin: 0; }
+
+  .ft-top { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; padding: 14px 0; }
+  .ft-brand { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .ft-logo { display: block; width: 220px; height: auto; max-width: 100%; }
+  .ft-brand-lines { line-height: 1.8; color: #555; border-left: 1px solid #c9cfdf; padding-left: 14px; }
+  .ft-brand-lines b { color: #1c4874; }
+
+  .ft-panel { border: 1px solid #a9b3cf; border-top-right-radius: 8px; background: #e8ebf3; }
+  .ft-panel-head { background: #a9b3cf; color: #fff; font-weight: bold; padding: 3px 10px; border-top-right-radius: 7px; }
+  .ft-panel-body { padding: 8px 10px 10px; }
+  .ft-news-row { display: flex; gap: 6px; margin-top: 6px; }
+  .ft-input {
+    flex: 1; min-width: 0; height: 22px; padding: 0 5px;
+    border: 1px solid #333; border-radius: 0; background: #fff;
+    font: inherit; font-size: 11px; color: #000;
+  }
+  .ft-input:focus { outline: 1px solid #1c4874; border-color: #1c4874; }
+  .ft-input:disabled { background: #f4f5f9; }
+  .ft-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 54px; height: 22px; padding: 0 12px;
+    background: #c8102e; border: 1px solid #8f0a20; color: #fff; border-radius: 0;
+    font: inherit; font-size: 11px; font-weight: bold; cursor: pointer;
+  }
+  .ft-btn:hover:not(:disabled) { background: #a90d27; }
+  .ft-btn:disabled { opacity: .7; cursor: default; }
+  .ft-spinner { width: 11px; height: 11px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: ftSpin .7s linear infinite; }
+  .ft-ok { color: #1d5e1d; font-weight: bold; padding: 4px 0; }
+  .ft-warn { color: #6b5200; margin-top: 4px !important; }
+  .ft-err { color: #b00000; margin-top: 4px !important; }
+
+  .ft-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #a9b3cf; }
+  .ft-col { border-left: 1px solid #a9b3cf; background: #f4f5f9; }
+  .ft-col:first-child { border-left: 0; }
+  .ft-col-head {
+    background: linear-gradient(to bottom, #164472 0px, #0d3b6c 3px, #2b547e 100%);
+    color: #fff; font-weight: bold; font-variant: small-caps; letter-spacing: .3px; padding: 4px 10px;
+    margin: 0; font-size: 11px;
+  }
+  .ft-col ul { list-style: none; margin: 0; padding: 5px 10px 8px; }
+  .ft-col a { display: block; line-height: 1.8; color: #555; text-decoration: none; }
+  .ft-col a:hover { color: #1c4874; text-decoration: underline; }
+
+  .ft-disc { padding: 10px 0; line-height: 1.6; font-size: 10px; color: #8a8a8a; }
+  .ft-disc b { color: #333; }
+  .ft-more { background: none; border: 0; padding: 0; font: inherit; font-size: 10px; color: #1c4874; font-weight: bold; text-decoration: underline; cursor: pointer; }
+
+  .ft-bar { background: #dfe2ea; border-top: 1px solid #a9b3cf; }
+  .ft-bar-inner { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 24px; }
+  .ft-copy { color: #000; font-weight: bold; }
+  .ft-bar-links { display: flex; align-items: center; gap: 6px; }
+  .ft-bar-links span { color: #8a8a8a; }
+  .ft-bar-links button { background: none; border: 0; padding: 0; font: inherit; font-size: 11px; color: #000; font-weight: bold; cursor: pointer; }
+  .ft-bar-links button:hover { text-decoration: underline; }
+  .ft-made { color: #555; }
+  .ft-made b { color: #c8102e; }
+
+  @media (max-width: 900px) {
+    .ft-top { grid-template-columns: 1fr; }
+    .ft-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ft-col:nth-child(3) { border-left: 0; }
+    .ft-col:nth-child(n+3) { border-top: 1px solid #a9b3cf; }
+    .ft-inner, .ft-bar-inner { padding-left: 14px; padding-right: 14px; }
+  }
+  @media (max-width: 480px) {
+    .ft-cols { grid-template-columns: 1fr; }
+    .ft-col { border-left: 0 !important; }
+    .ft-col:nth-child(n+2) { border-top: 1px solid #a9b3cf; }
+    .ft-input, .ft-btn { height: 30px; font-size: 13px; }
+    .ft-bar-inner { justify-content: center; text-align: center; }
+  }
+`;
+
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [subState, setSubState] = useState<
@@ -159,117 +229,52 @@ export default function Footer() {
     }
   };
   return (
-    <footer
-      className="relative mt-24 overflow-hidden"
-      style={{ background: "#ffffff" }}
-    >
-      {/* Top accent line */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[2px]"
-        style={{
-          background:
-            "linear-gradient(90deg, transparent 0%, #c9a84c 30%, #e8d5a0 50%, #c9a84c 70%, transparent 100%)",
-        }}
-      />
+    <footer className="ft">
+      <style>{FOOTER_CSS}</style>
+      <hr className="ft-rule" />
 
-      {/* Subtle grid texture */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(#c9a84c08 1px, transparent 1px), linear-gradient(90deg, #c9a84c08 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      {/* Large watermark gem */}
-      <div
-        className="absolute -bottom-8 -right-8 pointer-events-none select-none font-serif leading-none"
-        style={{ fontSize: "220px", color: "#c9a84c", opacity: 0.04 }}
-      >
-        ◆
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-10">
+      <div className="ft-inner">
         {/* ── Brand + Newsletter ── */}
-        <div
-          className="flex flex-col lg:flex-row lg:items-end justify-between gap-10 pb-12 border-b"
-          style={{ borderColor: "#e8e2d9" }}
-        >
-          {/* Brand */}
-          <div>
-            <Link href="/" className="nav-logo mb-3">
+        <div className="ft-top">
+          <div className="ft-brand">
+            <Link href="/" className="nav-logo">
               <Image
-                src="/logo/new3.png"
-                alt="Alpha Gemstones Logo"
-                width={150}
-                height={50}
-                className="w-auto h-auto"
+                src="/images/logo.png"
+                alt="Alphaimports.com — Lowest prices on the planet"
+                width={220}
+                height={52}
+                className="ft-logo"
                 priority
               />
             </Link>
-            <div className="flex flex-col gap-2">
+            <div className="ft-brand-lines">
               {[
-                { icon: Phone, text: "Customer Service Center" },
-                { icon: MapPin, text: "New York, NY" },
-                { icon: Mail, text: "Contact via Help Center" },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-2.5">
-                  <Icon
-                    size={11}
-                    strokeWidth={2}
-                    style={{ color: "#c9a84c" }}
-                  />
-                  <span
-                    className="text-[0.72rem] font-medium"
-                    style={{ color: "#3a3530" }}
-                  >
-                    {text}
-                  </span>
-                </div>
+                { label: "Phone:", text: "Customer Service Center" },
+                { label: "Address:", text: "New York, NY" },
+                { label: "E-Mail:", text: "Contact via Help Center" },
+              ].map(({ label, text }) => (
+                <p key={text}>
+                  <b>{label}</b> {text}
+                </p>
               ))}
             </div>
           </div>
 
           {/* Newsletter */}
-          <div className="lg:max-w-sm w-full">
-            <div
-              className="rounded-2xl p-6"
-              style={{
-                background: "#fff",
-                border: "1px solid #e8e2d9",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.05)",
-              }}
-            >
-              <p
-                className="text-[0.6rem] tracking-[0.25em] uppercase font-bold mb-1"
-                style={{ color: "#8a6e2a" }}
-              >
-                Alpha Club &amp; Newsletter
-              </p>
-              <p
-                className="text-[0.78rem] font-medium mb-4"
-                style={{ color: "#1a1714" }}
-              >
-                Exclusive deals &amp; early access to new gems.
-              </p>
+          <div className="ft-panel">
+            <div className="ft-panel-head">Alpha Club &amp; Newsletter</div>
+            <div className="ft-panel-body">
+              <p>Exclusive deals &amp; early access to new gems.</p>
 
               {subState === "success" ? (
-                <div className="flex items-center gap-2 py-2.5">
-                  <CheckCircle2 size={16} style={{ color: "#16a34a" }} />
-                  <span
-                    className="text-[0.72rem] font-medium"
-                    style={{ color: "#16a34a" }}
-                  >
-                    You&apos;re subscribed. Welcome!
-                  </span>
-                </div>
+                <p className="ft-ok">✓ You&apos;re subscribed. Welcome!</p>
               ) : (
                 <>
-                  <div className="flex gap-2">
+                  <div className="ft-news-row">
                     <input
                       type="email"
                       placeholder="your@email.com"
+                      aria-label="Email address"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
@@ -277,47 +282,25 @@ export default function Footer() {
                       }}
                       onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
                       disabled={subState === "loading"}
-                      className="flex-1 px-3 py-2.5 text-[0.72rem] rounded-lg outline-none transition-all"
-                      style={{
-                        background: "#faf8f4",
-                        border: "1.5px solid #e0dbd2",
-                        color: "#1a1714",
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#c9a84c";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#e0dbd2";
-                      }}
+                      className="ft-input"
                     />
                     <button
                       onClick={handleSubscribe}
                       disabled={subState === "loading"}
-                      className="px-4 py-2.5 rounded-lg text-[0.7rem] font-bold tracking-widest whitespace-nowrap transition-all hover:opacity-90 active:scale-95 uppercase flex items-center gap-1.5"
-                      style={{ background: "#1a1714", color: "#f5f0e8" }}
+                      className="ft-btn"
                     >
                       {subState === "loading" ? (
-                        <Loader2 size={13} className="animate-spin" />
+                        <span className="ft-spinner" aria-label="Subscribing" />
                       ) : (
                         "Join"
                       )}
                     </button>
                   </div>
                   {subState === "duplicate" && (
-                    <p
-                      className="mt-2 text-[0.67rem]"
-                      style={{ color: "#92400e" }}
-                    >
-                      You are already subscribed.
-                    </p>
+                    <p className="ft-warn">You are already subscribed.</p>
                   )}
                   {subState === "error" && (
-                    <p
-                      className="mt-2 text-[0.67rem]"
-                      style={{ color: "#991b1b" }}
-                    >
-                      Something went wrong. Please try again.
-                    </p>
+                    <p className="ft-err">Something went wrong. Please try again.</p>
                   )}
                 </>
               )}
@@ -326,33 +309,14 @@ export default function Footer() {
         </div>
 
         {/* ── Link columns ── */}
-        <div
-          className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12 border-b"
-          style={{ borderColor: "#e8e2d9" }}
-        >
+        <div className="ft-cols">
           {FOOTER_COLUMNS.map(({ title, links }) => (
-            <div key={title}>
-              <h3
-                className="text-[0.58rem] tracking-[0.28em] uppercase font-black mb-5"
-                style={{ color: "#0f0d0b" }}
-              >
-                {title}
-              </h3>
-              <ul className="flex flex-col gap-2">
+            <div key={title} className="ft-col">
+              <h3 className="ft-col-head">{title}</h3>
+              <ul>
                 {links.map((link) => (
                   <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="group flex items-center gap-1 text-[0.73rem] font-medium"
-                    >
-                      <ArrowUpRight
-                        size={9}
-                        strokeWidth={2.5}
-                        className="opacity-0 group-hover:opacity-100 shrink-0 transition-opacity duration-150"
-                        style={{ color: "#c9a84c" }}
-                      />
-                      {link.label}
-                    </Link>
+                    <Link href={link.href}>{link.label}</Link>
                   </li>
                 ))}
               </ul>
@@ -361,74 +325,32 @@ export default function Footer() {
         </div>
 
         {/* ── Disclaimer ── */}
-        <div className="py-8 border-b" style={{ borderColor: "#e8e2d9" }}>
-          <p
-            className="text-[0.63rem] leading-relaxed"
-            style={{ color: "#a09a90" }}
-          >
-            <span
-              className="font-bold tracking-wide"
-              style={{ color: "#3a3530" }}
-            >
-              Gemstone Disclosure:{" "}
-            </span>
-            {DISCLAIMER}{" "}
-            <button
-              className="font-semibold underline underline-offset-2 text-[0.63rem] transition-colors"
-              style={{ color: "#c9a84c" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#1a1714";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "#c9a84c";
-              }}
-            >
-              More…
-            </button>
-          </p>
-        </div>
+        <p className="ft-disc">
+          <b>Gemstone Disclosure: </b>
+          {DISCLAIMER}{" "}
+          <button className="ft-more">More…</button>
+        </p>
+      </div>
 
-        {/* ── Bottom bar ── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-8">
-          <p
-            className="text-[0.65rem] font-semibold"
-            style={{ color: "#1a1714" }}
-          >
+      {/* ── Bottom bar ── */}
+      <div className="ft-bar">
+        <div className="ft-bar-inner">
+          <p className="ft-copy">
             © {new Date().getFullYear()} Alpha Gemstone NY Inc. All Rights
             Reserved.
           </p>
 
-          <div className="flex items-center gap-1">
+          <div className="ft-bar-links">
             {["Privacy Policy", "Terms"].map((label, i) => (
-              <span key={label} className="flex items-center gap-1">
-                {i > 0 && (
-                  <span style={{ color: "#d4cec6" }} className="text-xs">
-                    ·
-                  </span>
-                )}
-                <button
-                  className="text-[0.63rem] font-semibold tracking-wide transition-colors"
-                  style={{ color: "#7a736a" }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#1a1714";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "#7a736a";
-                  }}
-                >
-                  {label}
-                </button>
+              <span key={label} style={{ display: "inline-flex", gap: 6, color: "inherit" }}>
+                {i > 0 && <span>|</span>}
+                <button>{label}</button>
               </span>
             ))}
           </div>
 
-          <p
-            className="text-[0.62rem] font-medium flex items-center gap-1.5"
-            style={{ color: "#b0a898" }}
-          >
-            Crafted with
-            <Heart size={9} strokeWidth={2.5} style={{ color: "#c9a84c" }} />
-            in New York
+          <p className="ft-made">
+            Crafted with <b>♥</b> in New York
           </p>
         </div>
       </div>

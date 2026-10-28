@@ -4,6 +4,7 @@ import Category from "@/models/Category";
 import { notFound } from "next/navigation";
 import CategoryClientPage from "./CategoryClientPage";
 import { SPECIALS_VIRTUAL_SUBCATEGORIES } from "@/lib/specialsVirtualSubcategories";
+import { getNavCategories } from "@/lib/getNavCategories";
 import type { Metadata } from "next";
 
 const SITE_URL =
@@ -55,7 +56,12 @@ export default async function CategoryPage({ params }: PageProps) {
   if (!category) notFound();
 
   const catId = (category as any)._id?.toString();
-  const subsWithFlag = await listSubcategoriesWithChildFlag(catId);
+  const [subsWithFlag, navCategories] = await Promise.all([
+    listSubcategoriesWithChildFlag(catId),
+    // Display-only: the category tree for the left sidebar (same source the
+    // navbar uses).
+    getNavCategories(),
+  ]);
 
   const subcategories = subsWithFlag.map((s) => ({
     _id: String((s as any)._id),
@@ -148,6 +154,7 @@ export default async function CategoryPage({ params }: PageProps) {
       <CategoryClientPage
         category={serializedCategory}
         subcategories={subcategories}
+        navCategories={navCategories}
       />
     </>
   );

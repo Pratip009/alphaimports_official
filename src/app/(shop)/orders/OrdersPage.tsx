@@ -5,28 +5,8 @@ import { useApi } from "@/hooks/useApi";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import OrderTracking from "@/components/shipping/OrderTracking";
-import {
-  Package,
-  Truck,
-  CheckCircle2,
-  Clock,
-  CircleDot,
-  ChevronDown,
-  Tag,
-  MapPin,
-  CreditCard,
-  ExternalLink,
-  ShoppingBag,
-  Receipt,
-  ArrowRight,
-  Printer,
-  TrendingUp,
-  Box,
-  CircleCheck,
-  Ban,
-  RefreshCw,
-  Loader2,
-} from "lucide-react";
+import ClassicSidebar from "@/components/ui/ClassicSidebar";
+import type { NavCategory } from "@/lib/getNavCategories";
 
 interface OrderItem {
   name: string;
@@ -82,95 +62,132 @@ interface Order {
 // ─── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
   string,
-  {
-    label: string;
-    bg: string;
-    text: string;
-    border: string;
-    Icon: React.ElementType;
-  }
+  { label: string; bg: string; text: string; border: string }
 > = {
-  pending: {
-    label: "Pending",
-    bg: "#fef9ec",
-    text: "#92400e",
-    border: "#fde68a",
-    Icon: Clock,
-  },
-  paid: {
-    label: "Paid",
-    bg: "#f0fdf4",
-    text: "#15803d",
-    border: "#86efac",
-    Icon: CircleCheck,
-  },
-  processing: {
-    label: "Processing",
-    bg: "#eff6ff",
-    text: "#1d4ed8",
-    border: "#93c5fd",
-    Icon: RefreshCw,
-  },
-  shipped: {
-    label: "Shipped",
-    bg: "#f5f3ff",
-    text: "#6d28d9",
-    border: "#c4b5fd",
-    Icon: Truck,
-  },
-  delivered: {
-    label: "Delivered",
-    bg: "#f0fdf4",
-    text: "#15803d",
-    border: "#86efac",
-    Icon: CheckCircle2,
-  },
-  cancelled: {
-    label: "Cancelled",
-    bg: "#fef2f2",
-    text: "#dc2626",
-    border: "#fca5a5",
-    Icon: Ban,
-  },
-  refunded: {
-    label: "Refunded",
-    bg: "#f9fafb",
-    text: "#4b5563",
-    border: "#d1d5db",
-    Icon: RefreshCw,
-  },
+  pending: { label: "Pending", bg: "#fff8d6", text: "#6b5200", border: "#e0c36a" },
+  paid: { label: "Paid", bg: "#eef6ee", text: "#1d5e1d", border: "#1d7a1d" },
+  processing: { label: "Processing", bg: "#e8ebf3", text: "#1c4874", border: "#a9b3cf" },
+  shipped: { label: "Shipped", bg: "#e8ebf3", text: "#1c4874", border: "#2b547e" },
+  delivered: { label: "Delivered", bg: "#eef6ee", text: "#1d5e1d", border: "#1d7a1d" },
+  cancelled: { label: "Cancelled", bg: "#fbecec", text: "#b00000", border: "#d9a3a3" },
+  refunded: { label: "Refunded", bg: "#f4f5f9", text: "#555555", border: "#b5b5b5" },
 };
 
 const STEPS = ["pending", "processing", "shipped", "delivered"] as const;
 const STEP_LABELS = ["Placed", "Processing", "Shipped", "Delivered"];
-const STEP_ICONS: React.ElementType[] = [
-  Receipt,
-  RefreshCw,
-  Truck,
-  CheckCircle2,
-];
+
+// ─── Classic styles ───────────────────────────────────────────────────────────
+const ORDERS_CSS = `
+  @keyframes orSpin { to { transform: rotate(360deg); } }
+  .or { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 11px; color: #6b6b6b; background: #fff; min-height: 60vh; }
+  .or *, .or *::before, .or *::after { box-sizing: border-box; }
+  .or p { margin: 0; }
+  .or-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 12px; padding: 6px 24px 40px; align-items: start; }
+  .or-main { min-width: 0; padding-top: 4px; }
+  .or-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .or-title { font-size: 15px; font-weight: bold; color: #4f72a8; margin: 2px 0; }
+  .or-sub { color: #8a8a8a; }
+  .or-rule { border: 0; border-top: 2px solid #555; margin: 8px 0 12px; }
+
+  .or-stats { display: inline-flex; border: 1px solid #a9b3cf; margin-bottom: 12px; background: #fff; flex-wrap: wrap; }
+  .or-stat { padding: 4px 14px; border-left: 1px solid #c9cfdf; }
+  .or-stat:first-child { border-left: 0; }
+  .or-stat span { color: #8a8a8a; margin-right: 6px; }
+  .or-stat strong { color: #000; }
+
+  .or-success { border: 1px solid #1d7a1d; background: #eef6ee; color: #1d5e1d; padding: 6px 10px; margin-bottom: 12px; line-height: 1.6; }
+  .or-success strong { color: #1d5e1d; }
+
+  .or-panel { border: 1px solid #a9b3cf; border-top-right-radius: 8px; background: #e8ebf3; margin-bottom: 14px; }
+  .or-panel-head {
+    background: #a9b3cf; color: #fff; font-weight: bold; font-size: 11px;
+    padding: 3px 10px; border-top-right-radius: 7px; margin: 0;
+    display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  }
+  .or-panel-head span { font-weight: normal; }
+  .or-panel-body { padding: 10px; }
+
+  .or-table { width: 100%; border-collapse: collapse; background: #fff; }
+  .or-table th, .or-table td { border: 1px solid #c9cfdf; padding: 5px 8px; text-align: left; vertical-align: middle; }
+  .or-table th { background: #dfe2ea; color: #1c4874; font-weight: bold; white-space: nowrap; }
+  .or-table td { color: #333; }
+  .or-table .or-num { text-align: right; white-space: nowrap; }
+  .or-id { font-weight: bold; color: #1c4874; letter-spacing: .05em; }
+  .or-total { font-weight: bold; font-size: 12px; color: #000; }
+
+  .or-badge { display: inline-block; padding: 1px 6px; border: 1px solid; font-size: 10px; font-weight: bold; margin: 1px 4px 1px 0; white-space: nowrap; }
+
+  .or-track { display: flex; margin-top: 8px; border: 1px solid #a9b3cf; }
+  .or-track div { flex: 1; text-align: center; padding: 3px 4px; font-weight: bold; color: #9a9a9a; background: #f4f5f9; border-left: 1px solid #a9b3cf; white-space: nowrap; }
+  .or-track div:first-child { border-left: 0; }
+  .or-track div.is-done { color: #1d5e1d; background: #eef6ee; }
+  .or-track div.is-active { color: #fff; background: linear-gradient(to bottom, #164472 0px, #0d3b6c 3px, #2b547e 100%); }
+
+  .or-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 22px; padding: 3px 14px;
+    background: #c6cfe6; border: 1px solid #2b547e; color: #1c4874;
+    font: inherit; font-size: 11px; font-weight: bold; text-decoration: none; cursor: pointer;
+  }
+  .or-btn:hover { background: #b5c0de; }
+  .or-btn.is-dark { background: #1c4874; color: #fff; border-color: #0d3b6c; }
+  .or-btn.is-dark:hover { background: #0d3b6c; }
+  .or-actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .or-details { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; margin-top: 10px; }
+  .or-box { background: #fff; border: 1px solid #c9cfdf; }
+  .or-box-head { background: #dfe2ea; color: #1c4874; font-weight: bold; padding: 4px 8px; }
+  .or-box-body { padding: 8px; line-height: 1.6; color: #333; }
+  .or-box-body strong { color: #000; }
+  .or-side { display: flex; flex-direction: column; gap: 12px; }
+  .or-link { color: #1c4874; font-weight: bold; }
+  .or-sum th { font-weight: normal; color: #555; background: #f4f5f9; }
+  .or-sum tr.or-grand th, .or-sum tr.or-grand td { font-weight: bold; color: #000; background: #dfe2ea; font-size: 12px; }
+
+  .or-ship { margin-top: 10px; background: #fff; border: 1px solid #c9cfdf; padding: 6px 8px; }
+  .or-ship-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .or-ship-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: #333; }
+  .or-carrier { background: #1c4874; color: #fff; font-weight: bold; padding: 1px 6px; }
+  .or-tn { font-family: "Courier New", monospace; color: #000; }
+  .or-ship-meta { margin-top: 4px !important; color: #8a8a8a; }
+  .or-ship-meta b { color: #333; }
+  .or-prep { margin-top: 10px; padding: 5px 8px; border: 1px solid #e0c36a; background: #fff8d6; color: #6b5200; }
+  .or-tracking { margin-top: 8px; }
+
+  .or-empty { padding: 14px 10px; text-align: center; line-height: 1.8; }
+  .or-loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 40px 10px; color: #1c4874; font-weight: bold; }
+  .or-spinner { width: 14px; height: 14px; border: 2px solid rgba(28,72,116,.25); border-top-color: #1c4874; border-radius: 50%; animation: orSpin .7s linear infinite; }
+
+  @media (max-width: 900px) {
+    .or-layout { grid-template-columns: 1fr; padding: 8px 14px 32px; }
+    .or-main { order: 1; }
+    .or-layout > aside { order: 2; }
+    .or-details { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .or-summary thead { display: none; }
+    .or-summary, .or-summary tbody, .or-summary tr, .or-summary td { display: block; width: 100%; }
+    .or-summary td { border-top: 0; text-align: left !important; }
+    .or-summary tr td:first-child { border-top: 1px solid #c9cfdf; }
+    .or-summary td[data-label]::before { content: attr(data-label) ": "; color: #8a8a8a; font-weight: normal; }
+    .or-track { font-size: 9.5px; }
+  }
+`;
 
 // ─── Components ────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? {
     label: status,
-    bg: "#f9fafb",
-    text: "#374151",
-    border: "#d1d5db",
-    Icon: CircleDot,
+    bg: "#f4f5f9",
+    text: "#333333",
+    border: "#b5b5b5",
   };
-  const { Icon } = cfg;
   return (
     <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[0.7rem] font-semibold tracking-wide"
-      style={{
-        background: cfg.bg,
-        color: cfg.text,
-        border: `1px solid ${cfg.border}`,
-      }}
+      className="or-badge"
+      style={{ background: cfg.bg, color: cfg.text, borderColor: cfg.border }}
     >
-      <Icon size={11} strokeWidth={2.5} />
       {cfg.label}
     </span>
   );
@@ -181,56 +198,14 @@ function ProgressTrack({ status }: { status: string }) {
   if (current < 0) return null;
 
   return (
-    <div className="relative flex items-start justify-between px-1 pt-1 pb-6">
-      {/* Connector line */}
-      <div
-        className="absolute top-[14px] left-0 right-0 mx-6 h-px"
-        style={{ background: "#e5e2db" }}
-      />
-      {/* Active fill */}
-      <div
-        className="absolute top-[14px] left-0 h-px mx-6 transition-all duration-700"
-        style={{
-          background: "linear-gradient(90deg, #c9a84c, #e8c96a)",
-          width:
-            current === 0
-              ? "0%"
-              : `calc(${(current / (STEPS.length - 1)) * 100}% - 3rem + ${(current / (STEPS.length - 1)) * 3}rem)`,
-        }}
-      />
-
+    <div className="or-track">
       {STEPS.map((step, i) => {
         const done = i <= current;
         const active = i === current;
-        const Icon = STEP_ICONS[i];
         return (
-          <div
-            key={step}
-            className="relative z-10 flex flex-col items-center gap-2"
-            style={{ width: `${100 / STEPS.length}%` }}
-          >
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
-              style={{
-                background: done
-                  ? "linear-gradient(135deg, #c9a84c 0%, #e8c96a 100%)"
-                  : "#fff",
-                border: `1.5px solid ${done ? "#c9a84c" : "#d5d0c8"}`,
-                boxShadow: active ? "0 0 0 4px rgba(201,168,76,0.15)" : "none",
-              }}
-            >
-              <Icon
-                size={13}
-                strokeWidth={2}
-                style={{ color: done ? "#fff" : "#b5b0a8" }}
-              />
-            </div>
-            <span
-              className="text-[0.6rem] font-semibold tracking-wide text-center leading-tight"
-              style={{ color: done ? "#92742a" : "#b5b0a8" }}
-            >
-              {STEP_LABELS[i]}
-            </span>
+          <div key={step} className={active ? "is-active" : done ? "is-done" : undefined}>
+            {done && !active ? "✓ " : ""}
+            {STEP_LABELS[i]}
           </div>
         );
       })}
@@ -246,119 +221,74 @@ function ShipmentPanel({ order }: { order: Order }) {
   if (!order.shippingRateId && !tn) {
     if (["paid", "processing"].includes(order.status)) {
       return (
-        <div
-          className="px-6 py-3.5 flex items-center gap-3"
-          style={{ background: "#fffdf5", borderTop: "1px solid #f0ead8" }}
-        >
-          <div
-            className="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse"
-            style={{ background: "#c9a84c" }}
-          />
-          <p className="text-xs" style={{ color: "#92742a" }}>
-            Preparing your shipment — tracking info will appear here once
-            dispatched.
-          </p>
-        </div>
+        <p className="or-prep">
+          Preparing your shipment — tracking info will appear here once
+          dispatched.
+        </p>
       );
     }
     return null;
   }
 
   return (
-    <div style={{ borderTop: "1px solid #ede9e0" }}>
-      <div className="px-6 py-4" style={{ background: "#fafaf8" }}>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 flex-wrap">
-            {carrier && (
-              <span
-                className="text-[0.65rem] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md"
-                style={{
-                  background: "#1a1814",
-                  color: "#c9a84c",
-                  letterSpacing: "0.12em",
-                }}
-              >
-                {carrier}
-              </span>
-            )}
-            {order.shippingService && (
-              <span className="text-xs" style={{ color: "#9c9690" }}>
-                {order.shippingService}
-              </span>
-            )}
-            {tn && (
-              <div className="flex items-center gap-1.5">
-                <Tag size={11} style={{ color: "#c9a84c" }} />
-                <span
-                  className="font-mono text-[0.7rem] font-medium"
-                  style={{ color: "#5c5852" }}
-                >
-                  {tn}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {order.labelUrl && (
-              <a
-                href={order.labelUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-opacity hover:opacity-75"
-                style={{ background: "#ede9e0", color: "#5c5852" }}
-              >
-                <Printer size={12} /> Label
-              </a>
-            )}
-            {order.labelId && (
-              <button
-                onClick={() => setTracking((t) => !t)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-1.5 rounded-lg transition-all active:scale-95"
-                style={
-                  tracking
-                    ? { background: "#1a1814", color: "#c9a84c" }
-                    : { background: "#c9a84c", color: "#fff" }
-                }
-              >
-                <Truck size={12} />
-                {tracking ? "Close tracking" : "Track package"}
-              </button>
-            )}
-          </div>
+    <div className="or-ship">
+      <div className="or-ship-row">
+        <div className="or-ship-info">
+          {carrier && <span className="or-carrier">{carrier}</span>}
+          {order.shippingService && <span>{order.shippingService}</span>}
+          {tn && (
+            <span>
+              Tracking #: <span className="or-tn">{tn}</span>
+            </span>
+          )}
         </div>
-
-        {(order.shippingEstimatedDelivery || order.shippedAt) && (
-          <div className="flex items-center gap-4 mt-3 flex-wrap">
-            {order.shippingEstimatedDelivery && (
-              <div className="flex items-center gap-1.5">
-                <Clock size={11} style={{ color: "#9c9690" }} />
-                <span className="text-[0.7rem]" style={{ color: "#9c9690" }}>
-                  Est. delivery:{" "}
-                  <span className="font-semibold" style={{ color: "#5c5852" }}>
-                    {order.shippingEstimatedDelivery}
-                  </span>
-                </span>
-              </div>
-            )}
-            {order.shippedAt && (
-              <div className="flex items-center gap-1.5">
-                <Package size={11} style={{ color: "#9c9690" }} />
-                <span className="text-[0.7rem]" style={{ color: "#9c9690" }}>
-                  Shipped{" "}
-                  {new Date(order.shippedAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="or-actions" style={{ marginTop: 0 }}>
+          {order.labelUrl && (
+            <a
+              href={order.labelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="or-btn"
+            >
+              Print Label
+            </a>
+          )}
+          {order.labelId && (
+            <button
+              onClick={() => setTracking((t) => !t)}
+              className={`or-btn${tracking ? "" : " is-dark"}`}
+            >
+              {tracking ? "Close tracking" : "Track package"}
+            </button>
+          )}
+        </div>
       </div>
 
+      {(order.shippingEstimatedDelivery || order.shippedAt) && (
+        <p className="or-ship-meta">
+          {order.shippingEstimatedDelivery && (
+            <>
+              Est. delivery: <b>{order.shippingEstimatedDelivery}</b>
+            </>
+          )}
+          {order.shippingEstimatedDelivery && order.shippedAt && " | "}
+          {order.shippedAt && (
+            <>
+              Shipped{" "}
+              <b>
+                {new Date(order.shippedAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </b>
+            </>
+          )}
+        </p>
+      )}
+
       {tracking && order.labelId && tn && (
-        <div className="px-6 pb-6 pt-1">
+        <div className="or-tracking">
           <OrderTracking
             labelId={order.labelId}
             trackingNumber={tn}
@@ -371,7 +301,12 @@ function ShipmentPanel({ order }: { order: Order }) {
 }
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
-export default function OrdersPage() {
+export default function OrdersPage({
+  navCategories = [],
+}: {
+  // Display-only: category tree for the classic left sidebar.
+  navCategories?: NavCategory[];
+}) {
   const { apiFetch } = useApi();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -396,414 +331,222 @@ export default function OrdersPage() {
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center gap-4"
-        style={{ background: "#fafaf8" }}
-      >
-        <Loader2
-          size={28}
-          className="animate-spin"
-          style={{ color: "#c9a84c" }}
-        />
-        <p className="text-sm tracking-wide" style={{ color: "#9c9690" }}>
-          Loading your orders…
-        </p>
+      <div className="or">
+        <style>{ORDERS_CSS}</style>
+        <div className="or-layout">
+          <ClassicSidebar categories={navCategories} />
+          <div className="or-main">
+            <h1 className="or-title">My Order History</h1>
+            <hr className="or-rule" />
+            <div className="or-loading">
+              <span className="or-spinner" /> Loading your orders…
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full" style={{ background: "#fafaf8" }}>
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div
-        className="w-full border-b"
-        style={{
-          background: "linear-gradient(180deg, #1a1814 0%, #22201b 100%)",
-          borderColor: "#2d2a24",
-        }}
-      >
-        <div className="w-full px-6 md:px-10 xl:px-16 py-10">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <p
-                className="text-[0.6rem] font-bold tracking-[0.25em] uppercase mb-3"
-                style={{ color: "#c9a84c" }}
-              >
-                My Account
-              </p>
-              <h1
-                className="text-4xl md:text-5xl font-light tracking-tight"
-                style={{
-                  fontFamily: '"Elms Sans", sans-serif',
-                  color: "#f5f1eb",
-                }}
-              >
-                Orders
-              </h1>
-              <p className="text-sm mt-2" style={{ color: "#6e6a62" }}>
-                {orders.length === 0
-                  ? "No purchases yet"
-                  : `${orders.length} order${orders.length !== 1 ? "s" : ""} · ${totalItems} item${totalItems !== 1 ? "s" : ""}`}
-              </p>
-            </div>
+    <div className="or">
+      <style>{ORDERS_CSS}</style>
+      <div className="or-layout">
+        <ClassicSidebar categories={navCategories} />
 
-            {orders.length > 0 && (
-              <div className="flex items-stretch gap-3">
-                {[
-                  {
-                    label: "Total spent",
-                    value: `$${totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                    Icon: TrendingUp,
-                  },
-                  {
-                    label: "Orders",
-                    value: String(orders.length),
-                    Icon: ShoppingBag,
-                  },
-                  { label: "Items", value: String(totalItems), Icon: Box },
-                ].map(({ label, value, Icon }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col justify-between px-5 py-3.5 rounded-xl"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(201,168,76,0.18)",
-                      minWidth: "100px",
-                    }}
-                  >
-                    <Icon
-                      size={14}
-                      style={{ color: "#c9a84c", opacity: 0.8 }}
-                    />
-                    <div className="mt-3">
-                      <p
-                        className="text-lg font-light leading-none"
-                        style={{ color: "#f5f1eb" }}
-                      >
-                        {value}
-                      </p>
-                      <p
-                        className="text-[0.6rem] uppercase tracking-widest mt-1"
-                        style={{ color: "#5c5852" }}
-                      >
-                        {label}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className="or-main">
+          {/* ── Page header ──────────────────────────────────────────────────── */}
+          <div className="or-title-row">
+            <h1 className="or-title">My Order History</h1>
+            <span className="or-sub">
+              {orders.length === 0
+                ? "No purchases yet"
+                : `${orders.length} order${orders.length !== 1 ? "s" : ""} | ${totalItems} item${totalItems !== 1 ? "s" : ""}`}
+            </span>
           </div>
-        </div>
-      </div>
+          <hr className="or-rule" />
 
-      {/* ── Success banner ───────────────────────────────────────────────── */}
-      {success && (
-        <div className="w-full px-6 md:px-10 xl:px-16 pt-6">
-          <div
-            className="flex items-start gap-4 rounded-xl px-5 py-4"
-            style={{ background: "#f0fdf4", border: "1px solid #86efac" }}
-          >
-            <CheckCircle2
-              size={18}
-              style={{ color: "#16a34a", flexShrink: 0, marginTop: "1px" }}
-            />
-            <div>
-              <p className="text-sm font-semibold" style={{ color: "#15803d" }}>
-                Payment confirmed
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: "#166534" }}>
-                Your order is placed. A tracking number will appear here once
-                your package ships.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Empty state ──────────────────────────────────────────────────── */}
-      {orders.length === 0 ? (
-        <div className="w-full flex flex-col items-center justify-center py-36 px-6">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-            style={{ background: "#ede9e0" }}
-          >
-            <Package size={28} style={{ color: "#b5a898" }} />
-          </div>
-          <p
-            className="text-xl font-light mb-1"
-            style={{ fontFamily: '"Elms Sans", sans-serif', color: "#1a1814" }}
-          >
-            No orders yet
-          </p>
-          <p className="text-sm mb-8" style={{ color: "#9c9690" }}>
-            Your purchases will appear here
-          </p>
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-            style={{ background: "#1a1814", color: "#c9a84c" }}
-          >
-            Explore Collection <ArrowRight size={14} />
-          </Link>
-        </div>
-      ) : (
-        /* ── Order list ────────────────────────────────────────────────── */
-        <div className="w-full px-6 md:px-10 xl:px-16 py-8 flex flex-col gap-5">
-          {orders.map((order) => {
-            const isOpen = expanded === order._id;
-            const date = new Date(order.createdAt).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            });
-
-            return (
-              <div
-                key={order._id}
-                className="w-full rounded-2xl overflow-hidden transition-shadow duration-200"
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e5e2db",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                }}
-              >
-                {/* ── Card header ─────────────────────────────────────── */}
-                <div className="px-6 pt-6 pb-5">
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Left: ID + date + status */}
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span
-                          className="font-mono text-[0.65rem] font-bold tracking-widest uppercase px-2 py-0.5 rounded"
-                          style={{
-                            background: "#faf5e8",
-                            color: "#92742a",
-                            border: "1px solid #f0e6c0",
-                          }}
-                        >
-                          #{order._id.slice(-10)}
-                        </span>
-                        <span className="text-xs" style={{ color: "#9c9690" }}>
-                          {date}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <StatusBadge status={order.status} />
-                        {order.paymentStatus &&
-                          order.paymentStatus !== order.status && (
-                            <StatusBadge status={order.paymentStatus} />
-                          )}
-                      </div>
-                    </div>
-
-                    {/* Right: Total */}
-                    <div className="text-right flex-shrink-0">
-                      <p
-                        className="text-2xl font-light"
-                        style={{
-                          fontFamily: '"Elms Sans", sans-serif',
-                          color: "#1a1814",
-                        }}
-                      >
-                        $
-                        {order.totalAmount.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </p>
-                      <p
-                        className="text-[0.65rem] mt-0.5 uppercase tracking-wide"
-                        style={{ color: "#b5b0a8" }}
-                      >
-                        {order.items.length} item
-                        {order.items.length !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Progress track */}
-                  <div className="mt-5">
-                    <ProgressTrack status={order.status} />
-                  </div>
+          {orders.length > 0 && (
+            <div className="or-stats">
+              {[
+                {
+                  label: "Total spent:",
+                  value: `$${totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                },
+                { label: "Orders:", value: String(orders.length) },
+                { label: "Items:", value: String(totalItems) },
+              ].map(({ label, value }) => (
+                <div key={label} className="or-stat">
+                  <span>{label}</span>
+                  <strong>{value}</strong>
                 </div>
+              ))}
+            </div>
+          )}
 
-                {/* ── Expand toggle ────────────────────────────────────── */}
-                <button
-                  onClick={() => setExpanded(isOpen ? null : order._id)}
-                  className="w-full flex items-center justify-between px-6 py-3.5 transition-colors text-left"
-                  style={{
-                    borderTop: "1px solid #ede9e0",
-                    borderBottom: isOpen ? "1px solid #ede9e0" : "none",
-                    background: isOpen ? "#fafaf8" : "transparent",
-                  }}
-                >
-                  <span
-                    className="text-xs font-semibold"
-                    style={{ color: "#5c5852" }}
-                  >
-                    {isOpen ? "Hide details" : "View order details"}
-                  </span>
-                  <ChevronDown
-                    size={15}
-                    style={{
-                      color: "#9c9690",
-                      transition: "transform 0.2s",
-                      transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    }}
-                  />
-                </button>
+          {/* ── Success banner ───────────────────────────────────────────────── */}
+          {success && (
+            <div className="or-success">
+              <strong>✓ Payment confirmed.</strong> Your order is placed. A
+              tracking number will appear here once your package ships.
+            </div>
+          )}
 
-                {/* ── Expanded detail ──────────────────────────────────── */}
-                {isOpen && (
-                  <div
-                    className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-8"
-                    style={{ background: "#fafaf8" }}
-                  >
-                    {/* Items */}
-                    <div>
-                      <p
-                        className="text-[0.6rem] font-bold uppercase tracking-widest mb-4"
-                        style={{ color: "#b5b0a8" }}
-                      >
-                        Items ordered
-                      </p>
-                      <div
-                        className="flex flex-col divide-y"
-                        style={{ "--tw-divide-opacity": 1 } as any}
-                      >
-                        {order.items.map((item, ii) => (
-                          <div
-                            key={ii}
-                            className="flex items-center justify-between py-3 gap-3 first:pt-0 last:pb-0"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div
-                                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{ background: "#ede9e0" }}
-                              >
-                                <Package
-                                  size={15}
-                                  style={{ color: "#8a7d6e" }}
-                                />
-                              </div>
-                              <div className="min-w-0">
-                                <p
-                                  className="text-sm font-medium truncate"
-                                  style={{ color: "#1a1814" }}
-                                >
-                                  {item.name}
-                                </p>
-                                <p
-                                  className="text-xs mt-0.5"
-                                  style={{ color: "#9c9690" }}
-                                >
-                                  Qty {item.quantity}
-                                </p>
-                              </div>
-                            </div>
-                            <p
-                              className="text-sm font-semibold flex-shrink-0"
-                              style={{ color: "#1a1814" }}
-                            >
+          {/* ── Empty state ──────────────────────────────────────────────────── */}
+          {orders.length === 0 ? (
+            <section className="or-panel">
+              <h2 className="or-panel-head">My Orders</h2>
+              <div className="or-panel-body">
+                <div className="or-empty">
+                  <p>You have not yet made any purchases.</p>
+                  <p style={{ marginBottom: 10 }}>Your purchases will appear here.</p>
+                  <Link href="/products" className="or-btn">
+                    Explore Collection
+                  </Link>
+                </div>
+              </div>
+            </section>
+          ) : (
+            /* ── Order list ────────────────────────────────────────────────── */
+            orders.map((order) => {
+              const isOpen = expanded === order._id;
+              const date = new Date(order.createdAt).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              });
+
+              return (
+                <section key={order._id} className="or-panel">
+                  <h2 className="or-panel-head">
+                    Order Number: #{order._id.slice(-10)}
+                    <span>{date}</span>
+                  </h2>
+                  <div className="or-panel-body">
+                    <table className="or-table or-summary">
+                      <thead>
+                        <tr>
+                          <th>Order Date</th>
+                          <th>Status</th>
+                          <th>Products</th>
+                          <th className="or-num">Order Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td data-label="Order Date">{date}</td>
+                          <td data-label="Status">
+                            <StatusBadge status={order.status} />
+                            {order.paymentStatus &&
+                              order.paymentStatus !== order.status && (
+                                <StatusBadge status={order.paymentStatus} />
+                              )}
+                          </td>
+                          <td data-label="Products">
+                            {order.items.length} item
+                            {order.items.length !== 1 ? "s" : ""}
+                          </td>
+                          <td className="or-num" data-label="Order Cost">
+                            <span className="or-total">
                               $
-                              {item.price.toLocaleString("en-US", {
+                              {order.totalAmount.toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
                               })}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
 
-                      {/* Totals breakdown */}
-                      <div
-                        className="mt-4 rounded-xl overflow-hidden"
-                        style={{ border: "1px solid #e5e2db" }}
+                    {/* Progress track */}
+                    <ProgressTrack status={order.status} />
+
+                    {/* ── Expand toggle ────────────────────────────────────── */}
+                    <div className="or-actions">
+                      <button
+                        onClick={() => setExpanded(isOpen ? null : order._id)}
+                        className="or-btn"
+                        aria-expanded={isOpen}
                       >
-                        {(() => {
-                          
-                          const fee = order.serviceFee ?? 0;
-                          const rawShipping =
-                            order.shippingRate && order.shippingRate > 0
-                              ? order.shippingRate
-                              : Math.max(0, order.shippingCost - fee);
-                          const rows = [
-                            { label: 'Subtotal', value: `$${(order.subtotal ?? order.totalAmount - order.shippingCost - order.tax).toFixed(2)}` },
-                            { label: 'Shipping', value: rawShipping > 0 ? `$${rawShipping.toFixed(2)}` : 'Free' },
-                            ...(fee > 0 ? [{ label: 'Service Fee', value: `$${fee.toFixed(2)}` }] : []),
-                            { label: 'Tax', value: `$${(order.tax ?? 0).toFixed(2)}` },
-                          ];
-                          return rows;
-                        })().map(({ label, value }) => (
-                          <div
-                            key={label}
-                            className="flex justify-between items-center px-4 py-2.5 text-xs"
-                            style={{
-                              borderBottom: "1px solid #ede9e0",
-                              color: "#9c9690",
-                            }}
-                          >
-                            <span>{label}</span>
-                            <span>{value}</span>
-                          </div>
-                        ))}
-                        <div
-                          className="flex justify-between items-center px-4 py-3"
-                          style={{ background: "#fff" }}
-                        >
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: "#1a1814" }}
-                          >
-                            Total
-                          </span>
-                          <span
-                            className="text-sm font-bold"
-                            style={{ color: "#1a1814" }}
-                          >
-                            $
-                            {order.totalAmount.toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                            })}
-                          </span>
-                        </div>
-                      </div>
+                        {isOpen ? "Hide details ▲" : "View order details ▼"}
+                      </button>
                     </div>
 
-                    {/* Shipping address + payment */}
-                    <div className="flex flex-col gap-5">
-                      {order.shippingAddress && (
-                        <div>
-                          <p
-                            className="text-[0.6rem] font-bold uppercase tracking-widest mb-3"
-                            style={{ color: "#b5b0a8" }}
-                          >
-                            Ship to
-                          </p>
-                          <div
-                            className="rounded-xl px-4 py-4"
-                            style={{
-                              background: "#fff",
-                              border: "1px solid #e5e2db",
-                            }}
-                          >
-                            <div className="flex items-start gap-3">
-                              <MapPin
-                                size={14}
-                                style={{
-                                  color: "#c9a84c",
-                                  flexShrink: 0,
-                                  marginTop: "1px",
-                                }}
-                              />
-                              <div
-                                className="text-xs leading-relaxed"
-                                style={{ color: "#5c5852" }}
-                              >
-                                <p
-                                  className="font-semibold text-sm mb-0.5"
-                                  style={{ color: "#1a1814" }}
-                                >
-                                  {order.shippingAddress.fullName}
+                    {/* ── Expanded detail ──────────────────────────────────── */}
+                    {isOpen && (
+                      <div className="or-details">
+                        {/* Items */}
+                        <div className="or-box">
+                          <div className="or-box-head">Items Ordered</div>
+                          <div className="or-box-body">
+                            <table className="or-table">
+                              <thead>
+                                <tr>
+                                  <th>Product</th>
+                                  <th style={{ width: 50 }}>Qty</th>
+                                  <th className="or-num" style={{ width: 90 }}>Price</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {order.items.map((item, ii) => (
+                                  <tr key={ii}>
+                                    <td>{item.name}</td>
+                                    <td>{item.quantity}</td>
+                                    <td className="or-num">
+                                      $
+                                      {item.price.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                      })}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+
+                            {/* Totals breakdown */}
+                            <table className="or-table or-sum" style={{ marginTop: 8 }}>
+                              <tbody>
+                                {(() => {
+                                  
+                                  const fee = order.serviceFee ?? 0;
+                                  const rawShipping =
+                                    order.shippingRate && order.shippingRate > 0
+                                      ? order.shippingRate
+                                      : Math.max(0, order.shippingCost - fee);
+                                  const rows = [
+                                    { label: 'Subtotal', value: `$${(order.subtotal ?? order.totalAmount - order.shippingCost - order.tax).toFixed(2)}` },
+                                    { label: 'Shipping', value: rawShipping > 0 ? `$${rawShipping.toFixed(2)}` : 'Free' },
+                                    ...(fee > 0 ? [{ label: 'Service Fee', value: `$${fee.toFixed(2)}` }] : []),
+                                    { label: 'Tax', value: `$${(order.tax ?? 0).toFixed(2)}` },
+                                  ];
+                                  return rows;
+                                })().map(({ label, value }) => (
+                                  <tr key={label}>
+                                    <th>{label}:</th>
+                                    <td className="or-num">{value}</td>
+                                  </tr>
+                                ))}
+                                <tr className="or-grand">
+                                  <th>Total:</th>
+                                  <td className="or-num">
+                                    $
+                                    {order.totalAmount.toLocaleString("en-US", {
+                                      minimumFractionDigits: 2,
+                                    })}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Shipping address + payment */}
+                        <div className="or-side">
+                          {order.shippingAddress && (
+                            <div className="or-box">
+                              <div className="or-box-head">Delivery Address</div>
+                              <div className="or-box-body">
+                                <p>
+                                  <strong>{order.shippingAddress.fullName}</strong>
                                 </p>
                                 <p>{order.shippingAddress.addressLine1}</p>
                                 {order.shippingAddress.addressLine2 && (
@@ -817,76 +560,61 @@ export default function OrdersPage() {
                                 <p>{order.shippingAddress.country}</p>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      )}
+                          )}
 
-                      <div>
-                        <p
-                          className="text-[0.6rem] font-bold uppercase tracking-widest mb-3"
-                          style={{ color: "#b5b0a8" }}
-                        >
-                          Payment
-                        </p>
-                        <div
-                          className="rounded-xl px-4 py-4 flex items-center gap-3"
-                          style={{
-                            background: "#fff",
-                            border: "1px solid #e5e2db",
-                          }}
-                        >
-                          <CreditCard size={15} style={{ color: "#c9a84c" }} />
-                          <div className="text-xs" style={{ color: "#5c5852" }}>
-                            <span
-                              className="capitalize font-medium"
-                              style={{ color: "#1a1814" }}
-                            >
-                              {order.paymentMethod}
-                            </span>
-                            <span className="mx-2" style={{ color: "#d5d0c8" }}>
-                              ·
-                            </span>
-                            <span
-                              className="capitalize px-2 py-0.5 rounded"
-                              style={{
-                                background:
-                                  order.paymentStatus === "paid"
-                                    ? "#f0fdf4"
-                                    : "#fef9ec",
-                                color:
-                                  order.paymentStatus === "paid"
-                                    ? "#15803d"
-                                    : "#92400e",
-                              }}
-                            >
-                              {order.paymentStatus}
-                            </span>
+                          <div className="or-box">
+                            <div className="or-box-head">Payment Method</div>
+                            <div className="or-box-body">
+                              <span style={{ textTransform: "capitalize" }}>
+                                <strong>{order.paymentMethod}</strong>
+                              </span>
+                              <span style={{ margin: "0 6px", color: "#b5b5b5" }}>|</span>
+                              <span
+                                className="or-badge"
+                                style={{
+                                  textTransform: "capitalize",
+                                  background:
+                                    order.paymentStatus === "paid"
+                                      ? "#eef6ee"
+                                      : "#fff8d6",
+                                  color:
+                                    order.paymentStatus === "paid"
+                                      ? "#1d5e1d"
+                                      : "#6b5200",
+                                  borderColor:
+                                    order.paymentStatus === "paid"
+                                      ? "#1d7a1d"
+                                      : "#e0c36a",
+                                }}
+                              >
+                                {order.paymentStatus}
+                              </span>
+                            </div>
                           </div>
+
+                          {order.trackingUrl && (
+                            <a
+                              href={order.trackingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="or-link"
+                            >
+                              View on carrier website »
+                            </a>
+                          )}
                         </div>
                       </div>
+                    )}
 
-                      {order.trackingUrl && (
-                        <a
-                          href={order.trackingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-xs font-semibold transition-opacity hover:opacity-75 self-start"
-                          style={{ color: "#c9a84c" }}
-                        >
-                          <ExternalLink size={12} /> View on carrier website
-                        </a>
-                      )}
-                    </div>
+                    {/* ── Shipment / Tracking panel ────────────────────────── */}
+                    <ShipmentPanel order={order} />
                   </div>
-                )}
-
-                {/* ── Shipment / Tracking panel ────────────────────────── */}
-                <ShipmentPanel order={order} />
-              </div>
-            );
-          })}
+                </section>
+              );
+            })
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
