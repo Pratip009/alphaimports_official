@@ -1,4 +1,4 @@
-import CheckoutClient from './checkoutClient';
+import CheckoutClient from './CheckoutClient';
 import { getNavCategories } from '@/lib/getNavCategories';
 
 export default async function CheckoutPage() {
