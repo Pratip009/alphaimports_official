@@ -1,18 +1,23 @@
 import bcrypt from 'bcryptjs';
 import { Resend } from 'resend';
+import { resend } from '@/lib/resend';
 import Otp from '@/models/Otp';
 import User from '@/models/User';
 import { signToken } from '@/lib/jwt';
 import { resolveAuthProviders, toPublicUser } from '@/services/auth.service';
 import { otpEmailHtml, welcomeEmailHtml } from '@/lib/email-templates';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX = 3;
+const MAX_CODES_PER_HOUR = 6;
+const MAX_FAILED_PER_HOUR = 10;
+const MAX_FAILED_PER_DAY = 20;
+/** How long code records are kept (for the limits above) before TTL deletion. */
+const RECORD_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -22,16 +27,66 @@ function generateOtp(): string {
   return String(array[0] % 1_000_000).padStart(6, '0');
 }
 
+/**
+ * Limits on how often codes can be requested for one email + purpose.
+ *
+ * Previously this counted Otp records created in the last minute, but every
+ * request deleted the older records first (Otp.deleteMany) — so the count was
+ * never more than 1 and the limit never applied. Replaced codes are now kept
+ * (marked `superseded`, retained until RECORD_RETENTION_MS) so they're counted.
+ */
 async function checkRateLimit(email: string, purpose: string): Promise<void> {
-  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000);
-  const count = await Otp.countDocuments({
-    email: email.toLowerCase(),
-    purpose,
-    createdAt: { $gte: windowStart },
-  });
-  if (count >= RATE_LIMIT_MAX) {
+  const now = Date.now();
+  const base = { email: email.toLowerCase(), purpose };
+  const [lastMinute, lastHour] = await Promise.all([
+    Otp.countDocuments({ ...base, createdAt: { $gte: new Date(now - RATE_LIMIT_WINDOW_SECONDS * 1000) } }),
+    Otp.countDocuments({ ...base, createdAt: { $gte: new Date(now - 60 * 60 * 1000) } }),
+  ]);
+  if (lastMinute >= RATE_LIMIT_MAX) {
     throw new Error('Too many codes sent. Please wait a moment before requesting another.');
   }
+  if (lastHour >= MAX_CODES_PER_HOUR) {
+    throw new Error('Too many codes requested. Please try again in an hour.');
+  }
+}
+
+/**
+ * Wrong guesses for one email + purpose across ALL codes in the window, so
+ * asking for a fresh code no longer resets the guess budget. Without this, a
+ * 6-digit code could be brute-forced by requesting new codes indefinitely
+ * and making MAX_ATTEMPTS guesses at each.
+ */
+async function failedAttemptsSince(email: string, purpose: string, sinceMs: number): Promise<number> {
+  const [row] = await Otp.aggregate<{ total: number }>([
+    { $match: { email: email.toLowerCase(), purpose, createdAt: { $gte: new Date(Date.now() - sinceMs) } } },
+    { $group: { _id: null, total: { $sum: '$attempts' } } },
+  ]);
+  return row?.total ?? 0;
+}
+
+async function assertGuessBudget(email: string, purpose: string): Promise<void> {
+  const [hour, day] = await Promise.all([
+    failedAttemptsSince(email, purpose, 60 * 60 * 1000),
+    failedAttemptsSince(email, purpose, RECORD_RETENTION_MS),
+  ]);
+  if (hour >= MAX_FAILED_PER_HOUR || day >= MAX_FAILED_PER_DAY) {
+    throw new Error('Too many incorrect codes. For your security, please try again later.');
+  }
+}
+
+/** Retire any live code for this email + purpose, keeping the record for rate limiting. */
+async function supersedeActiveCodes(email: string, purpose: string): Promise<void> {
+  await Otp.updateMany(
+    { email, purpose, superseded: { $ne: true } },
+    {
+      $set: { superseded: true, expiresAt: new Date(Date.now() + RECORD_RETENTION_MS) },
+      $unset: { pendingPassword: 1 },
+    },
+  );
+}
+
+function codeExpired(record: { codeExpiresAt?: Date; expiresAt: Date }): boolean {
+  return (record.codeExpiresAt ?? record.expiresAt) < new Date();
 }
 
 async function sendOtpEmail(
@@ -151,7 +206,7 @@ export async function sendSignupOtp(
   const otpHash = await bcrypt.hash(otp, 10);
   const passwordHash = await bcrypt.hash(password, 12);
 
-  await Otp.deleteMany({ email: normalizedEmail, purpose: 'signup' });
+  await supersedeActiveCodes(normalizedEmail, 'signup');
 
   await Otp.create({
     email: normalizedEmail,
@@ -159,7 +214,8 @@ export async function sendSignupOtp(
     purpose: 'signup',
     pendingName: name,
     pendingPassword: passwordHash,
-    expiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+    codeExpiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+    expiresAt: new Date(Date.now() + RECORD_RETENTION_MS),
     verified: false,
     attempts: 0,
   });
@@ -173,15 +229,19 @@ export async function verifySignupOtp(
 ): Promise<{ token: string; user: object }> {
   const normalizedEmail = email.trim().toLowerCase();
 
+  await assertGuessBudget(normalizedEmail, 'signup');
+
   const record = await Otp.findOne({
     email: normalizedEmail,
     purpose: 'signup',
     verified: false,
-  }).select('+otp +pendingPassword');
+    superseded: { $ne: true },
+  })
+    .sort({ createdAt: -1 }).select('+otp +pendingPassword');
 
   if (!record) throw new Error('No pending verification found. Please request a new code.');
   if (!record.pendingName) throw new Error('Signup data is missing. Please start over.');
-  if (record.expiresAt < new Date()) throw new Error('Code expired. Please request a new one.');
+  if (codeExpired(record)) throw new Error('Code expired. Please request a new one.');
   if (record.attempts >= MAX_ATTEMPTS) throw new Error('Too many wrong attempts. Please request a new code.');
 
   const isMatch = await bcrypt.compare(otp, record.otp);
@@ -286,13 +346,14 @@ export async function sendForgotPasswordOtp(email: string): Promise<void> {
   const otp = generateOtp();
   const otpHash = await bcrypt.hash(otp, 10);
 
-  await Otp.deleteMany({ email: normalizedEmail, purpose: 'reset_password' });
+  await supersedeActiveCodes(normalizedEmail, 'reset_password');
 
   await Otp.create({
     email: normalizedEmail,
     otp: otpHash,
     purpose: 'reset_password',
-    expiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+    codeExpiresAt: new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000),
+    expiresAt: new Date(Date.now() + RECORD_RETENTION_MS),
     verified: false,
     attempts: 0,
   });
@@ -307,14 +368,18 @@ export async function resetPasswordWithOtp(
 ): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
 
+  await assertGuessBudget(normalizedEmail, 'reset_password');
+
   const record = await Otp.findOne({
     email: normalizedEmail,
     purpose: 'reset_password',
     verified: false,
-  }).select('+otp');
+    superseded: { $ne: true },
+  })
+    .sort({ createdAt: -1 }).select('+otp');
 
   if (!record) throw new Error('No pending reset found. Please request a new code.');
-  if (record.expiresAt < new Date()) throw new Error('Code expired. Please request a new one.');
+  if (codeExpired(record)) throw new Error('Code expired. Please request a new one.');
   if (record.attempts >= MAX_ATTEMPTS) throw new Error('Too many wrong attempts. Please request a new code.');
 
   const isMatch = await bcrypt.compare(otp, record.otp);

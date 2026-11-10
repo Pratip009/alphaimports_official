@@ -352,7 +352,7 @@ export default function DropshipProductBrowser({
         }
       }
     },
-    [onSelect, token, setQuery]
+    [onSelect, token, setQuery, update]
   );
 
   const goToPage = (p: number) => {

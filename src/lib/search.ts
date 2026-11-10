@@ -44,7 +44,13 @@ export function fuzzyScore(text: string | undefined | null, q: string): number {
  */
 export function extractCarat(q: string): number | null {
   const lq = q.trim().toLowerCase();
-  const withUnit = lq.match(/(\d+(?:\.\d+)?)\s*(carats?|cts?)\b/);
+  // Fractions first: "1/2 ct", "3/4 carat", "1 1/2 carats" — the decimal
+  // pattern below would otherwise read "1/2 carat" as 2 carats.
+  const frac = lq.match(/(?:(\d+)[\s-]+)?(\d+)\s*\/\s*(\d+)\s*(?:carats?|cts?|tcw)\b/);
+  if (frac && Number(frac[3]) > 0) {
+    return (frac[1] ? Number(frac[1]) : 0) + Number(frac[2]) / Number(frac[3]);
+  }
+  const withUnit = lq.match(/(\d+(?:\.\d+)?)\s*(carats?|cts?|tcw)\b/);
   if (withUnit) return parseFloat(withUnit[1]);
   if (/^\d+(?:\.\d+)?$/.test(lq)) return parseFloat(lq);
   return null;

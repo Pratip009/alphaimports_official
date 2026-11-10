@@ -39,8 +39,8 @@ const EMPTY_FORM: SlideFormData = {
   description: '',
   desktopImage: '',
   mobileImage: '',
-  accent: '#b8c9d4',
-  accentGlow: '#5a8fa8',
+  accent: '#a6aec5',
+  accentGlow: '#2f5681',
   buttonText: '',
   buttonLink: '',
   openInNewTab: false,
@@ -57,11 +57,11 @@ function Toast({ msg, type, onClose }: { msg: string; type: 'success' | 'error';
   return (
     <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl border
       ${type === 'success'
-        ? 'bg-white border-[#9ab87a]/40 text-[#3a6020]'
-        : 'bg-white border-[#c97a7a]/40 text-[#8a2020]'}`}>
+        ? 'bg-white border-[#2d7a52]/40 text-[#3a6020]'
+        : 'bg-white border-[#990000]/40 text-[#8a2020]'}`}>
       {type === 'success'
-        ? <CheckCircle2 size={16} strokeWidth={2} className="text-[#9ab87a]" />
-        : <AlertCircle size={16} strokeWidth={2} className="text-[#c97a7a]" />
+        ? <CheckCircle2 size={16} strokeWidth={2} className="text-[#2d7a52]" />
+        : <AlertCircle size={16} strokeWidth={2} className="text-[#990000]" />
       }
       <span className="text-[0.8rem] font-medium">{msg}</span>
       <button onClick={onClose} className="ml-2 opacity-50 hover:opacity-100 transition-opacity">
@@ -118,21 +118,21 @@ function ImageUploadField({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[0.72rem] font-semibold tracking-wide text-[#6b6560] uppercase flex items-center gap-2">
+      <label className="text-[0.72rem] font-semibold tracking-wide text-[#555555] uppercase flex items-center gap-2">
         <Icon size={12} strokeWidth={2} />
         {label}
       </label>
 
       {/* Preview */}
       {value && (
-        <div className="relative w-full rounded-lg overflow-hidden border border-[#e2ddd5] bg-[#f5f3ef]"
+        <div className="relative w-full rounded-lg overflow-hidden border border-[#c6cbd6] bg-[#eef0f5]"
           style={{ aspectRatio: '16/6' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt={label} className="w-full h-full object-cover" />
           <button
             type="button"
             onClick={() => onChange('')}
-            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#0f0e0c]/70 flex items-center justify-center text-white hover:bg-[#c97a7a] transition-colors"
+            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-[#1c4874]/70 flex items-center justify-center text-white hover:bg-[#990000] transition-colors"
           >
             <X size={13} strokeWidth={2} />
           </button>
@@ -145,9 +145,9 @@ function ImageUploadField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Paste image URL or upload below…"
-        className="w-full px-3 py-2 text-[0.78rem] border border-[#e2ddd5] rounded-lg bg-[#faf9f6]
-          focus:outline-none focus:border-[#c9a84c]/60 focus:ring-1 focus:ring-[#c9a84c]/20 transition-all
-          placeholder:text-[#c4bdb2]"
+        className="w-full px-3 py-2 text-[0.78rem] border border-[#c6cbd6] rounded-lg bg-[#f5f7fb]
+          focus:outline-none focus:border-[#1c4874]/60 focus:ring-1 focus:ring-[#1c4874]/20 transition-all
+          placeholder:text-[#999999]"
       />
 
       {/* Upload button */}
@@ -168,14 +168,14 @@ function ImageUploadField({
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
           className="flex items-center gap-2 px-3 py-1.5 text-[0.72rem] font-medium rounded-lg border
-            border-[#e2ddd5] bg-white text-[#6b6560] hover:border-[#c9a84c]/50 hover:text-[#8a6e2a]
+            border-[#c6cbd6] bg-white text-[#555555] hover:border-[#1c4874]/50 hover:text-[#154273]
             disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           <Upload size={12} strokeWidth={2} />
           {uploading ? 'Uploading…' : 'Upload image'}
         </button>
         {uploadError && (
-          <span className="text-[0.68rem] text-[#c97a7a]">{uploadError}</span>
+          <span className="text-[0.68rem] text-[#990000]">{uploadError}</span>
         )}
       </div>
     </div>
@@ -200,8 +200,8 @@ function SlideModal({
           description: initial.description || '',
           desktopImage: initial.desktopImage,
           mobileImage: initial.mobileImage || '',
-          accent: initial.accent || '#b8c9d4',
-          accentGlow: initial.accentGlow || '#5a8fa8',
+          accent: initial.accent || '#a6aec5',
+          accentGlow: initial.accentGlow || '#2f5681',
           buttonText: initial.buttonText || '',
           buttonLink: initial.buttonLink || '',
           openInNewTab: initial.openInNewTab || false,
@@ -241,14 +241,14 @@ function SlideModal({
   };
 
   const inputCls = (field: string) =>
-    `w-full px-3 py-2 text-[0.78rem] border rounded-lg bg-[#faf9f6]
-    focus:outline-none focus:ring-1 transition-all placeholder:text-[#c4bdb2]
+    `w-full px-3 py-2 text-[0.78rem] border rounded-lg bg-[#f5f7fb]
+    focus:outline-none focus:ring-1 transition-all placeholder:text-[#999999]
     ${errors[field]
-      ? 'border-[#c97a7a] focus:border-[#c97a7a] focus:ring-[#c97a7a]/20'
-      : 'border-[#e2ddd5] focus:border-[#c9a84c]/60 focus:ring-[#c9a84c]/20'}`;
+      ? 'border-[#990000] focus:border-[#990000] focus:ring-[#990000]/20'
+      : 'border-[#c6cbd6] focus:border-[#1c4874]/60 focus:ring-[#1c4874]/20'}`;
 
-  const labelCls = 'text-[0.72rem] font-semibold tracking-wide text-[#6b6560] uppercase';
-  const errCls = 'text-[0.66rem] text-[#c97a7a] mt-0.5';
+  const labelCls = 'text-[0.72rem] font-semibold tracking-wide text-[#555555] uppercase';
+  const errCls = 'text-[0.66rem] text-[#990000] mt-0.5';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
@@ -256,16 +256,16 @@ function SlideModal({
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#ede9e1]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#c6cbd6]">
           <div>
-            <h2 className="font-['Cormorant_Garamond',serif] text-[1.4rem] font-medium text-[#1a1714]">
+            <h2 className=" text-[1.4rem] font-medium text-[#222222]">
               {initial ? 'Edit Slide' : 'New Slide'}
             </h2>
-            <p className="text-[0.68rem] text-[#a09a90] tracking-wide mt-0.5">
+            <p className="text-[0.68rem] text-[#7f7f7f] tracking-wide mt-0.5">
               {initial ? `Editing: ${initial.title}` : 'Add a new hero carousel slide'}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6b6560] hover:bg-[#f5f3ef] transition-colors">
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#555555] hover:bg-[#eef0f5] transition-colors">
             <X size={16} strokeWidth={2} />
           </button>
         </div>
@@ -275,7 +275,7 @@ function SlideModal({
 
           {/* Title */}
           <div className="flex flex-col gap-1">
-            <label className={labelCls}>Title <span className="text-[#c97a7a]">*</span></label>
+            <label className={labelCls}>Title <span className="text-[#990000]">*</span></label>
             <input type="text" value={form.title} onChange={(e) => set('title', e.target.value)}
               placeholder="e.g. Alpha Color Diamonds" className={inputCls('title')} />
             {errors.title && <p className={errCls}>{errors.title}</p>}
@@ -319,21 +319,21 @@ function SlideModal({
             <div className="flex flex-col gap-1">
               <label className={labelCls}>Accent Colour</label>
               <div className="flex items-center gap-2">
-                <input type="color" value={form.accent || '#b8c9d4'}
+                <input type="color" value={form.accent || '#a6aec5'}
                   onChange={(e) => set('accent', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-[#e2ddd5] cursor-pointer p-0.5 bg-white" />
+                  className="w-9 h-9 rounded-lg border border-[#c6cbd6] cursor-pointer p-0.5 bg-white" />
                 <input type="text" value={form.accent || ''} onChange={(e) => set('accent', e.target.value)}
-                  className={`flex-1 ${inputCls('accent')}`} placeholder="#b8c9d4" />
+                  className={`flex-1 ${inputCls('accent')}`} placeholder="#a6aec5" />
               </div>
             </div>
             <div className="flex flex-col gap-1">
               <label className={labelCls}>Glow Colour</label>
               <div className="flex items-center gap-2">
-                <input type="color" value={form.accentGlow || '#5a8fa8'}
+                <input type="color" value={form.accentGlow || '#2f5681'}
                   onChange={(e) => set('accentGlow', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-[#e2ddd5] cursor-pointer p-0.5 bg-white" />
+                  className="w-9 h-9 rounded-lg border border-[#c6cbd6] cursor-pointer p-0.5 bg-white" />
                 <input type="text" value={form.accentGlow || ''} onChange={(e) => set('accentGlow', e.target.value)}
-                  className={`flex-1 ${inputCls('accentGlow')}`} placeholder="#5a8fa8" />
+                  className={`flex-1 ${inputCls('accentGlow')}`} placeholder="#2f5681" />
               </div>
             </div>
           </div>
@@ -358,15 +358,15 @@ function SlideModal({
             <div
               onClick={() => set('openInNewTab', !form.openInNewTab)}
               className={`relative w-9 h-5 rounded-full transition-colors duration-200 flex items-center flex-shrink-0
-                ${form.openInNewTab ? 'bg-[#c9a84c]' : 'bg-[#d4cfc8]'}`}
+                ${form.openInNewTab ? 'bg-[#1c4874]' : 'bg-[#c9cedc]'}`}
             >
               <span className={`absolute w-3.5 h-3.5 rounded-full bg-white shadow transition-transform duration-200
                 ${form.openInNewTab ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
             </div>
-            <span className="text-[0.78rem] text-[#6b6560] group-hover:text-[#1a1714] transition-colors">
+            <span className="text-[0.78rem] text-[#555555] group-hover:text-[#222222] transition-colors">
               Open button link in new tab
             </span>
-            {form.openInNewTab && <ExternalLink size={12} strokeWidth={2} className="text-[#c9a84c]" />}
+            {form.openInNewTab && <ExternalLink size={12} strokeWidth={2} className="text-[#1c4874]" />}
           </label>
 
           {/* Display order + Status */}
@@ -376,7 +376,7 @@ function SlideModal({
               <input type="number" min={0} value={form.displayOrder}
                 onChange={(e) => set('displayOrder', parseInt(e.target.value, 10) || 0)}
                 className={inputCls('displayOrder')} />
-              <p className="text-[0.65rem] text-[#a09a90]">Lower = shown first</p>
+              <p className="text-[0.65rem] text-[#7f7f7f]">Lower = shown first</p>
             </div>
             <div className="flex flex-col gap-1">
               <label className={labelCls}>Status</label>
@@ -384,11 +384,11 @@ function SlideModal({
                 onClick={() => set('isActive', !form.isActive)}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-all
                   ${form.isActive
-                    ? 'bg-[#9ab87a]/10 border-[#9ab87a]/40 text-[#3a6020]'
-                    : 'bg-[#f5f3ef] border-[#e2ddd5] text-[#a09a90]'}`}
+                    ? 'bg-[#2d7a52]/10 border-[#2d7a52]/40 text-[#3a6020]'
+                    : 'bg-[#eef0f5] border-[#c6cbd6] text-[#7f7f7f]'}`}
               >
                 {form.isActive
-                  ? <Eye size={14} strokeWidth={2} className="text-[#9ab87a]" />
+                  ? <Eye size={14} strokeWidth={2} className="text-[#2d7a52]" />
                   : <EyeOff size={14} strokeWidth={2} />}
                 <span className="text-[0.78rem] font-medium">
                   {form.isActive ? 'Active' : 'Inactive'}
@@ -399,16 +399,16 @@ function SlideModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#ede9e1] flex items-center justify-end gap-3 bg-[#faf9f7]">
+        <div className="px-6 py-4 border-t border-[#c6cbd6] flex items-center justify-end gap-3 bg-[#f5f7fb]">
           <button onClick={onClose}
-            className="px-4 py-2 text-[0.78rem] font-medium text-[#6b6560] border border-[#e2ddd5] rounded-lg hover:border-[#c9a84c]/50 hover:text-[#1a1714] transition-all">
+            className="px-4 py-2 text-[0.78rem] font-medium text-[#555555] border border-[#c6cbd6] rounded-lg hover:border-[#1c4874]/50 hover:text-[#222222] transition-all">
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
             className="px-5 py-2 text-[0.78rem] font-semibold text-white rounded-lg
-              bg-[#1a1714] hover:bg-[#c9a84c] disabled:opacity-50 disabled:cursor-not-allowed
+              bg-[#1c4874] hover:bg-[#1c4874] disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-200"
           >
             {saving ? 'Saving…' : initial ? 'Save Changes' : 'Create Slide'}
@@ -428,23 +428,23 @@ function DeleteConfirm({ title, onConfirm, onCancel }: {
       style={{ background: 'rgba(15,14,12,0.65)', backdropFilter: 'blur(6px)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#c97a7a]/10 border border-[#c97a7a]/20 flex items-center justify-center shrink-0">
-            <Trash2 size={16} strokeWidth={1.8} className="text-[#c97a7a]" />
+          <div className="w-10 h-10 rounded-xl bg-[#990000]/10 border border-[#990000]/20 flex items-center justify-center shrink-0">
+            <Trash2 size={16} strokeWidth={1.8} className="text-[#990000]" />
           </div>
           <div>
-            <h3 className="text-[0.9rem] font-semibold text-[#1a1714]">Delete slide?</h3>
-            <p className="text-[0.75rem] text-[#a09a90] mt-1">
-              "<span className="font-medium text-[#6b6560]">{title}</span>" will be permanently deleted.
+            <h3 className="text-[0.9rem] font-semibold text-[#222222]">Delete slide?</h3>
+            <p className="text-[0.75rem] text-[#7f7f7f] mt-1">
+              "<span className="font-medium text-[#555555]">{title}</span>" will be permanently deleted.
             </p>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
           <button onClick={onCancel}
-            className="px-4 py-2 text-[0.75rem] font-medium border border-[#e2ddd5] rounded-lg text-[#6b6560] hover:border-[#c9a84c]/40 transition-all">
+            className="px-4 py-2 text-[0.75rem] font-medium border border-[#c6cbd6] rounded-lg text-[#555555] hover:border-[#1c4874]/40 transition-all">
             Cancel
           </button>
           <button onClick={onConfirm}
-            className="px-4 py-2 text-[0.75rem] font-semibold rounded-lg bg-[#c97a7a] text-white hover:bg-[#b56666] transition-all">
+            className="px-4 py-2 text-[0.75rem] font-semibold rounded-lg bg-[#990000] text-white hover:bg-[#990000] transition-all">
             Delete
           </button>
         </div>
@@ -473,31 +473,31 @@ function SlideCard({
   onMoveUp: () => void;
   onMoveDown: () => void;
 }) {
-  const accent = slide.accent || '#b8c9d4';
+  const accent = slide.accent || '#a6aec5';
 
   return (
     <div className={`group relative bg-white border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]
-      ${slide.isActive ? 'border-[#ede9e1]' : 'border-dashed border-[#d4cfc8] opacity-75'}`}>
+      ${slide.isActive ? 'border-[#c6cbd6]' : 'border-dashed border-[#a6aec5] opacity-75'}`}>
 
       {/* Colour accent strip */}
       <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, ${accent}, transparent)` }} />
 
       <div className="flex">
         {/* Drag handle / order controls */}
-        <div className="w-10 shrink-0 flex flex-col items-center justify-center gap-1 py-4 bg-[#faf9f7] border-r border-[#f0ece4]">
-          <GripVertical size={14} strokeWidth={1.5} className="text-[#c4bdb2] mb-1" />
+        <div className="w-10 shrink-0 flex flex-col items-center justify-center gap-1 py-4 bg-[#f5f7fb] border-r border-[#e3e6ee]">
+          <GripVertical size={14} strokeWidth={1.5} className="text-[#999999] mb-1" />
           <button onClick={onMoveUp} disabled={index === 0}
-            className="w-6 h-6 flex items-center justify-center rounded text-[#a09a90] hover:bg-[#f0ece4] hover:text-[#1a1714] disabled:opacity-20 transition-all">
+            className="w-6 h-6 flex items-center justify-center rounded text-[#7f7f7f] hover:bg-[#eef0f5] hover:text-[#222222] disabled:opacity-20 transition-all">
             <ChevronUp size={12} strokeWidth={2} />
           </button>
           <button onClick={onMoveDown} disabled={index === total - 1}
-            className="w-6 h-6 flex items-center justify-center rounded text-[#a09a90] hover:bg-[#f0ece4] hover:text-[#1a1714] disabled:opacity-20 transition-all">
+            className="w-6 h-6 flex items-center justify-center rounded text-[#7f7f7f] hover:bg-[#eef0f5] hover:text-[#222222] disabled:opacity-20 transition-all">
             <ChevronDown size={12} strokeWidth={2} />
           </button>
         </div>
 
         {/* Thumbnail */}
-        <div className="w-32 sm:w-40 shrink-0 relative overflow-hidden bg-[#0f0e0c]">
+        <div className="w-32 sm:w-40 shrink-0 relative overflow-hidden bg-[#1c4874]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={slide.desktopImage}
@@ -523,21 +523,21 @@ function SlideCard({
                 {slide.subtitle}
               </p>
             )}
-            <h3 className="font-['Cormorant_Garamond',serif] text-[1.05rem] font-medium text-[#1a1714] truncate">
+            <h3 className=" text-[1.05rem] font-medium text-[#222222] truncate">
               {slide.title}
             </h3>
             {slide.description && (
-              <p className="text-[0.7rem] text-[#a09a90] mt-0.5 line-clamp-1">{slide.description}</p>
+              <p className="text-[0.7rem] text-[#7f7f7f] mt-0.5 line-clamp-1">{slide.description}</p>
             )}
             {slide.buttonText && slide.buttonLink && (
               <div className="flex items-center gap-1.5 mt-1.5">
-                <span className="text-[0.65rem] px-2 py-0.5 rounded bg-[#f0ece4] text-[#6b6560] font-medium">
+                <span className="text-[0.65rem] px-2 py-0.5 rounded bg-[#eef0f5] text-[#555555] font-medium">
                   {slide.buttonText}
                 </span>
-                <span className="text-[0.62rem] text-[#c4bdb2] truncate max-w-[140px]">
+                <span className="text-[0.62rem] text-[#999999] truncate max-w-[140px]">
                   → {slide.buttonLink}
                 </span>
-                {slide.openInNewTab && <ExternalLink size={10} strokeWidth={2} className="text-[#c4bdb2] shrink-0" />}
+                {slide.openInNewTab && <ExternalLink size={10} strokeWidth={2} className="text-[#999999] shrink-0" />}
               </div>
             )}
           </div>
@@ -545,11 +545,11 @@ function SlideCard({
           {/* Meta row */}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             {slide.mobileImage && (
-              <span className="inline-flex items-center gap-1 text-[0.62rem] text-[#a09a90] border border-[#e2ddd5] px-1.5 py-0.5 rounded">
+              <span className="inline-flex items-center gap-1 text-[0.62rem] text-[#7f7f7f] border border-[#c6cbd6] px-1.5 py-0.5 rounded">
                 <Smartphone size={9} strokeWidth={2} /> Mobile img
               </span>
             )}
-            <span className="text-[0.62rem] text-[#c4bdb2]">
+            <span className="text-[0.62rem] text-[#999999]">
               Updated {new Date(slide.updatedAt).toLocaleDateString()}
             </span>
           </div>
@@ -562,8 +562,8 @@ function SlideCard({
             onClick={onToggle}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.65rem] font-semibold tracking-wide transition-all
               ${slide.isActive
-                ? 'bg-[#9ab87a]/12 text-[#3a6020] border border-[#9ab87a]/30 hover:bg-[#c97a7a]/10 hover:text-[#8a2020] hover:border-[#c97a7a]/30'
-                : 'bg-[#f5f3ef] text-[#a09a90] border border-[#e2ddd5] hover:bg-[#9ab87a]/10 hover:text-[#3a6020] hover:border-[#9ab87a]/30'}`}
+                ? 'bg-[#2d7a52]/12 text-[#3a6020] border border-[#2d7a52]/30 hover:bg-[#990000]/10 hover:text-[#8a2020] hover:border-[#990000]/30'
+                : 'bg-[#eef0f5] text-[#7f7f7f] border border-[#c6cbd6] hover:bg-[#2d7a52]/10 hover:text-[#3a6020] hover:border-[#2d7a52]/30'}`}
           >
             {slide.isActive ? <Eye size={10} strokeWidth={2} /> : <EyeOff size={10} strokeWidth={2} />}
             {slide.isActive ? 'Active' : 'Inactive'}
@@ -571,13 +571,13 @@ function SlideCard({
 
           {/* Edit */}
           <button onClick={onEdit}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6b6560] border border-[#e2ddd5] hover:border-[#c9a84c]/50 hover:text-[#8a6e2a] hover:bg-[#faf3e0] transition-all">
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#555555] border border-[#c6cbd6] hover:border-[#1c4874]/50 hover:text-[#154273] hover:bg-[#eef2f8] transition-all">
             <Pencil size={13} strokeWidth={1.8} />
           </button>
 
           {/* Delete */}
           <button onClick={onDelete}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6b6560] border border-[#e2ddd5] hover:border-[#c97a7a]/50 hover:text-[#c97a7a] hover:bg-[#fdf0f0] transition-all">
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#555555] border border-[#c6cbd6] hover:border-[#990000]/50 hover:text-[#990000] hover:bg-[#fdf0f0] transition-all">
             <Trash2 size={13} strokeWidth={1.8} />
           </button>
         </div>
@@ -722,7 +722,7 @@ export default function HeroSlidesAdminPage() {
     return (
       <div className="flex flex-col gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-28 rounded-2xl bg-white border border-[#ede9e1] animate-pulse" />
+          <div key={i} className="h-28 rounded-2xl bg-white border border-[#c6cbd6] animate-pulse" />
         ))}
       </div>
     );
@@ -735,13 +735,13 @@ export default function HeroSlidesAdminPage() {
       <div className="mb-8">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#c9a84c] font-semibold mb-2">
+            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#1c4874] font-semibold mb-2">
               ◆ Alpha Gemstone
             </p>
-            <h1 className="font-['Cormorant_Garamond',serif] text-[2.4rem] font-medium text-[#1a1714] tracking-tight leading-none">
+            <h1 className=" text-[2.4rem] font-medium text-[#222222] tracking-tight leading-none">
               Hero Carousel
             </h1>
-            <p className="text-[0.75rem] text-[#a09a90] mt-1.5">
+            <p className="text-[0.75rem] text-[#7f7f7f] mt-1.5">
               Manage homepage hero banner slides — images, text, buttons, and ordering.
             </p>
           </div>
@@ -750,35 +750,35 @@ export default function HeroSlidesAdminPage() {
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 text-[0.75rem] font-medium border border-[#e2ddd5] rounded-lg text-[#6b6560] hover:border-[#c9a84c]/50 hover:text-[#8a6e2a] transition-all"
+              className="flex items-center gap-2 px-3 py-2 text-[0.75rem] font-medium border border-[#c6cbd6] rounded-lg text-[#555555] hover:border-[#1c4874]/50 hover:text-[#154273] transition-all"
             >
               <ExternalLink size={13} strokeWidth={1.8} />
               Preview site
             </a>
             <button
               onClick={() => setEditTarget({ mode: 'new' })}
-              className="flex items-center gap-2 px-4 py-2 text-[0.78rem] font-semibold text-white bg-[#1a1714] rounded-lg hover:bg-[#c9a84c] transition-all duration-200"
+              className="flex items-center gap-2 px-4 py-2 text-[0.78rem] font-semibold text-white bg-[#1c4874] rounded-lg hover:bg-[#1c4874] transition-all duration-200"
             >
               <Plus size={14} strokeWidth={2} />
               New Slide
             </button>
           </div>
         </div>
-        <div className="mt-5 h-px bg-gradient-to-r from-[#c9a84c]/30 via-[#ede9e1] to-transparent" />
+        <div className="mt-5 h-px bg-gradient-to-r from-[#1c4874]/30 via-[#e3e6ee] to-transparent" />
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { label: 'Total Slides', value: slides.length, accent: '#c9a84c' },
-          { label: 'Active', value: slides.filter(s => s.isActive).length, accent: '#9ab87a' },
-          { label: 'Inactive', value: slides.filter(s => !s.isActive).length, accent: '#a09a90' },
+          { label: 'Total Slides', value: slides.length, accent: '#1c4874' },
+          { label: 'Active', value: slides.filter(s => s.isActive).length, accent: '#2d7a52' },
+          { label: 'Inactive', value: slides.filter(s => !s.isActive).length, accent: '#7f7f7f' },
         ].map(({ label, value, accent }) => (
-          <div key={label} className="bg-white border border-[#ede9e1] rounded-xl px-4 py-3">
-            <div className="font-['Cormorant_Garamond',serif] text-[1.8rem] font-medium leading-none" style={{ color: accent }}>
+          <div key={label} className="bg-white border border-[#c6cbd6] rounded-xl px-4 py-3">
+            <div className=" text-[1.8rem] font-medium leading-none" style={{ color: accent }}>
               {value}
             </div>
-            <div className="text-[0.65rem] text-[#a09a90] uppercase tracking-wider font-semibold mt-0.5">
+            <div className="text-[0.65rem] text-[#7f7f7f] uppercase tracking-wider font-semibold mt-0.5">
               {label}
             </div>
           </div>
@@ -787,13 +787,13 @@ export default function HeroSlidesAdminPage() {
 
       {/* Slides list */}
       {slides.length === 0 ? (
-        <div className="bg-white border border-dashed border-[#d4cfc8] rounded-2xl flex flex-col items-center justify-center py-20 text-center gap-3">
-          <LayoutDashboard size={32} strokeWidth={1} className="text-[#d4cfc8]" />
-          <p className="text-[0.85rem] font-medium text-[#b0a898]">No slides yet</p>
-          <p className="text-[0.72rem] text-[#c4bdb2]">Create your first hero carousel slide to get started</p>
+        <div className="bg-white border border-dashed border-[#a6aec5] rounded-2xl flex flex-col items-center justify-center py-20 text-center gap-3">
+          <LayoutDashboard size={32} strokeWidth={1} className="text-[#999999]" />
+          <p className="text-[0.85rem] font-medium text-[#999999]">No slides yet</p>
+          <p className="text-[0.72rem] text-[#999999]">Create your first hero carousel slide to get started</p>
           <button
             onClick={() => setEditTarget({ mode: 'new' })}
-            className="mt-2 flex items-center gap-2 px-4 py-2 text-[0.75rem] font-semibold text-white bg-[#1a1714] rounded-lg hover:bg-[#c9a84c] transition-all"
+            className="mt-2 flex items-center gap-2 px-4 py-2 text-[0.75rem] font-semibold text-white bg-[#1c4874] rounded-lg hover:bg-[#1c4874] transition-all"
           >
             <Plus size={13} strokeWidth={2} />
             Create First Slide

@@ -33,7 +33,7 @@ export default function ReturnPolicyPage() {
       <div>
       
 
-        <ul className="list-disc pl-6 space-y-2">
+        <ul className="fp-list">
           <li>Returns accepted within 10 days of delivery unless otherwise specified.</li>
           <li>Item must be unused and in original condition.</li>
           <li>Custom orders and special-cut stones are non-returnable.</li>

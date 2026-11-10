@@ -8,6 +8,7 @@ import { validateCoupon, redeemCoupon } from './coupon.service';
 import { purchaseLabelFromRate, trackShipEnginePackage } from './shipengine.service';
 import { buildTrackingUrl } from '@/models/ORDER_SHIPPING_FIELDS';
 import { Resend } from 'resend';
+import { resend } from '@/lib/resend';
 import {
   orderConfirmationEmailHtml,
   orderShippedEmailHtml,
@@ -15,7 +16,6 @@ import {
   adminNewOrderEmailHtml,
 } from '@/lib/email-templates';
 import { applyShippingServiceFee } from '@/lib/shipping-config';
-const resend    = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const ADMIN_NOTIFICATION_EMAILS = (process.env.ADMIN_NOTIFICATION_EMAILS || '')
   .split(',')

@@ -223,6 +223,9 @@ function SkeletonCard() {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
+/** Card width + gap, in px. */
+const CARD_W = 200 + 16;
+
 export default function BestSellersMarquee() {
   const [items, setItems]       = useState<IPopularProduct[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -234,7 +237,6 @@ export default function BestSellersMarquee() {
   const posRef   = useRef(0);
 
   const SPEED  = 0.55;          // px per rAF
-  const CARD_W = 200 + 16;      // card width + gap
 
   // ── Fetch from real API ──────────────────────────────────────────────────
   useEffect(() => {

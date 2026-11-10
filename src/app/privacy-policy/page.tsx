@@ -32,11 +32,11 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <div>
-        <h2 className="font-semibold text-xl mb-3">
+        <h2 className="fp-h2">
           Information We Collect
         </h2>
 
-        <ul className="list-disc pl-6 space-y-2">
+        <ul className="fp-list">
           <li>Name</li>
           <li>Address</li>
           <li>Phone number</li>
@@ -48,11 +48,11 @@ export default function PrivacyPolicyPage() {
       </div>
 
       <div>
-        <h2 className="font-semibold text-xl mb-3">
+        <h2 className="fp-h2">
           How We Use Your Information
         </h2>
 
-        <ul className="list-disc pl-6 space-y-2">
+        <ul className="fp-list">
           <li>Process and ship orders</li>
           <li>Customer support</li>
           <li>Fraud prevention</li>

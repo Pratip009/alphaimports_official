@@ -78,30 +78,30 @@ function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
         e.preventDefault();
         onClick ? onClick() : exec(cmd, val);
       }}
-      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6b6560] hover:bg-[#f0ece4] hover:text-[#1a1714] transition-all"
+      className="w-7 h-7 flex items-center justify-center rounded-md text-[#555555] hover:bg-[#eef0f5] hover:text-[#222222] transition-all"
     >
       {icon}
     </button>
   );
 
   return (
-    <div className="flex flex-col rounded-xl border border-[#e2ddd5] bg-[#faf9f6] overflow-hidden focus-within:border-[#c9a84c] focus-within:ring-2 focus-within:ring-[#c9a84c]/10 transition-all">
+    <div className="flex flex-col rounded-xl border border-[#c6cbd6] bg-[#f5f7fb] overflow-hidden focus-within:border-[#1c4874] focus-within:ring-2 focus-within:ring-[#1c4874]/10 transition-all">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[#e2ddd5] bg-white">
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-[#c6cbd6] bg-white">
         {toolbarBtn(<Bold size={13} strokeWidth={2.2} />, 'bold', undefined, 'Bold')}
         {toolbarBtn(<Italic size={13} strokeWidth={2} />, 'italic', undefined, 'Italic')}
-        <div className="w-px h-4 bg-[#e2ddd5] mx-0.5" />
+        <div className="w-px h-4 bg-[#e3e6ee] mx-0.5" />
         {toolbarBtn(<Heading2 size={13} strokeWidth={1.8} />, 'formatBlock', '<h2>', 'Heading 2')}
         {toolbarBtn(<Heading3 size={13} strokeWidth={1.8} />, 'formatBlock', '<h3>', 'Heading 3')}
         {toolbarBtn(<AlignLeft size={13} strokeWidth={1.8} />, 'formatBlock', '<p>', 'Paragraph')}
-        <div className="w-px h-4 bg-[#e2ddd5] mx-0.5" />
+        <div className="w-px h-4 bg-[#e3e6ee] mx-0.5" />
         {toolbarBtn(<List size={13} strokeWidth={1.8} />, 'insertUnorderedList', undefined, 'Bullet List')}
         {toolbarBtn(<ListOrdered size={13} strokeWidth={1.8} />, 'insertOrderedList', undefined, 'Numbered List')}
         {toolbarBtn(<Quote size={13} strokeWidth={1.8} />, 'formatBlock', '<blockquote>', 'Blockquote')}
-        <div className="w-px h-4 bg-[#e2ddd5] mx-0.5" />
+        <div className="w-px h-4 bg-[#e3e6ee] mx-0.5" />
         {toolbarBtn(<Minus size={13} strokeWidth={1.8} />, 'insertHorizontalRule', undefined, 'Divider')}
         {toolbarBtn(<Link size={13} strokeWidth={1.8} />, 'createLink', undefined, 'Insert Link', insertLink)}
-        <div className="w-px h-4 bg-[#e2ddd5] mx-0.5" />
+        <div className="w-px h-4 bg-[#e3e6ee] mx-0.5" />
         {toolbarBtn(<RotateCcw size={12} strokeWidth={2} />, 'undo', undefined, 'Undo')}
         {toolbarBtn(<RotateCw size={12} strokeWidth={2} />, 'redo', undefined, 'Redo')}
       </div>
@@ -113,29 +113,29 @@ function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
         suppressContentEditableWarning
         onInput={handleInput}
         data-placeholder={placeholder}
-        className="rich-editor-body min-h-[220px] max-h-[360px] overflow-y-auto px-4 py-3 text-[0.85rem] text-[#1a1714] leading-relaxed outline-none"
+        className="rich-editor-body min-h-[220px] max-h-[360px] overflow-y-auto px-4 py-3 text-[0.85rem] text-[#222222] leading-relaxed outline-none"
       />
 
       <style>{`
         .rich-editor-body:empty:before {
           content: attr(data-placeholder);
-          color: #c8c2b8;
+          color: #999999;
           pointer-events: none;
         }
         .rich-editor-body h2 {
-          font-family: 'Cormorant Garamond', serif;
+          font-family: Verdana, Geneva, Tahoma, sans-serif;
           font-size: 1.25rem;
           font-weight: 600;
-          color: #1a1714;
+          color: #222222;
           margin: 0.75em 0 0.35em;
-          border-bottom: 1px solid #e2ddd5;
+          border-bottom: 1px solid #c6cbd6;
           padding-bottom: 4px;
         }
         .rich-editor-body h3 {
-          font-family: 'Cormorant Garamond', serif;
+          font-family: Verdana, Geneva, Tahoma, sans-serif;
           font-size: 1.05rem;
           font-weight: 600;
-          color: #3a3530;
+          color: #555555;
           margin: 0.65em 0 0.25em;
         }
         .rich-editor-body p { margin: 0.4em 0; }
@@ -151,20 +151,20 @@ function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
         }
         .rich-editor-body li { margin: 0.2em 0; }
         .rich-editor-body blockquote {
-          border-left: 3px solid #c9a84c;
+          border-left: 3px solid #1c4874;
           margin: 0.5em 0;
           padding: 4px 12px;
-          color: #6b6560;
+          color: #555555;
           font-style: italic;
-          background: #fdf9f0;
+          background: #eef2f8;
         }
         .rich-editor-body hr {
           border: none;
-          border-top: 1px solid #e2ddd5;
+          border-top: 1px solid #c6cbd6;
           margin: 0.75em 0;
         }
         .rich-editor-body a {
-          color: #7ab0c9;
+          color: #2f5681;
           text-decoration: underline;
         }
         .rich-editor-body strong { font-weight: 700; }
@@ -197,23 +197,23 @@ function EditCategoryModal({ category, onClose, onSave, loading }: EditCategoryM
       style={{ background: 'rgba(26,23,20,0.6)', backdropFilter: 'blur(6px)' }}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl border border-[#ede9e1] w-full flex flex-col"
+        className="bg-white rounded-2xl shadow-2xl border border-[#c6cbd6] w-full flex flex-col"
         style={{ maxWidth: 680, maxHeight: '90vh' }}
       >
         {/* Modal header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#f0ece4] flex-shrink-0">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#e3e6ee] flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#c9a84c]/10 border border-[#c9a84c]/20 flex items-center justify-center">
-              <Pencil size={14} strokeWidth={1.8} className="text-[#c9a84c]" />
+            <div className="w-9 h-9 rounded-xl bg-[#1c4874]/10 border border-[#1c4874]/20 flex items-center justify-center">
+              <Pencil size={14} strokeWidth={1.8} className="text-[#1c4874]" />
             </div>
             <div>
-              <h3 className="text-[0.92rem] font-semibold text-[#1a1714]">Edit Category</h3>
-              <p className="text-[0.7rem] text-[#a09a90] font-mono">{category.slug}</p>
+              <h3 className="text-[0.92rem] font-semibold text-[#222222]">Edit Category</h3>
+              <p className="text-[0.7rem] text-[#7f7f7f] font-mono">{category.slug}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#c8c2b8] hover:bg-[#f7f5f1] hover:text-[#6b6560] transition-all"
+            className="p-1.5 rounded-lg text-[#999999] hover:bg-[#f5f7fb] hover:text-[#555555] transition-all"
           >
             <X size={16} strokeWidth={2} />
           </button>
@@ -225,11 +225,11 @@ function EditCategoryModal({ category, onClose, onSave, loading }: EditCategoryM
 
             {/* Name field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">
+              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">
                 Category Name
               </label>
               <input
-                className="w-full px-3 py-2.5 rounded-lg border border-[#e2ddd5] bg-[#faf9f6] text-[0.88rem] text-[#1a1714] placeholder:text-[#c8c2b8] focus:outline-none focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/10 transition-all font-medium"
+                className="w-full px-3 py-2.5 rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] text-[0.88rem] text-[#222222] placeholder:text-[#999999] focus:outline-none focus:border-[#1c4874] focus:ring-2 focus:ring-[#1c4874]/10 transition-all font-medium"
                 placeholder="Category name"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -240,15 +240,15 @@ function EditCategoryModal({ category, onClose, onSave, loading }: EditCategoryM
             {/* Rich text description */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">
+                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">
                   Description
-                  <span className="normal-case font-normal text-[#c8c2b8] ml-1">(rich text)</span>
+                  <span className="normal-case font-normal text-[#999999] ml-1">(rich text)</span>
                 </label>
                 {desc && (
                   <button
                     type="button"
                     onClick={() => setDesc('')}
-                    className="text-[0.65rem] text-[#c8c2b8] hover:text-red-400 transition-colors"
+                    className="text-[0.65rem] text-[#999999] hover:text-red-400 transition-colors"
                   >
                     Clear
                   </button>
@@ -259,7 +259,7 @@ function EditCategoryModal({ category, onClose, onSave, loading }: EditCategoryM
                 onChange={setDesc}
                 placeholder="Write a detailed description for this category. Supports rich formatting — headings, bold, lists, quotes…"
               />
-              <p className="text-[0.65rem] text-[#c8c2b8]">
+              <p className="text-[0.65rem] text-[#999999]">
                 This description appears on the category landing page shown to customers.
               </p>
             </div>
@@ -267,14 +267,14 @@ function EditCategoryModal({ category, onClose, onSave, loading }: EditCategoryM
             {/* Live preview */}
             {desc && desc !== '<br>' && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">
+                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">
                   Preview
                 </label>
                 <div
-                  className="rounded-xl border border-[#e2ddd5] bg-gradient-to-br from-[#1a2a5e] to-[#0e1a40] px-5 py-4"
-                  style={{ fontFamily: '"Elms Sans", sans-serif' }}
+                  className="rounded-xl border border-[#c6cbd6] bg-gradient-to-br from-[#154273] to-[#154273] px-5 py-4"
+                  style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif' }}
                 >
-                  <p className="text-[0.62rem] tracking-[0.22em] uppercase text-[#c8a96e] font-sans mb-1.5">
+                  <p className="text-[0.62rem] tracking-[0.22em] uppercase text-[#1c4874] font-sans mb-1.5">
                     As seen on category page
                   </p>
                   <div
@@ -287,18 +287,18 @@ function EditCategoryModal({ category, onClose, onSave, loading }: EditCategoryM
           </div>
 
           {/* Footer actions */}
-          <div className="flex gap-2.5 px-6 py-4 border-t border-[#f0ece4] bg-[#faf9f6] flex-shrink-0">
+          <div className="flex gap-2.5 px-6 py-4 border-t border-[#e3e6ee] bg-[#f5f7fb] flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-[#e2ddd5] text-[#6b6560] text-[0.8rem] font-semibold hover:bg-white transition-all"
+              className="flex-1 py-2.5 rounded-xl border border-[#c6cbd6] text-[#555555] text-[0.8rem] font-semibold hover:bg-white transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-[#1a1714] text-white text-[0.8rem] font-semibold hover:bg-[#2a2420] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl bg-[#1c4874] text-white text-[0.8rem] font-semibold hover:bg-[#1c4874] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
             >
               {loading
                 ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Saving…</>
@@ -386,6 +386,9 @@ export default function AdminCategoriesPage() {
     if (!selectedCat && cats.length > 0) setSelectedCat(cats[0]._id);
   };
 
+  // Load once on mount. fetchAll is re-created every render (it reads
+  // selectedCat), so listing it would refetch on every category click.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchAll(); }, []);
 
   // ── helpers ────────────────────────────────────────────────────────────────
@@ -464,7 +467,7 @@ export default function AdminCategoriesPage() {
     const now = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
     const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Catalogue Structure</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#fff;color:#1a1714;padding:48px 52px;font-size:13px}.header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:28px;border-bottom:1.5px solid #1a1714;margin-bottom:32px}.brand{font-family:'Cormorant Garamond',serif;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#c9a84c}.title{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;color:#1a1714;line-height:1;margin-top:4px}.meta{text-align:right;font-size:10.5px;color:#a09a90;line-height:1.7}.meta strong{color:#1a1714;font-weight:600}.stats{display:flex;gap:12px;margin-bottom:28px}.stat-pill{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:100px;font-size:11px;font-weight:600}.stat-pill.gold{background:#c9a84c18;border:1px solid #c9a84c40;color:#8a6e24}.stat-pill.blue{background:#7ab0c918;border:1px solid #7ab0c940;color:#3a7d9a}.stat-dot{width:7px;height:7px;border-radius:50%}.stat-dot.gold-dot{background:#c9a84c}.stat-dot.blue-dot{background:#7ab0c9}table{width:100%;border-collapse:collapse}thead tr{background:#1a1714}thead th{padding:11px 14px;text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e8e0d0}thead th:first-child{border-radius:10px 0 0 10px}thead th:last-child{border-radius:0 10px 10px 0}.cat-row td{padding:13px 14px 10px;border-bottom:1px solid #f0ece4;background:#faf9f6}.icon-cell{width:32px}.cat-icon{color:#c9a84c;font-size:9px}.cat-name{font-weight:600;font-size:13.5px}.sub-row td{padding:7px 14px;border-bottom:1px solid #f6f3ee;background:#fff}.connector-cell{width:32px}.sub-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#7ab0c9;margin-left:4px}.sub-name{font-size:12.5px;color:#3a3530;padding-left:10px!important}.empty-text{font-size:11px;color:#c8c2b8;font-style:italic;padding-left:16px!important}.slug-cell{font-family:monospace;font-size:10.5px;color:#b0a99f;width:180px}.type-cell{width:120px}.badge{display:inline-block;padding:2.5px 9px;border-radius:100px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.badge-cat{background:#c9a84c18;color:#8a6e24;border:1px solid #c9a84c30}.badge-sub{background:#7ab0c918;color:#3a7d9a;border:1px solid #7ab0c930}.footer{margin-top:36px;padding-top:20px;border-top:1px solid #ede9e1;display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:#c8c2b8}.footer-brand{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#c9a84c}</style>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family: Verdana, Geneva, Tahoma, sans-serif;background:#fff;color:#222222;padding:48px 52px;font-size:13px}.header{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:28px;border-bottom:1.5px solid #1c4874;margin-bottom:32px}.brand{font-family: Verdana, Geneva, Tahoma, sans-serif;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#1c4874}.title{font-family: Verdana, Geneva, Tahoma, sans-serif;font-size:38px;font-weight:600;color:#222222;line-height:1;margin-top:4px}.meta{text-align:right;font-size:10.5px;color:#7f7f7f;line-height:1.7}.meta strong{color:#222222;font-weight:600}.stats{display:flex;gap:12px;margin-bottom:28px}.stat-pill{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:100px;font-size:11px;font-weight:600}.stat-pill.gold{background:#1c487418;border:1px solid #1c487440;color:#154273}.stat-pill.blue{background:#2f568118;border:1px solid #2f568140;color:#2f5681}.stat-dot{width:7px;height:7px;border-radius:50%}.stat-dot.gold-dot{background:#1c4874}.stat-dot.blue-dot{background:#2f5681}table{width:100%;border-collapse:collapse}thead tr{background:#1c4874}thead th{padding:11px 14px;text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ffffff}thead th:first-child{border-radius:3px 0 0 10px}thead th:last-child{border-radius:0 10px 10px 0}.cat-row td{padding:13px 14px 10px;border-bottom:1px solid #e3e6ee;background:#f5f7fb}.icon-cell{width:32px}.cat-icon{color:#1c4874;font-size:9px}.cat-name{font-weight:600;font-size:13.5px}.sub-row td{padding:7px 14px;border-bottom:1px solid #e3e6ee;background:#fff}.connector-cell{width:32px}.sub-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#2f5681;margin-left:4px}.sub-name{font-size:12.5px;color:#555555;padding-left:10px!important}.empty-text{font-size:11px;color:#999999;font-style:italic;padding-left:16px!important}.slug-cell{font-family:monospace;font-size:10.5px;color:#999999;width:180px}.type-cell{width:120px}.badge{display:inline-block;padding:2.5px 9px;border-radius:100px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.badge-cat{background:#1c487418;color:#154273;border:1px solid #1c487430}.badge-sub{background:#2f568118;color:#2f5681;border:1px solid #2f568130}.footer{margin-top:36px;padding-top:20px;border-top:1px solid #c6cbd6;display:flex;justify-content:space-between;align-items:center;font-size:9.5px;color:#999999}.footer-brand{font-family: Verdana, Geneva, Tahoma, sans-serif;font-size:13px;font-weight:600;color:#1c4874}</style>
 </head><body>
 <div class="header"><div><div class="brand">Admin · Catalogue Report</div><div class="title">Category Structure</div></div><div class="meta"><div>Generated on <strong>${now}</strong></div><div>${categories.length} categories · ${totalSubs} subcategories</div></div></div>
 <div class="stats"><div class="stat-pill gold"><span class="stat-dot gold-dot"></span>${categories.length} ${categories.length===1?'Category':'Categories'}</div><div class="stat-pill blue"><span class="stat-dot blue-dot"></span>${totalSubs} ${totalSubs===1?'Subcategory':'Subcategories'}</div></div>
@@ -694,39 +697,39 @@ export default function AdminCategoriesPage() {
 
   // ── render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-6xl font-['DM_Sans',sans-serif]">
+    <div className="max-w-6xl">
 
       {/* Page header */}
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <p className="text-[0.68rem] font-semibold tracking-[0.12em] uppercase text-[#c9a84c] mb-1">
+          <p className="text-[0.68rem] font-semibold tracking-[0.12em] uppercase text-[#1c4874] mb-1">
             Catalogue Management
           </p>
-          <h1 className="font-['Cormorant_Garamond',serif] text-[2.4rem] font-semibold text-[#1a1714] leading-none">
+          <h1 className=" text-[2.4rem] font-semibold text-[#222222] leading-none">
             Categories
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 text-[0.72rem] text-[#a09a90]">
+          <div className="flex items-center gap-3 text-[0.72rem] text-[#7f7f7f]">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#c9a84c]" />
+              <span className="w-2 h-2 rounded-full bg-[#1c4874]" />
               {categories.length} categories
             </span>
-            <span className="w-px h-3 bg-[#e2ddd5]" />
+            <span className="w-px h-3 bg-[#e3e6ee]" />
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#7ab0c9]" />
+              <span className="w-2 h-2 rounded-full bg-[#2f5681]" />
               {subcategories.length} subcategories
             </span>
-            <span className="w-px h-3 bg-[#e2ddd5]" />
+            <span className="w-px h-3 bg-[#e3e6ee]" />
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#a97ac9]" />
+              <span className="w-2 h-2 rounded-full bg-[#7d88aa]" />
               {subsubcategories.length} sub-subcategories
             </span>
           </div>
           <button
             onClick={generatePdf}
             disabled={categories.length === 0}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#ede9e1] bg-white text-[0.78rem] font-semibold text-[#1a1714] hover:border-[#c9a84c]/50 hover:bg-[#fdf9f0] hover:text-[#c9a84c] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#c6cbd6] bg-white text-[0.78rem] font-semibold text-[#222222] hover:border-[#1c4874]/50 hover:bg-[#eef2f8] hover:text-[#1c4874] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
           >
             <FileDown size={14} strokeWidth={2} /> Export PDF
           </button>
@@ -749,22 +752,22 @@ export default function AdminCategoriesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_280px] gap-4">
 
         {/* ══ COL 1 — Category list ══ */}
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden flex flex-col">
-          <div className="px-4 pt-4 pb-3 border-b border-[#f0ece4]">
+        <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden flex flex-col">
+          <div className="px-4 pt-4 pb-3 border-b border-[#e3e6ee]">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[0.68rem] font-bold tracking-[0.1em] uppercase text-[#a09a90]">Categories</p>
+              <p className="text-[0.68rem] font-bold tracking-[0.1em] uppercase text-[#7f7f7f]">Categories</p>
               {/* Reorder saving indicator */}
               {reorderSaving && (
-                <span className="flex items-center gap-1.5 text-[0.62rem] text-[#c9a84c]">
-                  <span className="w-2.5 h-2.5 rounded-full border-2 border-[#c9a84c]/30 border-t-[#c9a84c] animate-spin" />
+                <span className="flex items-center gap-1.5 text-[0.62rem] text-[#1c4874]">
+                  <span className="w-2.5 h-2.5 rounded-full border-2 border-[#1c4874]/30 border-t-[#1c4874] animate-spin" />
                   Saving order…
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#faf9f6] border border-[#e8e3db]">
-              <Search size={12} strokeWidth={1.8} className="text-[#c8c2b8]" />
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f7fb] border border-[#c6cbd6]">
+              <Search size={12} strokeWidth={1.8} className="text-[#999999]" />
               <input
-                className="flex-1 bg-transparent text-[0.8rem] text-[#1a1714] placeholder:text-[#c8c2b8] outline-none"
+                className="flex-1 bg-transparent text-[0.8rem] text-[#222222] placeholder:text-[#999999] outline-none"
                 placeholder="Find category…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -772,7 +775,7 @@ export default function AdminCategoriesPage() {
             </div>
             {/* Drag hint — shown when no search active and >1 categories */}
             {!search && categories.length > 1 && (
-              <p className="mt-2 text-[0.62rem] text-[#c8c2b8] flex items-center gap-1">
+              <p className="mt-2 text-[0.62rem] text-[#999999] flex items-center gap-1">
                 <GripVertical size={10} strokeWidth={2} />
                 Drag to reorder
               </p>
@@ -781,7 +784,7 @@ export default function AdminCategoriesPage() {
 
           <ul className="overflow-y-auto flex-1 py-1.5" style={{ maxHeight: '480px' }}>
             {filteredCats.length === 0 ? (
-              <li className="px-4 py-8 text-center text-[0.75rem] text-[#c8c2b8]">
+              <li className="px-4 py-8 text-center text-[0.75rem] text-[#999999]">
                 {search ? 'No results.' : 'No categories yet.'}
               </li>
             ) : filteredCats.map(cat => {
@@ -803,12 +806,12 @@ export default function AdminCategoriesPage() {
                 >
                   {/* Drop indicator line — shown above when dragging over */}
                   {isDragOver && (
-                    <div className="h-0.5 mx-1 rounded-full bg-[#c9a84c] mb-0.5 transition-all" />
+                    <div className="h-0.5 mx-1 rounded-full bg-[#1c4874] mb-0.5 transition-all" />
                   )}
 
                   <div
                     className={`group flex items-center gap-2 px-2 py-2.5 rounded-xl cursor-pointer transition-all duration-150
-                      ${isActive ? 'bg-[#1a1714] shadow-sm' : 'hover:bg-[#f7f5f1]'}
+                      ${isActive ? 'bg-[#1c4874] shadow-sm' : 'hover:bg-[#f5f7fb]'}
                       ${isDragging ? 'opacity-40 scale-[0.98]' : ''}
                     `}
                     onClick={() => { setSelectedCat(cat._id); setSubSearch(''); }}
@@ -819,7 +822,7 @@ export default function AdminCategoriesPage() {
                         title="Drag to reorder"
                         className={`flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity
                           opacity-0 group-hover:opacity-100
-                          ${isActive ? 'text-white/30 hover:text-white/60' : 'text-[#c8c2b8] hover:text-[#a09a90]'}`}
+                          ${isActive ? 'text-white/30 hover:text-white/60' : 'text-[#999999] hover:text-[#7f7f7f]'}`}
                         onMouseDown={e => e.stopPropagation()}
                       >
                         <GripVertical size={13} strokeWidth={1.8} />
@@ -827,19 +830,19 @@ export default function AdminCategoriesPage() {
                     )}
 
                     {/* Folder icon */}
-                    <span className={`flex-shrink-0 ${isActive ? 'text-[#c9a84c]' : 'text-[#c9a84c]/70'}`}>
+                    <span className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-[#1c4874]/70'}`}>
                       {isActive ? <FolderOpen size={15} strokeWidth={1.6} /> : <Folder size={15} strokeWidth={1.6} />}
                     </span>
 
                     {/* Name */}
-                    <span className={`flex-1 text-[0.825rem] font-medium truncate ${isActive ? 'text-white' : 'text-[#1a1714]'}`}>
+                    <span className={`flex-1 text-[0.825rem] font-medium truncate ${isActive ? 'text-white' : 'text-[#222222]'}`}>
                       {cat.name}
                     </span>
 
                     {/* Sub count badge */}
                     {count > 0 && (
                       <span className={`text-[0.62rem] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0
-                        ${isActive ? 'bg-white/15 text-white' : 'bg-[#c9a84c]/12 text-[#c9a84c]'}`}>
+                        ${isActive ? 'bg-white/15 text-white' : 'bg-[#1c4874]/12 text-[#1c4874]'}`}>
                         {count}
                       </span>
                     )}
@@ -850,8 +853,8 @@ export default function AdminCategoriesPage() {
                       title="Edit category"
                       className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg flex-shrink-0
                         ${isActive
-                          ? 'text-white/40 hover:text-[#c9a84c] hover:bg-white/10'
-                          : 'text-[#c8c2b8] hover:bg-[#fdf9f0] hover:text-[#c9a84c]'}`}
+                          ? 'text-white/40 hover:text-white hover:bg-white/10'
+                          : 'text-[#999999] hover:bg-[#eef2f8] hover:text-[#1c4874]'}`}
                     >
                       <Pencil size={11} strokeWidth={2} />
                     </button>
@@ -862,7 +865,7 @@ export default function AdminCategoriesPage() {
                       className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg flex-shrink-0
                         ${isActive
                           ? 'text-white/30 hover:text-red-400 hover:bg-white/10'
-                          : 'text-[#c8c2b8] hover:bg-red-50 hover:text-red-400'}`}
+                          : 'text-[#999999] hover:bg-red-50 hover:text-red-400'}`}
                     >
                       <Trash2 size={11} strokeWidth={1.8} />
                     </button>
@@ -874,33 +877,33 @@ export default function AdminCategoriesPage() {
         </div>
 
         {/* ══ COL 2 — Subcategory grid ══ */}
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden flex flex-col">
-          <div className="px-5 pt-4 pb-3 border-b border-[#f0ece4] flex items-center justify-between gap-4">
+        <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden flex flex-col">
+          <div className="px-5 pt-4 pb-3 border-b border-[#e3e6ee] flex items-center justify-between gap-4">
             <div>
-              <p className="text-[0.68rem] font-bold tracking-[0.1em] uppercase text-[#a09a90] mb-0.5">Subcategories</p>
+              <p className="text-[0.68rem] font-bold tracking-[0.1em] uppercase text-[#7f7f7f] mb-0.5">Subcategories</p>
               {activeCatObj ? (
                 <div className="flex items-center gap-1.5">
-                  <ChevronRight size={11} strokeWidth={2} className="text-[#c9a84c]" />
-                  <span className="text-[0.8rem] font-semibold text-[#1a1714]">{activeCatObj.name}</span>
-                  <span className="text-[0.7rem] text-[#a09a90]">· {visibleSubs.length} {visibleSubs.length === 1 ? 'item' : 'items'}</span>
+                  <ChevronRight size={11} strokeWidth={2} className="text-[#1c4874]" />
+                  <span className="text-[0.8rem] font-semibold text-[#222222]">{activeCatObj.name}</span>
+                  <span className="text-[0.7rem] text-[#7f7f7f]">· {visibleSubs.length} {visibleSubs.length === 1 ? 'item' : 'items'}</span>
                   {/* Quick edit from header */}
                   <button
                     onClick={() => setEditingCat(activeCatObj)}
-                    className="ml-1 p-1 rounded-md text-[#c8c2b8] hover:text-[#c9a84c] hover:bg-[#fdf9f0] transition-all"
+                    className="ml-1 p-1 rounded-md text-[#999999] hover:text-[#1c4874] hover:bg-[#eef2f8] transition-all"
                     title="Edit category description"
                   >
                     <Pencil size={10} strokeWidth={2} />
                   </button>
                 </div>
               ) : (
-                <p className="text-[0.75rem] text-[#c8c2b8]">Select a category</p>
+                <p className="text-[0.75rem] text-[#999999]">Select a category</p>
               )}
             </div>
             {activeCatObj && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#faf9f6] border border-[#e8e3db] w-52">
-                <Search size={11} strokeWidth={1.8} className="text-[#c8c2b8]" />
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f5f7fb] border border-[#c6cbd6] w-52">
+                <Search size={11} strokeWidth={1.8} className="text-[#999999]" />
                 <input
-                  className="flex-1 bg-transparent text-[0.78rem] text-[#1a1714] placeholder:text-[#c8c2b8] outline-none"
+                  className="flex-1 bg-transparent text-[0.78rem] text-[#222222] placeholder:text-[#999999] outline-none"
                   placeholder="Search…"
                   value={subSearch}
                   onChange={e => setSubSearch(e.target.value)}
@@ -912,29 +915,29 @@ export default function AdminCategoriesPage() {
           <div className="overflow-y-auto flex-1 p-4" style={{ maxHeight: '480px' }}>
             {!selectedCat ? (
               <div className="h-full flex flex-col items-center justify-center gap-3 text-center py-16">
-                <div className="w-12 h-12 rounded-2xl bg-[#f7f5f1] border border-[#ede9e1] flex items-center justify-center">
-                  <Layers size={20} strokeWidth={1.3} className="text-[#c8c2b8]" />
+                <div className="w-12 h-12 rounded-2xl bg-[#f5f7fb] border border-[#c6cbd6] flex items-center justify-center">
+                  <Layers size={20} strokeWidth={1.3} className="text-[#999999]" />
                 </div>
-                <p className="text-[0.78rem] text-[#c8c2b8]">Select a category on the left<br />to view its subcategories.</p>
+                <p className="text-[0.78rem] text-[#999999]">Select a category on the left<br />to view its subcategories.</p>
               </div>
             ) : visibleSubs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center gap-3 text-center py-16">
-                <div className="w-12 h-12 rounded-2xl bg-[#f7f5f1] border border-[#ede9e1] flex items-center justify-center">
-                  <Layers size={20} strokeWidth={1.3} className="text-[#c8c2b8]" />
+                <div className="w-12 h-12 rounded-2xl bg-[#f5f7fb] border border-[#c6cbd6] flex items-center justify-center">
+                  <Layers size={20} strokeWidth={1.3} className="text-[#999999]" />
                 </div>
-                <p className="text-[0.78rem] text-[#c8c2b8]">{subSearch ? 'No results.' : 'No subcategories yet.'}</p>
+                <p className="text-[0.78rem] text-[#999999]">{subSearch ? 'No results.' : 'No subcategories yet.'}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {visibleSubs.map(sub => (
                   <div
                     key={sub._id}
-                    className={`group relative flex flex-col rounded-xl border bg-[#faf9f6] hover:border-[#a97ac9]/40 hover:bg-white transition-all duration-150 overflow-hidden cursor-pointer
-                      ${selectedSub === sub._id ? 'border-[#a97ac9] ring-2 ring-[#a97ac9]/15 bg-white' : 'border-[#ede9e1]'}`}
+                    className={`group relative flex flex-col rounded-xl border bg-[#f5f7fb] hover:border-[#7d88aa]/40 hover:bg-white transition-all duration-150 overflow-hidden cursor-pointer
+                      ${selectedSub === sub._id ? 'border-[#7d88aa] ring-2 ring-[#7d88aa]/15 bg-white' : 'border-[#c6cbd6]'}`}
                     onClick={() => { setSelectedSub(sub._id); setSubsubParent(sub._id); setSubsubSearch(''); }}
                   >
                     {sub.imageUrl ? (
-                      <div className="relative w-full h-28 bg-[#f0ece4] overflow-hidden">
+                      <div className="relative w-full h-28 bg-[#eef0f5] overflow-hidden">
                         <img src={sub.imageUrl} alt={sub.name} className="w-full h-full object-cover" />
                         <button
                           onClick={() => { setUploadingSub(sub._id); setUploadFile(null); setUploadPreview(null); }}
@@ -946,29 +949,29 @@ export default function AdminCategoriesPage() {
                     ) : (
                       <button
                         onClick={() => { setUploadingSub(sub._id); setUploadFile(null); setUploadPreview(null); }}
-                        className="w-full h-20 flex flex-col items-center justify-center gap-1.5 border-b border-dashed border-[#e2ddd5] bg-[#f7f5f1] hover:bg-[#f0ece4] text-[#c8c2b8] hover:text-[#a09a90] transition-colors"
+                        className="w-full h-20 flex flex-col items-center justify-center gap-1.5 border-b border-dashed border-[#c6cbd6] bg-[#f5f7fb] hover:bg-[#eef0f5] text-[#999999] hover:text-[#7f7f7f] transition-colors"
                       >
                         <ImagePlus size={15} strokeWidth={1.6} />
                         <span className="text-[0.65rem] font-medium">Add image</span>
                       </button>
                     )}
                     <div className="flex items-center gap-3 px-4 py-3">
-                      <span className="w-7 h-7 rounded-lg bg-[#7ab0c9]/10 border border-[#7ab0c9]/20 flex items-center justify-center flex-shrink-0">
-                        <Layers size={12} strokeWidth={1.6} className="text-[#7ab0c9]" />
+                      <span className="w-7 h-7 rounded-lg bg-[#2f5681]/10 border border-[#2f5681]/20 flex items-center justify-center flex-shrink-0">
+                        <Layers size={12} strokeWidth={1.6} className="text-[#2f5681]" />
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[0.825rem] font-semibold text-[#1a1714] truncate">{sub.name}</p>
-                        <p className="text-[0.65rem] font-mono text-[#c8c2b8] truncate">{sub.slug}</p>
+                        <p className="text-[0.825rem] font-semibold text-[#222222] truncate">{sub.name}</p>
+                        <p className="text-[0.65rem] font-mono text-[#999999] truncate">{sub.slug}</p>
                       </div>
                       {subsubCount(sub._id) > 0 && (
-                        <span className="text-[0.62rem] font-bold px-1.5 py-0.5 rounded-full bg-[#a97ac9]/12 text-[#a97ac9] flex-shrink-0">
+                        <span className="text-[0.62rem] font-bold px-1.5 py-0.5 rounded-full bg-[#7d88aa]/12 text-[#7d88aa] flex-shrink-0">
                           {subsubCount(sub._id)}
                         </span>
                       )}
-                      <ChevronRight size={13} strokeWidth={2} className={`flex-shrink-0 transition-transform ${selectedSub === sub._id ? 'rotate-90 text-[#a97ac9]' : 'text-[#c8c2b8]'}`} />
+                      <ChevronRight size={13} strokeWidth={2} className={`flex-shrink-0 transition-transform ${selectedSub === sub._id ? 'rotate-90 text-[#7d88aa]' : 'text-[#999999]'}`} />
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeletingSub(sub._id); }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 text-[#c8c2b8] hover:text-red-400 flex-shrink-0"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 text-[#999999] hover:text-red-400 flex-shrink-0"
                       >
                         <Trash2 size={13} strokeWidth={1.8} />
                       </button>
@@ -984,21 +987,21 @@ export default function AdminCategoriesPage() {
         <div className="flex flex-col gap-4">
 
           {/* New Category */}
-          <form onSubmit={createCategory} className="bg-white border border-[#ede9e1] rounded-2xl p-5 flex flex-col gap-4">
+          <form onSubmit={createCategory} className="bg-white border border-[#c6cbd6] rounded-2xl p-5 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#c9a84c]/10 border border-[#c9a84c]/20 flex items-center justify-center flex-shrink-0">
-                <Tag size={13} strokeWidth={1.6} className="text-[#c9a84c]" />
+              <div className="w-8 h-8 rounded-xl bg-[#1c4874]/10 border border-[#1c4874]/20 flex items-center justify-center flex-shrink-0">
+                <Tag size={13} strokeWidth={1.6} className="text-[#1c4874]" />
               </div>
               <div>
-                <h2 className="text-[0.85rem] font-semibold text-[#1a1714]">New Category</h2>
-                <p className="text-[0.7rem] text-[#a09a90]">Top-level grouping</p>
+                <h2 className="text-[0.85rem] font-semibold text-[#222222]">New Category</h2>
+                <p className="text-[0.7rem] text-[#7f7f7f]">Top-level grouping</p>
               </div>
             </div>
-            <div className="h-px bg-[#f0ece4]" />
+            <div className="h-px bg-[#eef0f5]" />
             <div className="flex flex-col gap-1.5">
-              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">Name</label>
+              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">Name</label>
               <input
-                className="w-full px-3 py-2 rounded-lg border border-[#e2ddd5] bg-[#faf9f6] text-[0.83rem] text-[#1a1714] placeholder:text-[#c8c2b8] focus:outline-none focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/10 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] text-[0.83rem] text-[#222222] placeholder:text-[#999999] focus:outline-none focus:border-[#1c4874] focus:ring-2 focus:ring-[#1c4874]/10 transition-all"
                 placeholder="e.g. Diamonds"
                 value={catName}
                 onChange={e => setCatName(e.target.value)}
@@ -1007,13 +1010,13 @@ export default function AdminCategoriesPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">
-                  Description <span className="normal-case font-normal text-[#c8c2b8]">(optional)</span>
+                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">
+                  Description <span className="normal-case font-normal text-[#999999]">(optional)</span>
                 </label>
-                <span className="text-[0.6rem] text-[#c8c2b8] italic">Full editor available after creation</span>
+                <span className="text-[0.6rem] text-[#999999] italic">Full editor available after creation</span>
               </div>
               <textarea
-                className="w-full px-3 py-2 rounded-lg border border-[#e2ddd5] bg-[#faf9f6] text-[0.83rem] text-[#1a1714] placeholder:text-[#c8c2b8] focus:outline-none focus:border-[#c9a84c] focus:ring-2 focus:ring-[#c9a84c]/10 transition-all resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] text-[0.83rem] text-[#222222] placeholder:text-[#999999] focus:outline-none focus:border-[#1c4874] focus:ring-2 focus:ring-[#1c4874]/10 transition-all resize-none"
                 placeholder="Short description (you can add rich content after creating)"
                 value={catDesc}
                 onChange={e => setCatDesc(e.target.value)}
@@ -1022,28 +1025,28 @@ export default function AdminCategoriesPage() {
             </div>
             <button
               type="submit" disabled={loading}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1a1714] text-white text-[0.8rem] font-semibold tracking-wide hover:bg-[#2a2420] disabled:opacity-50 transition-all"
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1c4874] text-white text-[0.8rem] font-semibold tracking-wide hover:bg-[#1c4874] disabled:opacity-50 transition-all"
             >
               <Plus size={14} strokeWidth={2.2} /> Create Category
             </button>
           </form>
 
           {/* New Subcategory */}
-          <form onSubmit={createSubcategory} className="bg-white border border-[#ede9e1] rounded-2xl p-5 flex flex-col gap-4">
+          <form onSubmit={createSubcategory} className="bg-white border border-[#c6cbd6] rounded-2xl p-5 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#7ab0c9]/10 border border-[#7ab0c9]/20 flex items-center justify-center flex-shrink-0">
-                <Layers size={13} strokeWidth={1.6} className="text-[#7ab0c9]" />
+              <div className="w-8 h-8 rounded-xl bg-[#2f5681]/10 border border-[#2f5681]/20 flex items-center justify-center flex-shrink-0">
+                <Layers size={13} strokeWidth={1.6} className="text-[#2f5681]" />
               </div>
               <div>
-                <h2 className="text-[0.85rem] font-semibold text-[#1a1714]">New Subcategory</h2>
-                <p className="text-[0.7rem] text-[#a09a90]">Nested under a category</p>
+                <h2 className="text-[0.85rem] font-semibold text-[#222222]">New Subcategory</h2>
+                <p className="text-[0.7rem] text-[#7f7f7f]">Nested under a category</p>
               </div>
             </div>
-            <div className="h-px bg-[#f0ece4]" />
+            <div className="h-px bg-[#eef0f5]" />
             <div className="flex flex-col gap-1.5">
-              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">Name</label>
+              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">Name</label>
               <input
-                className="w-full px-3 py-2 rounded-lg border border-[#e2ddd5] bg-[#faf9f6] text-[0.83rem] text-[#1a1714] placeholder:text-[#c8c2b8] focus:outline-none focus:border-[#7ab0c9] focus:ring-2 focus:ring-[#7ab0c9]/10 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] text-[0.83rem] text-[#222222] placeholder:text-[#999999] focus:outline-none focus:border-[#2f5681] focus:ring-2 focus:ring-[#2f5681]/10 transition-all"
                 placeholder="e.g. Loose Diamonds"
                 value={subName}
                 onChange={e => setSubName(e.target.value)}
@@ -1051,9 +1054,9 @@ export default function AdminCategoriesPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">Parent Category</label>
+              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">Parent Category</label>
               <select
-                className="w-full px-3 py-2 rounded-lg border border-[#e2ddd5] bg-[#faf9f6] text-[0.83rem] text-[#1a1714] focus:outline-none focus:border-[#7ab0c9] focus:ring-2 focus:ring-[#7ab0c9]/10 transition-all appearance-none cursor-pointer"
+                className="w-full px-3 py-2 rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] text-[0.83rem] text-[#222222] focus:outline-none focus:border-[#2f5681] focus:ring-2 focus:ring-[#2f5681]/10 transition-all appearance-none cursor-pointer"
                 value={subCat}
                 onChange={e => setSubCat(e.target.value)}
                 required
@@ -1063,11 +1066,11 @@ export default function AdminCategoriesPage() {
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">
-                Image <span className="normal-case font-normal text-[#c8c2b8]">(optional)</span>
+              <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">
+                Image <span className="normal-case font-normal text-[#999999]">(optional)</span>
               </label>
               {subPreview ? (
-                <div className="relative rounded-xl overflow-hidden border border-[#e2ddd5]">
+                <div className="relative rounded-xl overflow-hidden border border-[#c6cbd6]">
                   <img src={subPreview} alt="preview" className="w-full h-32 object-cover" />
                   <button
                     type="button"
@@ -1080,10 +1083,10 @@ export default function AdminCategoriesPage() {
               ) : (
                 <label
                   htmlFor="sub-image-input"
-                  className="flex flex-col items-center justify-center gap-2 w-full h-24 rounded-xl border-2 border-dashed border-[#e2ddd5] bg-[#faf9f6] cursor-pointer hover:border-[#7ab0c9]/60 hover:bg-[#f0f7fb] transition-all"
+                  className="flex flex-col items-center justify-center gap-2 w-full h-24 rounded-xl border-2 border-dashed border-[#c6cbd6] bg-[#f5f7fb] cursor-pointer hover:border-[#2f5681]/60 hover:bg-[#f0f7fb] transition-all"
                 >
-                  <Upload size={16} strokeWidth={1.6} className="text-[#c8c2b8]" />
-                  <span className="text-[0.7rem] text-[#c8c2b8]">Click to upload · JPG / PNG / WebP · max 5 MB</span>
+                  <Upload size={16} strokeWidth={1.6} className="text-[#999999]" />
+                  <span className="text-[0.7rem] text-[#999999]">Click to upload · JPG / PNG / WebP · max 5 MB</span>
                 </label>
               )}
               <input
@@ -1097,7 +1100,7 @@ export default function AdminCategoriesPage() {
             </div>
             <button
               type="submit" disabled={loading || categories.length === 0}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1a1714] text-white text-[0.8rem] font-semibold tracking-wide hover:bg-[#2a2420] disabled:opacity-50 transition-all"
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1c4874] text-white text-[0.8rem] font-semibold tracking-wide hover:bg-[#1c4874] disabled:opacity-50 transition-all"
             >
               <Plus size={14} strokeWidth={2.2} /> Create Subcategory
             </button>
@@ -1107,26 +1110,26 @@ export default function AdminCategoriesPage() {
 
       {/* ══ Sub-subcategories panel — appears once a subcategory is selected ══ */}
       {selectedSubObj && (
-        <div className="mt-4 bg-white border border-[#ede9e1] rounded-2xl overflow-hidden">
-          <div className="px-5 pt-4 pb-3 border-b border-[#f0ece4] flex items-center justify-between gap-3 flex-wrap">
+        <div className="mt-4 bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden">
+          <div className="px-5 pt-4 pb-3 border-b border-[#e3e6ee] flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#a97ac9]/10 border border-[#a97ac9]/20 flex items-center justify-center flex-shrink-0">
-                <Boxes size={13} strokeWidth={1.6} className="text-[#a97ac9]" />
+              <div className="w-8 h-8 rounded-xl bg-[#7d88aa]/10 border border-[#7d88aa]/20 flex items-center justify-center flex-shrink-0">
+                <Boxes size={13} strokeWidth={1.6} className="text-[#7d88aa]" />
               </div>
               <div>
-                <p className="text-[0.68rem] font-bold tracking-[0.1em] uppercase text-[#a09a90]">
+                <p className="text-[0.68rem] font-bold tracking-[0.1em] uppercase text-[#7f7f7f]">
                   Sub-subcategories &middot; {selectedSubObj.name}
                 </p>
-                <p className="text-[0.7rem] text-[#c8c2b8] mt-0.5">
+                <p className="text-[0.7rem] text-[#999999] mt-0.5">
                   {activeCatObj?.name} &rsaquo; {selectedSubObj.name} &rsaquo; …
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#faf9f6] border border-[#e8e3db]">
-                <Search size={12} strokeWidth={1.8} className="text-[#c8c2b8]" />
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f5f7fb] border border-[#c6cbd6]">
+                <Search size={12} strokeWidth={1.8} className="text-[#999999]" />
                 <input
-                  className="flex-1 bg-transparent text-[0.78rem] text-[#1a1714] placeholder:text-[#c8c2b8] outline-none w-32"
+                  className="flex-1 bg-transparent text-[0.78rem] text-[#222222] placeholder:text-[#999999] outline-none w-32"
                   placeholder="Find…"
                   value={subsubSearch}
                   onChange={e => setSubsubSearch(e.target.value)}
@@ -1134,7 +1137,7 @@ export default function AdminCategoriesPage() {
               </div>
               <button
                 onClick={() => setSelectedSub(null)}
-                className="p-1.5 rounded-lg text-[#c8c2b8] hover:bg-[#f7f5f1] hover:text-[#6b6560] transition-all"
+                className="p-1.5 rounded-lg text-[#999999] hover:bg-[#f5f7fb] hover:text-[#555555] transition-all"
                 title="Close"
               >
                 <X size={15} strokeWidth={2} />
@@ -1146,11 +1149,11 @@ export default function AdminCategoriesPage() {
             {/* ── existing sub-subcategories grid ── */}
             <div>
               {visibleSubsubs.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center gap-3 text-center py-14 border border-dashed border-[#e2ddd5] rounded-xl bg-[#faf9f6]">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-[#ede9e1] flex items-center justify-center">
-                    <Boxes size={20} strokeWidth={1.3} className="text-[#c8c2b8]" />
+                <div className="h-full flex flex-col items-center justify-center gap-3 text-center py-14 border border-dashed border-[#c6cbd6] rounded-xl bg-[#f5f7fb]">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-[#c6cbd6] flex items-center justify-center">
+                    <Boxes size={20} strokeWidth={1.3} className="text-[#999999]" />
                   </div>
-                  <p className="text-[0.78rem] text-[#c8c2b8]">
+                  <p className="text-[0.78rem] text-[#999999]">
                     {subsubSearch ? 'No results.' : 'No sub-subcategories yet — add one with the form.'}
                   </p>
                 </div>
@@ -1159,10 +1162,10 @@ export default function AdminCategoriesPage() {
                   {visibleSubsubs.map(ss => (
                     <div
                       key={ss._id}
-                      className="group relative flex flex-col rounded-xl border border-[#ede9e1] bg-[#faf9f6] hover:border-[#a97ac9]/40 hover:bg-white transition-all duration-150 overflow-hidden"
+                      className="group relative flex flex-col rounded-xl border border-[#c6cbd6] bg-[#f5f7fb] hover:border-[#7d88aa]/40 hover:bg-white transition-all duration-150 overflow-hidden"
                     >
                       {ss.imageUrl ? (
-                        <div className="relative w-full h-28 bg-[#f0ece4] overflow-hidden">
+                        <div className="relative w-full h-28 bg-[#eef0f5] overflow-hidden">
                           <img src={ss.imageUrl} alt={ss.name} className="w-full h-full object-cover" />
                           <button
                             onClick={() => { setUploadingSubsub(ss._id); setUploadFileSubsub(null); setUploadPreviewSubsub(null); }}
@@ -1174,23 +1177,23 @@ export default function AdminCategoriesPage() {
                       ) : (
                         <button
                           onClick={() => { setUploadingSubsub(ss._id); setUploadFileSubsub(null); setUploadPreviewSubsub(null); }}
-                          className="w-full h-20 flex flex-col items-center justify-center gap-1.5 border-b border-dashed border-[#e2ddd5] bg-[#f7f5f1] hover:bg-[#f0ece4] text-[#c8c2b8] hover:text-[#a09a90] transition-colors"
+                          className="w-full h-20 flex flex-col items-center justify-center gap-1.5 border-b border-dashed border-[#c6cbd6] bg-[#f5f7fb] hover:bg-[#eef0f5] text-[#999999] hover:text-[#7f7f7f] transition-colors"
                         >
                           <ImagePlus size={15} strokeWidth={1.6} />
                           <span className="text-[0.65rem] font-medium">Add image</span>
                         </button>
                       )}
                       <div className="flex items-center gap-3 px-4 py-3">
-                        <span className="w-7 h-7 rounded-lg bg-[#a97ac9]/10 border border-[#a97ac9]/20 flex items-center justify-center flex-shrink-0">
-                          <Boxes size={12} strokeWidth={1.6} className="text-[#a97ac9]" />
+                        <span className="w-7 h-7 rounded-lg bg-[#7d88aa]/10 border border-[#7d88aa]/20 flex items-center justify-center flex-shrink-0">
+                          <Boxes size={12} strokeWidth={1.6} className="text-[#7d88aa]" />
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[0.825rem] font-semibold text-[#1a1714] truncate">{ss.name}</p>
-                          <p className="text-[0.65rem] font-mono text-[#c8c2b8] truncate">{ss.slug}</p>
+                          <p className="text-[0.825rem] font-semibold text-[#222222] truncate">{ss.name}</p>
+                          <p className="text-[0.65rem] font-mono text-[#999999] truncate">{ss.slug}</p>
                         </div>
                         <button
                           onClick={() => setDeletingSubsub(ss._id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 text-[#c8c2b8] hover:text-red-400 flex-shrink-0"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-red-50 text-[#999999] hover:text-red-400 flex-shrink-0"
                         >
                           <Trash2 size={13} strokeWidth={1.8} />
                         </button>
@@ -1202,21 +1205,21 @@ export default function AdminCategoriesPage() {
             </div>
 
             {/* ── New Sub-subcategory form ── */}
-            <form onSubmit={createSubSubcategoryHandler} className="bg-[#faf9f6] border border-[#ede9e1] rounded-2xl p-4 flex flex-col gap-3.5 h-fit">
+            <form onSubmit={createSubSubcategoryHandler} className="bg-[#f5f7fb] border border-[#c6cbd6] rounded-2xl p-4 flex flex-col gap-3.5 h-fit">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#a97ac9]/10 border border-[#a97ac9]/20 flex items-center justify-center flex-shrink-0">
-                  <Boxes size={13} strokeWidth={1.6} className="text-[#a97ac9]" />
+                <div className="w-8 h-8 rounded-xl bg-[#7d88aa]/10 border border-[#7d88aa]/20 flex items-center justify-center flex-shrink-0">
+                  <Boxes size={13} strokeWidth={1.6} className="text-[#7d88aa]" />
                 </div>
                 <div>
-                  <h2 className="text-[0.85rem] font-semibold text-[#1a1714]">New Sub-subcategory</h2>
-                  <p className="text-[0.7rem] text-[#a09a90]">Nested under a subcategory</p>
+                  <h2 className="text-[0.85rem] font-semibold text-[#222222]">New Sub-subcategory</h2>
+                  <p className="text-[0.7rem] text-[#7f7f7f]">Nested under a subcategory</p>
                 </div>
               </div>
-              <div className="h-px bg-[#e8e3db]" />
+              <div className="h-px bg-[#e3e6ee]" />
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">Name</label>
+                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">Name</label>
                 <input
-                  className="w-full px-3 py-2 rounded-lg border border-[#e2ddd5] bg-white text-[0.83rem] text-[#1a1714] placeholder:text-[#c8c2b8] focus:outline-none focus:border-[#a97ac9] focus:ring-2 focus:ring-[#a97ac9]/10 transition-all"
+                  className="w-full px-3 py-2 rounded-lg border border-[#c6cbd6] bg-white text-[0.83rem] text-[#222222] placeholder:text-[#999999] focus:outline-none focus:border-[#7d88aa] focus:ring-2 focus:ring-[#7d88aa]/10 transition-all"
                   placeholder="e.g. Oval Tanzanite"
                   value={subsubName}
                   onChange={e => setSubsubName(e.target.value)}
@@ -1224,9 +1227,9 @@ export default function AdminCategoriesPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">Parent Subcategory</label>
+                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">Parent Subcategory</label>
                 <select
-                  className="w-full px-3 py-2 rounded-lg border border-[#e2ddd5] bg-white text-[0.83rem] text-[#1a1714] focus:outline-none focus:border-[#a97ac9] focus:ring-2 focus:ring-[#a97ac9]/10 transition-all appearance-none cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border border-[#c6cbd6] bg-white text-[0.83rem] text-[#222222] focus:outline-none focus:border-[#7d88aa] focus:ring-2 focus:ring-[#7d88aa]/10 transition-all appearance-none cursor-pointer"
                   value={subsubParent}
                   onChange={e => setSubsubParent(e.target.value)}
                   required
@@ -1236,11 +1239,11 @@ export default function AdminCategoriesPage() {
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#a09a90]">
-                  Image <span className="normal-case font-normal text-[#c8c2b8]">(optional)</span>
+                <label className="text-[0.65rem] font-bold tracking-[0.09em] uppercase text-[#7f7f7f]">
+                  Image <span className="normal-case font-normal text-[#999999]">(optional)</span>
                 </label>
                 {subsubPreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-[#e2ddd5]">
+                  <div className="relative rounded-xl overflow-hidden border border-[#c6cbd6]">
                     <img src={subsubPreview} alt="preview" className="w-full h-28 object-cover" />
                     <button
                       type="button"
@@ -1253,10 +1256,10 @@ export default function AdminCategoriesPage() {
                 ) : (
                   <label
                     htmlFor="subsub-image-input"
-                    className="flex flex-col items-center justify-center gap-2 w-full h-20 rounded-xl border-2 border-dashed border-[#e2ddd5] bg-white cursor-pointer hover:border-[#a97ac9]/60 hover:bg-[#faf6fb] transition-all"
+                    className="flex flex-col items-center justify-center gap-2 w-full h-20 rounded-xl border-2 border-dashed border-[#c6cbd6] bg-white cursor-pointer hover:border-[#7d88aa]/60 hover:bg-[#faf6fb] transition-all"
                   >
-                    <Upload size={15} strokeWidth={1.6} className="text-[#c8c2b8]" />
-                    <span className="text-[0.68rem] text-[#c8c2b8]">Click to upload · JPG / PNG / WebP · max 5 MB</span>
+                    <Upload size={15} strokeWidth={1.6} className="text-[#999999]" />
+                    <span className="text-[0.68rem] text-[#999999]">Click to upload · JPG / PNG / WebP · max 5 MB</span>
                   </label>
                 )}
                 <input
@@ -1270,7 +1273,7 @@ export default function AdminCategoriesPage() {
               </div>
               <button
                 type="submit" disabled={subsubLoading}
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1a1714] text-white text-[0.8rem] font-semibold tracking-wide hover:bg-[#2a2420] disabled:opacity-50 transition-all"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1c4874] text-white text-[0.8rem] font-semibold tracking-wide hover:bg-[#1c4874] disabled:opacity-50 transition-all"
               >
                 <Plus size={14} strokeWidth={2.2} /> Create Sub-subcategory
               </button>
@@ -1282,27 +1285,27 @@ export default function AdminCategoriesPage() {
       {/* ══ Upload Image Modal — Sub-subcategory ══ */}
       {uploadingSubsub && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,23,20,0.55)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#ede9e1] w-full max-w-sm p-6 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#c6cbd6] w-full max-w-sm p-6 flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#a97ac9]/10 border border-[#a97ac9]/20 flex items-center justify-center">
-                  <ImagePlus size={15} strokeWidth={1.6} className="text-[#a97ac9]" />
+                <div className="w-9 h-9 rounded-xl bg-[#7d88aa]/10 border border-[#7d88aa]/20 flex items-center justify-center">
+                  <ImagePlus size={15} strokeWidth={1.6} className="text-[#7d88aa]" />
                 </div>
                 <div>
-                  <h3 className="text-[0.9rem] font-semibold text-[#1a1714]">
+                  <h3 className="text-[0.9rem] font-semibold text-[#222222]">
                     {subsubcategories.find(s => s._id === uploadingSubsub)?.imageUrl ? 'Replace Image' : 'Add Image'}
                   </h3>
-                  <p className="text-[0.72rem] text-[#a09a90]">
+                  <p className="text-[0.72rem] text-[#7f7f7f]">
                     {subsubcategories.find(s => s._id === uploadingSubsub)?.name}
                   </p>
                 </div>
               </div>
-              <button onClick={closeUploadModalSubsub} className="p-1.5 rounded-lg text-[#c8c2b8] hover:bg-[#f7f5f1] hover:text-[#6b6560] transition-all">
+              <button onClick={closeUploadModalSubsub} className="p-1.5 rounded-lg text-[#999999] hover:bg-[#f5f7fb] hover:text-[#555555] transition-all">
                 <X size={15} strokeWidth={2} />
               </button>
             </div>
             {uploadPreviewSubsub ? (
-              <div className="relative rounded-xl overflow-hidden border border-[#e2ddd5]">
+              <div className="relative rounded-xl overflow-hidden border border-[#c6cbd6]">
                 <img src={uploadPreviewSubsub} alt="preview" className="w-full h-44 object-cover" />
                 <button
                   onClick={() => { setUploadFileSubsub(null); setUploadPreviewSubsub(null); if (uploadInputSubsubRef.current) uploadInputSubsubRef.current.value = ''; }}
@@ -1312,18 +1315,18 @@ export default function AdminCategoriesPage() {
                 </button>
               </div>
             ) : (
-              <label htmlFor="upload-existing-input-subsub" className="flex flex-col items-center justify-center gap-2.5 w-full h-36 rounded-xl border-2 border-dashed border-[#e2ddd5] bg-[#faf9f6] cursor-pointer hover:border-[#a97ac9]/60 hover:bg-[#faf6fb] transition-all">
-                <Upload size={20} strokeWidth={1.5} className="text-[#c8c2b8]" />
+              <label htmlFor="upload-existing-input-subsub" className="flex flex-col items-center justify-center gap-2.5 w-full h-36 rounded-xl border-2 border-dashed border-[#c6cbd6] bg-[#f5f7fb] cursor-pointer hover:border-[#7d88aa]/60 hover:bg-[#faf6fb] transition-all">
+                <Upload size={20} strokeWidth={1.5} className="text-[#999999]" />
                 <div className="text-center">
-                  <p className="text-[0.78rem] font-medium text-[#a09a90]">Click to choose image</p>
-                  <p className="text-[0.68rem] text-[#c8c2b8]">JPG · PNG · WebP · max 5 MB</p>
+                  <p className="text-[0.78rem] font-medium text-[#7f7f7f]">Click to choose image</p>
+                  <p className="text-[0.68rem] text-[#999999]">JPG · PNG · WebP · max 5 MB</p>
                 </div>
               </label>
             )}
             <input id="upload-existing-input-subsub" ref={uploadInputSubsubRef} type="file" accept="image/*" className="hidden" onChange={e => handleUploadFilePickSubsub(e.target.files?.[0] ?? null)} />
             <div className="flex gap-2.5">
-              <button onClick={closeUploadModalSubsub} className="flex-1 py-2.5 rounded-xl border border-[#e2ddd5] text-[#6b6560] text-[0.8rem] font-semibold hover:bg-[#f7f5f1] transition-all">Cancel</button>
-              <button onClick={submitUploadImageSubsub} disabled={!uploadFileSubsub || uploadLoadingSubsub} className="flex-1 py-2.5 rounded-xl bg-[#1a1714] text-white text-[0.8rem] font-semibold hover:bg-[#2a2420] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+              <button onClick={closeUploadModalSubsub} className="flex-1 py-2.5 rounded-xl border border-[#c6cbd6] text-[#555555] text-[0.8rem] font-semibold hover:bg-[#f5f7fb] transition-all">Cancel</button>
+              <button onClick={submitUploadImageSubsub} disabled={!uploadFileSubsub || uploadLoadingSubsub} className="flex-1 py-2.5 rounded-xl bg-[#1c4874] text-white text-[0.8rem] font-semibold hover:bg-[#1c4874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
                 {uploadLoadingSubsub ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Uploading…</> : <><Upload size={13} strokeWidth={2} /> Upload</>}
               </button>
             </div>
@@ -1334,21 +1337,21 @@ export default function AdminCategoriesPage() {
       {/* ══ Delete Sub-subcategory Modal ══ */}
       {deletingSubsub && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,23,20,0.55)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#ede9e1] w-full max-w-sm p-6 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#c6cbd6] w-full max-w-sm p-6 flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
                 <Trash2 size={16} strokeWidth={1.8} className="text-red-500" />
               </div>
               <div>
-                <h3 className="text-[0.9rem] font-semibold text-[#1a1714]">Delete Sub-subcategory</h3>
-                <p className="text-[0.72rem] text-[#a09a90]">"{subsubcategories.find(s => s._id === deletingSubsub)?.name}"</p>
+                <h3 className="text-[0.9rem] font-semibold text-[#222222]">Delete Sub-subcategory</h3>
+                <p className="text-[0.72rem] text-[#7f7f7f]">"{subsubcategories.find(s => s._id === deletingSubsub)?.name}"</p>
               </div>
             </div>
-            <p className="text-[0.8rem] text-[#6b6560] leading-relaxed">
+            <p className="text-[0.8rem] text-[#555555] leading-relaxed">
               This sub-subcategory will be permanently removed, along with its image. This action cannot be undone.
             </p>
             <div className="flex gap-2.5">
-              <button onClick={() => setDeletingSubsub(null)} className="flex-1 py-2.5 rounded-xl border border-[#e2ddd5] text-[#6b6560] text-[0.8rem] font-semibold hover:bg-[#f7f5f1] transition-all">Cancel</button>
+              <button onClick={() => setDeletingSubsub(null)} className="flex-1 py-2.5 rounded-xl border border-[#c6cbd6] text-[#555555] text-[0.8rem] font-semibold hover:bg-[#f5f7fb] transition-all">Cancel</button>
               <button onClick={() => deleteSubSubcategory(deletingSubsub)} disabled={subsubLoading} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[0.8rem] font-semibold hover:bg-red-600 disabled:opacity-50 transition-all">Delete</button>
             </div>
           </div>
@@ -1368,27 +1371,27 @@ export default function AdminCategoriesPage() {
       {/* ══ Upload Image Modal ══ */}
       {uploadingSub && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,23,20,0.55)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#ede9e1] w-full max-w-sm p-6 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#c6cbd6] w-full max-w-sm p-6 flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#7ab0c9]/10 border border-[#7ab0c9]/20 flex items-center justify-center">
-                  <ImagePlus size={15} strokeWidth={1.6} className="text-[#7ab0c9]" />
+                <div className="w-9 h-9 rounded-xl bg-[#2f5681]/10 border border-[#2f5681]/20 flex items-center justify-center">
+                  <ImagePlus size={15} strokeWidth={1.6} className="text-[#2f5681]" />
                 </div>
                 <div>
-                  <h3 className="text-[0.9rem] font-semibold text-[#1a1714]">
+                  <h3 className="text-[0.9rem] font-semibold text-[#222222]">
                     {subcategories.find(s => s._id === uploadingSub)?.imageUrl ? 'Replace Image' : 'Add Image'}
                   </h3>
-                  <p className="text-[0.72rem] text-[#a09a90]">
+                  <p className="text-[0.72rem] text-[#7f7f7f]">
                     {subcategories.find(s => s._id === uploadingSub)?.name}
                   </p>
                 </div>
               </div>
-              <button onClick={closeUploadModal} className="p-1.5 rounded-lg text-[#c8c2b8] hover:bg-[#f7f5f1] hover:text-[#6b6560] transition-all">
+              <button onClick={closeUploadModal} className="p-1.5 rounded-lg text-[#999999] hover:bg-[#f5f7fb] hover:text-[#555555] transition-all">
                 <X size={15} strokeWidth={2} />
               </button>
             </div>
             {uploadPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-[#e2ddd5]">
+              <div className="relative rounded-xl overflow-hidden border border-[#c6cbd6]">
                 <img src={uploadPreview} alt="preview" className="w-full h-44 object-cover" />
                 <button
                   onClick={() => { setUploadFile(null); setUploadPreview(null); if (uploadInputRef.current) uploadInputRef.current.value = ''; }}
@@ -1398,18 +1401,18 @@ export default function AdminCategoriesPage() {
                 </button>
               </div>
             ) : (
-              <label htmlFor="upload-existing-input" className="flex flex-col items-center justify-center gap-2.5 w-full h-36 rounded-xl border-2 border-dashed border-[#e2ddd5] bg-[#faf9f6] cursor-pointer hover:border-[#7ab0c9]/60 hover:bg-[#f0f7fb] transition-all">
-                <Upload size={20} strokeWidth={1.5} className="text-[#c8c2b8]" />
+              <label htmlFor="upload-existing-input" className="flex flex-col items-center justify-center gap-2.5 w-full h-36 rounded-xl border-2 border-dashed border-[#c6cbd6] bg-[#f5f7fb] cursor-pointer hover:border-[#2f5681]/60 hover:bg-[#f0f7fb] transition-all">
+                <Upload size={20} strokeWidth={1.5} className="text-[#999999]" />
                 <div className="text-center">
-                  <p className="text-[0.78rem] font-medium text-[#a09a90]">Click to choose image</p>
-                  <p className="text-[0.68rem] text-[#c8c2b8]">JPG · PNG · WebP · max 5 MB</p>
+                  <p className="text-[0.78rem] font-medium text-[#7f7f7f]">Click to choose image</p>
+                  <p className="text-[0.68rem] text-[#999999]">JPG · PNG · WebP · max 5 MB</p>
                 </div>
               </label>
             )}
             <input id="upload-existing-input" ref={uploadInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleUploadFilePick(e.target.files?.[0] ?? null)} />
             <div className="flex gap-2.5">
-              <button onClick={closeUploadModal} className="flex-1 py-2.5 rounded-xl border border-[#e2ddd5] text-[#6b6560] text-[0.8rem] font-semibold hover:bg-[#f7f5f1] transition-all">Cancel</button>
-              <button onClick={submitUploadImage} disabled={!uploadFile || uploadLoading} className="flex-1 py-2.5 rounded-xl bg-[#1a1714] text-white text-[0.8rem] font-semibold hover:bg-[#2a2420] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+              <button onClick={closeUploadModal} className="flex-1 py-2.5 rounded-xl border border-[#c6cbd6] text-[#555555] text-[0.8rem] font-semibold hover:bg-[#f5f7fb] transition-all">Cancel</button>
+              <button onClick={submitUploadImage} disabled={!uploadFile || uploadLoading} className="flex-1 py-2.5 rounded-xl bg-[#1c4874] text-white text-[0.8rem] font-semibold hover:bg-[#1c4874] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
                 {uploadLoading ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Uploading…</> : <><Upload size={13} strokeWidth={2} /> Upload</>}
               </button>
             </div>
@@ -1420,21 +1423,21 @@ export default function AdminCategoriesPage() {
       {/* ══ Delete Category Modal ══ */}
       {deletingCat && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,23,20,0.55)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#ede9e1] w-full max-w-sm p-6 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#c6cbd6] w-full max-w-sm p-6 flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
                 <Trash2 size={16} strokeWidth={1.8} className="text-red-500" />
               </div>
               <div>
-                <h3 className="text-[0.9rem] font-semibold text-[#1a1714]">Delete Category</h3>
-                <p className="text-[0.72rem] text-[#a09a90]">"{categories.find(c => c._id === deletingCat)?.name}"</p>
+                <h3 className="text-[0.9rem] font-semibold text-[#222222]">Delete Category</h3>
+                <p className="text-[0.72rem] text-[#7f7f7f]">"{categories.find(c => c._id === deletingCat)?.name}"</p>
               </div>
             </div>
-            <p className="text-[0.8rem] text-[#6b6560] leading-relaxed">
+            <p className="text-[0.8rem] text-[#555555] leading-relaxed">
               This will permanently delete the category and all its subcategories. This action cannot be undone.
             </p>
             <div className="flex gap-2.5">
-              <button onClick={() => setDeletingCat(null)} className="flex-1 py-2.5 rounded-xl border border-[#e2ddd5] text-[#6b6560] text-[0.8rem] font-semibold hover:bg-[#f7f5f1] transition-all">Cancel</button>
+              <button onClick={() => setDeletingCat(null)} className="flex-1 py-2.5 rounded-xl border border-[#c6cbd6] text-[#555555] text-[0.8rem] font-semibold hover:bg-[#f5f7fb] transition-all">Cancel</button>
               <button onClick={() => deleteCategory(deletingCat)} disabled={loading} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[0.8rem] font-semibold hover:bg-red-600 disabled:opacity-50 transition-all">Delete</button>
             </div>
           </div>
@@ -1444,21 +1447,21 @@ export default function AdminCategoriesPage() {
       {/* ══ Delete Subcategory Modal ══ */}
       {deletingSub && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,23,20,0.55)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-[#ede9e1] w-full max-w-sm p-6 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl shadow-2xl border border-[#c6cbd6] w-full max-w-sm p-6 flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
                 <Trash2 size={16} strokeWidth={1.8} className="text-red-500" />
               </div>
               <div>
-                <h3 className="text-[0.9rem] font-semibold text-[#1a1714]">Delete Subcategory</h3>
-                <p className="text-[0.72rem] text-[#a09a90]">"{subcategories.find(s => s._id === deletingSub)?.name}"</p>
+                <h3 className="text-[0.9rem] font-semibold text-[#222222]">Delete Subcategory</h3>
+                <p className="text-[0.72rem] text-[#7f7f7f]">"{subcategories.find(s => s._id === deletingSub)?.name}"</p>
               </div>
             </div>
-            <p className="text-[0.8rem] text-[#6b6560] leading-relaxed">
+            <p className="text-[0.8rem] text-[#555555] leading-relaxed">
               This subcategory will be permanently removed. Products linked to it may need reassignment.
             </p>
             <div className="flex gap-2.5">
-              <button onClick={() => setDeletingSub(null)} className="flex-1 py-2.5 rounded-xl border border-[#e2ddd5] text-[#6b6560] text-[0.8rem] font-semibold hover:bg-[#f7f5f1] transition-all">Cancel</button>
+              <button onClick={() => setDeletingSub(null)} className="flex-1 py-2.5 rounded-xl border border-[#c6cbd6] text-[#555555] text-[0.8rem] font-semibold hover:bg-[#f5f7fb] transition-all">Cancel</button>
               <button onClick={() => deleteSubcategory(deletingSub)} disabled={loading} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-[0.8rem] font-semibold hover:bg-red-600 disabled:opacity-50 transition-all">Delete</button>
             </div>
           </div>

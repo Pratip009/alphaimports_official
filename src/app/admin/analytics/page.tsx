@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
 type Range = "24h" | "7d" | "30d" | "90d";
@@ -53,10 +53,6 @@ function ChartSkeleton({ height }: { height: number }) {
 const VisitorsChart = dynamic<{
   dailyVisitors: AnalyticsData["dailyVisitors"];
 }>(() =>
-  // AnalyticsCharts may be missing during type-check in some environments;
-  // ignore the import error here so the app can build. The runtime dynamic
-  // import will still attempt to load the module.
-  // @ts-ignore
   import("./AnalyticsCharts").then((m) => m.VisitorsChart),
 {
   ssr: false,
@@ -65,7 +61,6 @@ const VisitorsChart = dynamic<{
 const DeviceChart = dynamic<{
   deviceBreakdown: AnalyticsData["deviceBreakdown"];
 }>(() =>
-  // @ts-ignore
   import("./AnalyticsCharts").then((m) => m.DeviceChart),
 {
   ssr: false,
@@ -74,7 +69,6 @@ const DeviceChart = dynamic<{
 const EventsChart = dynamic<{
   topEvents: AnalyticsData["topEvents"];
 }>(() =>
-  // @ts-ignore
   import("./AnalyticsCharts").then((m) => m.EventsChart),
 {
   ssr: false,
@@ -94,7 +88,7 @@ export default function AnalyticsPage() {
     null
   );
 
-  async function fetchAnalytics() {
+  const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -123,11 +117,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [range]);
 
   useEffect(() => {
     fetchAnalytics();
-  }, [range]);
+  }, [fetchAnalytics]); // re-runs when the date range changes
 
   function formatDuration(seconds: number) {
     if (!seconds) return "0s";

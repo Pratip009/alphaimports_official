@@ -67,10 +67,10 @@ export default function MemoEligibilityAdminPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <UserCheck size={20} style={{ color: '#c9a84c' }} />
+        <UserCheck size={20} style={{ color: '#1c4874' }} />
         <div>
-          <h1 className="text-lg font-bold" style={{ color: '#1a1714' }}>Memo Applications</h1>
-          <p className="text-xs" style={{ color: '#9c9690' }}>Review trade-vetting applications for the memo program.</p>
+          <h1 className="text-lg font-bold" style={{ color: '#222222' }}>Memo Applications</h1>
+          <p className="text-xs" style={{ color: '#7f7f7f' }}>Review trade-vetting applications for the memo program.</p>
         </div>
       </div>
 
@@ -88,25 +88,25 @@ export default function MemoEligibilityAdminPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin" size={20} style={{ color: '#c9a84c' }} /></div>
+        <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin" size={20} style={{ color: '#1c4874' }} /></div>
       ) : apps.length === 0 ? (
-        <div className="rounded-2xl px-6 py-14 text-center" style={{ border: '1px dashed #e5e2db', color: '#9c9690', background: '#fff' }}>
+        <div className="rounded-2xl px-6 py-14 text-center" style={{ border: '1px dashed #c6cbd6', color: '#7f7f7f', background: '#fff' }}>
           <UserCheck size={22} className="mx-auto mb-2" />
           <p className="text-sm">No pending applications.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {apps.map((a) => (
-            <div key={a._id} className="rounded-2xl px-6 py-5" style={{ border: '1px solid #ede9e1', background: '#fff' }}>
+            <div key={a._id} className="rounded-2xl px-6 py-5" style={{ border: '1px solid #c6cbd6', background: '#fff' }}>
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: '#1a1714' }}>{a.name}</p>
-                  <p className="text-xs" style={{ color: '#9c9690' }}>{a.email}</p>
-                  <div className="mt-2 text-xs space-y-0.5" style={{ color: '#5c5852' }}>
+                  <p className="text-sm font-semibold" style={{ color: '#222222' }}>{a.name}</p>
+                  <p className="text-xs" style={{ color: '#7f7f7f' }}>{a.email}</p>
+                  <div className="mt-2 text-xs space-y-0.5" style={{ color: '#555555' }}>
                     {a.memoBusinessName && <p><span className="font-semibold">Business:</span> {a.memoBusinessName}</p>}
                     {a.memoResaleCertNumber && <p><span className="font-semibold">Resale cert:</span> {a.memoResaleCertNumber}</p>}
                     {a.memoReferences && <p><span className="font-semibold">References:</span> {a.memoReferences}</p>}
-                    <p className="text-[0.65rem]" style={{ color: '#b5b0a8' }}>Applied {new Date(a.createdAt).toLocaleDateString()}</p>
+                    <p className="text-[0.65rem]" style={{ color: '#999999' }}>Applied {new Date(a.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
 
@@ -117,7 +117,7 @@ export default function MemoEligibilityAdminPage() {
                     value={creditLimits[a._id] ?? ''}
                     onChange={(e) => setCreditLimits((prev) => ({ ...prev, [a._id]: e.target.value }))}
                     className="w-32 rounded-lg px-3 py-2 text-xs"
-                    style={{ border: '1px solid #e5e2db' }}
+                    style={{ border: '1px solid #c6cbd6' }}
                   />
                   <button
                     disabled={actingOn === a._id}
@@ -131,7 +131,7 @@ export default function MemoEligibilityAdminPage() {
                     disabled={actingOn === a._id}
                     onClick={() => act(a._id, 'deny')}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-60"
-                    style={{ border: '1px solid #e5e2db', color: '#1a1714' }}
+                    style={{ border: '1px solid #c6cbd6', color: '#222222' }}
                   >
                     <Ban size={13} /> Deny
                   </button>

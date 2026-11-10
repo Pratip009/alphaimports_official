@@ -14,7 +14,7 @@ export default function AdminSubSubcategoriesRedirect() {
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center min-h-[50vh] text-sm text-[#a09a90]">
+    <div className="flex items-center justify-center min-h-[50vh] text-sm text-[#7f7f7f]">
       Redirecting to Categories…
     </div>
   );

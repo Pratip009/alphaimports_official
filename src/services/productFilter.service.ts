@@ -4,7 +4,7 @@ import { cache } from 'react';
 import { IProduct } from '@/models/Product';
 import Category from '@/models/Category';
 import Subcategory from '@/models/Subcategory';
-import { escapeRegex, extractCarat, CARAT_MATCH_TOLERANCE } from '@/lib/search';
+import { buildProductSearchFilter } from '@/lib/productSearchQuery';
 import { SPECIALS_VIRTUAL_SUBCATEGORY_MAP } from '@/lib/specialsVirtualSubcategories';
 
 // ─── Filter Query Params ──────────────────────────────────────────────────────
@@ -83,10 +83,12 @@ export interface ProductFilterParams {
   limit?: string | number;
 
   // Sorting
-  sortBy?: 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'size_asc' | 'size_desc';
+  sortBy?: 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'oldest' | 'size_asc' | 'size_desc';
 
   // Search
   q?: string;
+  /** Let search words also match description — used as a fallback when the strict search finds nothing. */
+  searchIncludeDescription?: boolean;
 
   // Stock
   inStock?: string | boolean;
@@ -382,31 +384,14 @@ export function buildProductFilterQuery(params: ProductFilterParams): ParsedFilt
   }
 
   // ── Full-text search ───────────────────────────────────────────────────────
-  // Was `filter.$text = { $search: params.q.trim() }`, which only matches
-  // whole, stemmed words indexed on `name`/`description` — so partial input
-  // ("diam"), watch brands/models, gemstone names, SKUs, and carat weights
-  // (e.g. "0.35 carat") all silently returned nothing or missed obvious hits.
-  // This mirrors the regex + carat matching already used by the working
-  // autocomplete dropdown (/api/products/search) so both search paths agree.
+  // Same rules as the header autocomplete: every word must match, size specs
+  // ("1 carat", "6.5mm") rank rather than widen the results, description is
+  // only searched as a fallback. See src/lib/productSearchQuery.ts.
   if (params.q && params.q.trim()) {
-    const q = params.q.trim();
-    const rx = new RegExp(escapeRegex(q), 'i');
-    const orConditions: FilterQuery<IProduct>[] = [
-      { name: rx },
-      { watchBrand: rx },
-      { watchModel: rx },
-      { gemstoneName: rx },
-      { legacySku: rx },
-    ];
-    const carat = extractCarat(q);
-    if (carat !== null) {
-      orConditions.push({ size: { $gte: carat - CARAT_MATCH_TOLERANCE, $lte: carat + CARAT_MATCH_TOLERANCE } });
-    }
-    if (andConditions.length > 0) {
-      andConditions.push({ $or: orConditions });
-    } else {
-      filter.$or = orConditions;
-    }
+    const searchFilter = buildProductSearchFilter(params.q, {
+      includeDescription: params.searchIncludeDescription,
+    });
+    if (searchFilter) andConditions.push(searchFilter as FilterQuery<IProduct>);
   }
 
   if (andConditions.length > 0) filter.$and = andConditions;

@@ -33,11 +33,11 @@ const page = () => {
 
       {/* Grading Topics */}
       <div>
-        <h2 className="text-2xl font-semibold text-[#1a1714] mb-4">
+        <h2 className="fp-h2">
           Educational Grading References
         </h2>
 
-        <ul className="list-disc pl-6 space-y-3">
+        <ul className="fp-list">
           <li>Clarity grading</li>
 
           <li>Color evaluation</li>
@@ -52,26 +52,15 @@ const page = () => {
         </ul>
       </div>
 
-      {/* Educational Chart */}
-      <div className="rounded-2xl border border-[#e8e2d9] bg-[#fffdf9] p-8">
-
-        <h3 className="text-xl font-semibold text-[#1a1714] mb-6">
-          Diamond Quality Factors
-        </h3>
-
-        
-
-
-      </div>
 
       {/* Additional Information */}
-      <div className="rounded-2xl border border-[#e8e2d9] bg-[#fffdf9] p-8">
+      <div className="fp-box">
 
-        <h3 className="text-xl font-semibold text-[#1a1714] mb-3">
+        <h3 className="fp-h3">
           Understanding Gemstone Quality
         </h3>
 
-        <p className="leading-8 text-[#4d463f]">
+        <p>
           Quality grading helps customers better understand gemstone
           characteristics, value, rarity, and overall appearance.
           Learning about grading standards allows buyers to make more

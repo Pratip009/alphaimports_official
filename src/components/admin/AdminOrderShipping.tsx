@@ -219,13 +219,13 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-[#ede9e1] bg-white overflow-hidden">
+    <div className="rounded-xl border border-[#c6cbd6] bg-white overflow-hidden">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#ede9e1] bg-[#faf9f7]">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#c6cbd6] bg-[#f5f7fb]">
         <div className="flex items-center gap-2">
-          <Truck size={14} className="text-[#c9a84c]" strokeWidth={2} />
-          <span className="text-[0.7rem] font-bold uppercase tracking-[0.15em] text-[#1a1714]">
+          <Truck size={14} className="text-[#1c4874]" strokeWidth={2} />
+          <span className="text-[0.7rem] font-bold uppercase tracking-[0.15em] text-[#222222]">
             Shipment
           </span>
         </div>
@@ -255,7 +255,7 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
 
         {/* ── Rate summary ── */}
         <div>
-          <p className="text-[0.6rem] uppercase tracking-[0.18em] text-[#a09a90] font-semibold mb-3">
+          <p className="text-[0.6rem] uppercase tracking-[0.18em] text-[#7f7f7f] font-semibold mb-3">
             Selected Rate
           </p>
           {order.shippingRateId ? (
@@ -269,15 +269,15 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
                 { label: 'Rate ID',      value: order.shippingRateId, mono: true, muted: true },
               ].filter(r => r.value).map(({ label, value, mono, muted }) => (
                 <div key={label} className="flex flex-col gap-0.5">
-                  <span className="text-[0.6rem] uppercase tracking-widest text-[#a09a90]">{label}</span>
-                  <span className={`text-[0.75rem] font-medium ${muted ? 'font-mono text-[0.65rem] text-[#b0a898]' : 'text-[#1a1714]'} ${mono ? 'font-mono' : ''}`}>
+                  <span className="text-[0.6rem] uppercase tracking-widest text-[#7f7f7f]">{label}</span>
+                  <span className={`text-[0.75rem] font-medium ${muted ? 'font-mono text-[0.65rem] text-[#999999]' : 'text-[#222222]'} ${mono ? 'font-mono' : ''}`}>
                     {value}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-[0.75rem] text-[#c4bdb2] italic">
+            <p className="text-[0.75rem] text-[#999999] italic">
               No shipping rate was selected at checkout.
             </p>
           )}
@@ -285,8 +285,8 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
 
         {/* ── Label / tracking info (post-purchase) ── */}
         {labelPurchased && (
-          <div className="rounded-lg border border-[#ede9e1] bg-[#faf9f7] p-4 space-y-3">
-            <p className="text-[0.6rem] uppercase tracking-[0.18em] text-[#a09a90] font-semibold">
+          <div className="rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] p-4 space-y-3">
+            <p className="text-[0.6rem] uppercase tracking-[0.18em] text-[#7f7f7f] font-semibold">
               Label Details
             </p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
@@ -296,8 +296,8 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
                 { label: 'Purchased at',  value: shippedAt ? new Date(shippedAt).toLocaleString() : null },
               ].filter(r => r.value).map(({ label, value, mono, highlight }) => (
                 <div key={label} className="flex flex-col gap-0.5">
-                  <span className="text-[0.6rem] uppercase tracking-widest text-[#a09a90]">{label}</span>
-                  <span className={`text-[0.75rem] font-medium ${mono ? 'font-mono' : ''} ${highlight ? 'text-[#1a1714]' : 'text-[#5a5249]'}`}>
+                  <span className="text-[0.6rem] uppercase tracking-widest text-[#7f7f7f]">{label}</span>
+                  <span className={`text-[0.75rem] font-medium ${mono ? 'font-mono' : ''} ${highlight ? 'text-[#222222]' : 'text-[#555555]'}`}>
                     {value}
                   </span>
                 </div>
@@ -313,7 +313,7 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
               onClick={handlePurchaseLabel}
               disabled={labelLoading || !canPurchase}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold text-white transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: '#1a1714' }}
+              style={{ background: '#1c4874' }}
             >
               <Package size={13} strokeWidth={2} />
               {labelLoading ? 'Purchasing…' : 'Purchase Label'}
@@ -325,8 +325,8 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
               href={labelUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold border transition-colors hover:bg-[#faf9f7]"
-              style={{ borderColor: '#ede9e1', color: '#5a5249' }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold border transition-colors hover:bg-[#f5f7fb]"
+              style={{ borderColor: '#c6cbd6', color: '#555555' }}
             >
               <Printer size={13} strokeWidth={2} /> Print Label
             </a>
@@ -336,8 +336,8 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
             <button
               onClick={handleTrack}
               disabled={trackLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold border transition-colors hover:bg-[#faf9f7] disabled:opacity-40"
-              style={{ borderColor: '#ede9e1', color: '#5a5249' }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold border transition-colors hover:bg-[#f5f7fb] disabled:opacity-40"
+              style={{ borderColor: '#c6cbd6', color: '#555555' }}
             >
               {trackLoading
                 ? <><RefreshCw size={13} strokeWidth={2} className="animate-spin" /> Loading…</>
@@ -346,7 +346,7 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
             </button>
           )}
           {!labelId && trackingNumber && (
-            <span className="flex items-center gap-1.5 px-4 py-2 text-[0.7rem] text-[#a09a90] italic">
+            <span className="flex items-center gap-1.5 px-4 py-2 text-[0.7rem] text-[#7f7f7f] italic">
               No live tracking (manually entered — use Carrier Site link if available)
             </span>
           )}
@@ -356,8 +356,8 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
               href={order.trackingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold border transition-colors hover:bg-[#faf9f7]"
-              style={{ borderColor: '#ede9e1', color: '#5a5249' }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold border transition-colors hover:bg-[#f5f7fb]"
+              style={{ borderColor: '#c6cbd6', color: '#555555' }}
             >
               <ExternalLink size={13} strokeWidth={2} /> Carrier Site
             </a>
@@ -366,11 +366,11 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
 
         {/* ── Manual tracking entry (for orders without ShipEngine rate) ── */}
         {!labelPurchased && !order.shippingRateId && (
-          <div className="rounded-lg border border-[#ede9e1] bg-[#faf9f7] p-4 space-y-3">
-            <p className="text-[0.6rem] uppercase tracking-[0.18em] text-[#a09a90] font-semibold">
+          <div className="rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] p-4 space-y-3">
+            <p className="text-[0.6rem] uppercase tracking-[0.18em] text-[#7f7f7f] font-semibold">
               Enter Tracking Manually
             </p>
-            <p className="text-[0.68rem] text-[#8a8278]">
+            <p className="text-[0.68rem] text-[#7f7f7f]">
               No ShipEngine rate was stored for this order. Enter a tracking number from your carrier portal to mark it as shipped.
             </p>
             <div className="flex flex-col gap-2">
@@ -380,21 +380,21 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
                   placeholder="Tracking number…"
                   value={manualTracking}
                   onChange={e => setManualTracking(e.target.value)}
-                  className="flex-1 text-[0.75rem] px-3 py-2 rounded-lg border border-[#ede9e1] outline-none focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20 bg-white placeholder:text-[#c4bdb2]"
+                  className="flex-1 text-[0.75rem] px-3 py-2 rounded-lg border border-[#c6cbd6] outline-none focus:border-[#1c4874]/50 focus:ring-1 focus:ring-[#1c4874]/20 bg-white placeholder:text-[#999999]"
                 />
                 <input
                   type="text"
                   placeholder="Carrier (optional)…"
                   value={manualCarrier}
                   onChange={e => setManualCarrier(e.target.value)}
-                  className="w-32 text-[0.75rem] px-3 py-2 rounded-lg border border-[#ede9e1] outline-none focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20 bg-white placeholder:text-[#c4bdb2]"
+                  className="w-32 text-[0.75rem] px-3 py-2 rounded-lg border border-[#c6cbd6] outline-none focus:border-[#1c4874]/50 focus:ring-1 focus:ring-[#1c4874]/20 bg-white placeholder:text-[#999999]"
                 />
               </div>
               <button
                 onClick={handleSaveManualTracking}
                 disabled={manualLoading || !manualTracking.trim()}
                 className="self-start flex items-center gap-2 px-4 py-2 rounded-lg text-[0.75rem] font-semibold text-white transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: '#1a1714' }}
+                style={{ background: '#1c4874' }}
               >
                 <Package size={13} strokeWidth={2} />
                 {manualLoading ? 'Saving…' : 'Save & Mark Shipped'}
@@ -419,13 +419,13 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
 
         {/* ── Live tracking timeline ── */}
         {trackOpen && tracking && (
-          <div className="rounded-lg border border-[#ede9e1] bg-[#faf9f7] p-4 space-y-3">
+          <div className="rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[0.72rem] font-semibold text-[#1a1714]">
+              <span className="text-[0.72rem] font-semibold text-[#222222]">
                 {tracking.status}
               </span>
               {tracking.estimatedDelivery && !tracking.deliveredAt && (
-                <span className="text-[0.65rem] text-[#a09a90] flex items-center gap-1">
+                <span className="text-[0.65rem] text-[#7f7f7f] flex items-center gap-1">
                   <Clock size={10} /> Est. {tracking.estimatedDelivery}
                 </span>
               )}
@@ -448,21 +448,21 @@ export default function AdminOrderShipping({ order, onUpdate }: Props) {
             </div>
 
             {tracking.currentLocation && (
-              <p className="text-[0.7rem] text-[#6b6560] flex items-center gap-1.5">
-                <MapPin size={11} strokeWidth={1.8} className="text-[#c9a84c]" />
+              <p className="text-[0.7rem] text-[#555555] flex items-center gap-1.5">
+                <MapPin size={11} strokeWidth={1.8} className="text-[#1c4874]" />
                 {tracking.currentLocation}
               </p>
             )}
 
             {tracking.events.length > 0 && (
-              <ol className="relative border-l border-[#ede9e1] space-y-3 ml-2 pt-1">
+              <ol className="relative border-l border-[#c6cbd6] space-y-3 ml-2 pt-1">
                 {tracking.events.slice(0, 8).map((ev, i) => (
                   <li key={i} className="ml-4">
-                    <div className="absolute -left-1.5 mt-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#c9a84c]" />
-                    <p className="text-[0.6rem] text-[#a09a90]">
+                    <div className="absolute -left-1.5 mt-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#1c4874]" />
+                    <p className="text-[0.6rem] text-[#7f7f7f]">
                       {ev.timestamp}{ev.location && ` · ${ev.location}`}
                     </p>
-                    <p className="text-[0.72rem] font-medium text-[#1a1714]">{ev.description}</p>
+                    <p className="text-[0.72rem] font-medium text-[#222222]">{ev.description}</p>
                   </li>
                 ))}
               </ol>

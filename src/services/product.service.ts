@@ -15,6 +15,12 @@ import {
   CategoryFilterSelection,
   CategoryFilterGroup,
 } from './categoryFilter.service';
+import {
+  parseSearchQuery,
+  rankSearchResults,
+  RANK_FIELDS,
+  type RankableProduct,
+} from '@/lib/productSearchQuery';
 
 export async function listProducts(params: ProductFilterParams) {
   // Resolve category/subcategory slugs → ObjectIds before building the query
@@ -50,20 +56,36 @@ export async function listProductsWithCategoryFilters(
   categorySelection: CategoryFilterSelection
 ) {
   const resolved = await resolveSlugFilters(params);
-  const { query, sort, page, limit, skip } = buildProductFilterQuery(resolved);
+  let { query, sort, page, limit, skip } = buildProductFilterQuery(resolved);
+  let finalQuery = applyCategoryFilterSelection(query, categorySelection);
 
-  const finalQuery = applyCategoryFilterSelection(query, categorySelection);
+  const searching = !!params.q?.trim();
+  let total = await Product.countDocuments(finalQuery);
 
-  const [products, total, definitions] = await Promise.all([
-    Product.find(finalQuery)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .populate('category', 'name slug')
-      .populate('subcategory', 'name slug')
-      .populate('subSubcategory', 'name slug')
-      .lean(),
-    Product.countDocuments(finalQuery),
+  // Strict search found nothing → retry letting words match descriptions too.
+  if (searching && total === 0) {
+    ({ query, sort, page, limit, skip } = buildProductFilterQuery({
+      ...resolved,
+      searchIncludeDescription: true,
+    }));
+    finalQuery = applyCategoryFilterSelection(query, categorySelection);
+    total = await Product.countDocuments(finalQuery);
+  }
+
+  // With a query and no sort picked by the customer, order by relevance.
+  const byRelevance = searching && (!params.sortBy || params.sortBy === 'relevance');
+
+  const [products, definitions] = await Promise.all([
+    byRelevance
+      ? findRankedPage(finalQuery, params.q as string, skip, limit)
+      : Product.find(finalQuery)
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .populate('category', 'name slug')
+          .populate('subcategory', 'name slug')
+          .populate('subSubcategory', 'name slug')
+          .lean(),
     getApplicableFilterDefinitions({
       categoryId: resolved.category,
       subcategoryId: resolved.subcategory,
@@ -76,6 +98,40 @@ export async function listProductsWithCategoryFilters(
   }
 
   return { products, total, page, limit, categoryFilters };
+}
+
+/** Upper bound on matches ranked in memory for one search page. */
+const MAX_RANKED_MATCHES = 3000;
+
+/**
+ * Relevance needs every match scored before paginating, so fetch just the
+ * fields the scorer reads for all matches, rank them, then load full
+ * documents for the requested page only.
+ */
+async function findRankedPage(
+  filter: Record<string, unknown>,
+  q: string,
+  skip: number,
+  limit: number,
+) {
+  const parsed = parseSearchQuery(q);
+  const light = (await Product.find(filter)
+    .select(RANK_FIELDS)
+    .sort({ createdAt: -1 })
+    .limit(MAX_RANKED_MATCHES)
+    .lean()) as unknown as (RankableProduct & { _id: mongoose.Types.ObjectId })[];
+
+  const ranked = parsed ? rankSearchResults(light, parsed) : light;
+  const pageIds = ranked.slice(skip, skip + limit).map((p) => p._id);
+  if (pageIds.length === 0) return [];
+
+  const docs = await Product.find({ _id: { $in: pageIds } })
+    .populate('category', 'name slug')
+    .populate('subcategory', 'name slug')
+    .populate('subSubcategory', 'name slug')
+    .lean();
+  const order = new Map(pageIds.map((id, i) => [String(id), i]));
+  return docs.sort((a, b) => (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0));
 }
 
 // ─── Admin listing ──────────────────────────────────────────────────────────

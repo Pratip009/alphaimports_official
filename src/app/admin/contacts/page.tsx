@@ -119,57 +119,48 @@ export default function AdminContactsPage() {
   const countByStatus = (s: string) => s ? messages.filter(m => m.status === s).length : messages.length;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f9]" style={{ fontFamily: '"Elms Sans", sans-serif' }}>
+    <div className="ct-root">
+      <style>{`
+        .ct-root { font-size: 11px; color: #222; }
+        .ct-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .ct-top h1 { margin: 2px 0 2px; }
+        .ct-top p { margin: 0; color: #7f7f7f; font-size: 12px; }
+        .ct-new { color: #990000; font-weight: bold; }
+        .ct-figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid #a6aec5; margin-bottom: 16px; }
+        .ct-fig { padding: 8px 12px; border-left: 1px solid #e3e6ee; }
+        .ct-fig:first-child { border-left: 0; }
+        .ct-fig span { display: block; color: #7f7f7f; font-size: 10px; }
+        .ct-fig b { display: block; font-size: 20px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+        @media (max-width: 700px) {
+          .ct-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .ct-fig:nth-child(3) { border-left: 0; }
+          .ct-fig:nth-child(n+3) { border-top: 1px solid #e3e6ee; }
+        }
+      `}</style>
 
-      {/* ── Top Bar ── */}
-      <div className="bg-[#0d2240] border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Gem icon */}
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/40">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-white font-bold text-lg tracking-tight">Contact Inbox</h1>
-              <p className="text-white/40 text-xs">GemStone Admin Panel</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {unreadCount > 0 && (
-              <div className="flex items-center gap-2 bg-rose-500/20 border border-rose-400/30 rounded-full px-3 py-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-                <span className="text-rose-300 text-xs font-semibold">{unreadCount} new</span>
-              </div>
-            )}
-            <div className="bg-white/10 border border-white/10 rounded-full px-3 py-1.5">
-              <span className="text-white/60 text-xs font-medium">{total} total</span>
-            </div>
-          </div>
+      <div className="ct-top">
+        <div>
+          <h1>Contact Inbox</h1>
+          <p>
+            Messages sent through the website contact form.
+            {unreadCount > 0 && <> <span className="ct-new">{unreadCount} unread.</span></>}
+          </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div>
 
-        {/* ── Stat Cards ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* ── Figures ── */}
+        <div className="ct-figs">
           {[
-            { label: "Total",   value: total,        color: "from-[#112c52] to-[#1a4070]", icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
-            { label: "Unread",  value: unreadCount,  color: "from-rose-500 to-rose-600",   icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" },
-            { label: "Read",    value: messages.filter(m => m.status === "read").length,    color: "from-slate-500 to-slate-600",   icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
-            { label: "Replied", value: messages.filter(m => m.status === "replied").length, color: "from-emerald-500 to-emerald-600", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
+            { label: "Total messages", value: total,       color: "#1c4874" },
+            { label: "Unread",         value: unreadCount, color: "#990000" },
+            { label: "Read",           value: messages.filter(m => m.status === "read").length,    color: "#555555" },
+            { label: "Replied",        value: messages.filter(m => m.status === "replied").length, color: "#2d7a52" },
           ].map((card) => (
-            <div key={card.label} className={`bg-gradient-to-br ${card.color} rounded-2xl p-5 text-white shadow-lg`}>
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">{card.label}</span>
-                <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={card.icon} />
-                  </svg>
-                </div>
-              </div>
-              <p className="text-3xl font-bold tracking-tight">{card.value}</p>
+            <div key={card.label} className="ct-fig">
+              <span>{card.label}</span>
+              <b style={{ color: card.color }}>{card.value}</b>
             </div>
           ))}
         </div>
@@ -187,8 +178,8 @@ export default function AdminContactsPage() {
                   onClick={() => { setStatusFilter(f.value); setPage(1); }}
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all duration-200 ${
                     statusFilter === f.value
-                      ? "bg-[#112c52] text-white border-[#112c52] shadow-md shadow-[#112c52]/20"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-[#112c52]/30 hover:text-[#112c52]"
+                      ? "bg-[#154273] text-white border-[#154273] shadow-md shadow-[#154273]/20"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-[#154273]/30 hover:text-[#154273]"
                   }`}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -236,7 +227,7 @@ export default function AdminContactsPage() {
                       onClick={() => openMessage(msg)}
                       className={`group relative bg-white rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden ${
                         isActive
-                          ? "border-[#112c52] shadow-lg shadow-[#112c52]/10 ring-1 ring-[#112c52]/20"
+                          ? "border-[#154273] shadow-lg shadow-[#154273]/10 ring-1 ring-[#154273]/20"
                           : msg.status === "unread"
                           ? "border-rose-200 shadow-sm hover:shadow-md hover:border-rose-300"
                           : "border-slate-200 hover:border-slate-300 hover:shadow-md"
@@ -254,7 +245,7 @@ export default function AdminContactsPage() {
                         <div className="flex items-start gap-3">
                           {/* Avatar */}
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                            isActive ? "bg-[#112c52] text-white" : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600"
+                            isActive ? "bg-[#154273] text-white" : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600"
                           }`}>
                             {msg.name.charAt(0).toUpperCase()}
                           </div>
@@ -331,7 +322,7 @@ export default function AdminContactsPage() {
             {selected ? (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden sticky top-6">
                 {/* Panel header */}
-                <div className="bg-gradient-to-r from-[#0d2240] to-[#1a4070] px-6 py-5">
+                <div className="bg-gradient-to-r from-[#154273] to-[#1c4874] px-6 py-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-bold text-lg">
@@ -417,7 +408,7 @@ export default function AdminContactsPage() {
                   {/* Reply via email link */}
                   <a
                     href={`mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject)}`}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold rounded-xl border border-[#112c52]/20 text-[#112c52] hover:bg-[#112c52]/5 transition-all mt-1"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-semibold rounded-xl border border-[#154273]/20 text-[#154273] hover:bg-[#154273]/5 transition-all mt-1"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

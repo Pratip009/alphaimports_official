@@ -79,7 +79,7 @@ export default function CartSidebar({
       })
       .catch(() => setCart(null))
       .finally(() => setLoading(false));
-  }, [open]);
+  }, [open, apiFetch]); // apiFetch is memoized, so this still re-runs only when `open` changes
 
   // Lock body scroll while the panel is visible (mounted covers the
   // closing-animation window too, so scroll doesn't jump back early).

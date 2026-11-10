@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Heart, ArrowRight, Package, ShoppingBag, Trash2 } from 'lucide-react';
@@ -83,7 +83,7 @@ export default function WishlistPage() {
     if (!authLoading && !user) router.push('/login?redirect=/wishlist');
   }, [authLoading, user, router]);
 
-  const fetchWishlist = async () => {
+  const fetchWishlist = useCallback(async () => {
     try {
       const data = await apiFetch('/api/wishlist');
       setItems(data.data.wishlist?.items || []);
@@ -92,17 +92,17 @@ export default function WishlistPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiFetch]);
 
   useEffect(() => {
     if (!authLoading && user) fetchWishlist();
-  }, [authLoading, user]);
+  }, [authLoading, user, fetchWishlist]);
 
   useEffect(() => {
     const handler = () => { if (user) fetchWishlist(); };
     window.addEventListener('wishlist:refresh', handler);
     return () => window.removeEventListener('wishlist:refresh', handler);
-  }, [user]);
+  }, [user, fetchWishlist]);
 
   const remove = async (productId: string) => {
     setBusyId(productId);

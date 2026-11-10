@@ -12,56 +12,61 @@ import Product from "@/models/Product";
 import "@/models/Category";
 import "@/models/Subcategory";
 import "@/models/SubSubcategory";
-import { buildProductSearchOr } from "@/lib/productSearchQuery";
+import {
+  buildProductSearchFilter,
+  parseSearchQuery,
+  rankSearchResults,
+  type RankableProduct,
+} from "@/lib/productSearchQuery";
 
 export const dynamic = "force-dynamic";
 
-// The matching rules (per-word AND across name/brand/model/gem/SKU/
-// description/approxWeight, plus carat / gram / mm / WxH numeric matching)
-// live in src/lib/productSearchQuery.ts so the dropship seller catalog
-// searches exactly the same way this homepage search does.
+// Matching + ranking rules live in src/lib/productSearchQuery.ts so this
+// dropdown, the full results page (/products?search=) and the dropship
+// catalog all agree on what a query means.
+
+const SELECT =
+  "name slug price images image category subcategory subSubcategory productKind watchBrand watchModel gemstoneName legacySku description size caratWeight weight dimensions approxWeight shape color clarity certification shapeRaw cutType createdAt";
+
+/** Matches pulled before ranking. Ranking happens in memory, so this bounds the work. */
+const RANK_POOL = 400;
 
 export async function GET(req: NextRequest) {
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
-  // Capped at 200, not 50: this endpoint has no relevance sort (plain $or,
-  // no text index), so Mongo returns matching documents in essentially
-  // arbitrary order. The client re-ranks by relevance after fetching (see
-  // scoreProduct in SearchBar.tsx) — but it can only rank documents that
-  // actually made it into this response. A low cap here was silently
-  // dropping genuinely relevant products whenever a query also (loosely)
-  // matched a lot of unrelated ones, especially with the broad
-  // name/description fallback regexes for mm/dimension queries.
   const limit = Math.min(Number(req.nextUrl.searchParams.get("limit") ?? 30) || 30, 200);
 
   if (!q) return NextResponse.json({ data: [] });
+  const parsed = parseSearchQuery(q);
+  if (!parsed) return NextResponse.json({ data: [] });
 
   await db();
 
-  const or = buildProductSearchOr(q);
-  if (!or) return NextResponse.json({ data: [] });
+  const find = async (includeDescription: boolean) => {
+    const filter = buildProductSearchFilter(q, { includeDescription });
+    if (!filter) return [];
+    return Product.find({ isActive: { $ne: false }, $and: [filter] })
+      .select(SELECT)
+      .sort({ createdAt: -1 })
+      .limit(RANK_POOL)
+      .lean();
+  };
 
-  const products = await Product.find({
-    isActive: { $ne: false },
-    $or: or,
-  })
-    .select(
-      "name slug price images image category subcategory subSubcategory productKind watchBrand watchModel gemstoneName legacySku description size caratWeight weight dimensions approxWeight shape color clarity certification"
-    )
-    // Product now has a real `slug` field (see Product.slug in the model) —
-    // it's included above so the client can route straight to
-    // /products/<slug> instead of falling back to a fuzzy
-    // /products?search= listing for every result. Populating `category`
-    // here (previously left as a bare ObjectId) also fixes the category
-    // name shown under each result in the dropdown.
-    //
-    // `subcategory`/`subSubcategory` are populated too so the dropdown can
-    // show the full taxonomy path a product lives under (e.g.
-    // "Diamonds › White Diamonds"), not just the top-level category.
+  // Strict first; only widen to descriptions when nothing matched.
+  let pool = await find(false);
+  if (pool.length === 0) pool = await find(true);
+
+  const top = rankSearchResults(pool as unknown as RankableProduct[], parsed).slice(0, limit) as unknown as typeof pool;
+  const ids = top.map((p) => (p as { _id: unknown })._id);
+
+  // Populate taxonomy names for just the rows we return.
+  const populated = await Product.find({ _id: { $in: ids } })
+    .select(SELECT)
     .populate("category", "name slug")
     .populate("subcategory", "name slug")
     .populate("subSubcategory", "name slug")
-    .limit(limit)
     .lean();
+  const byId = new Map(populated.map((p) => [String((p as { _id: unknown })._id), p]));
+  const data = ids.map((id) => byId.get(String(id))).filter(Boolean);
 
-  return NextResponse.json({ data: products });
+  return NextResponse.json({ data });
 }

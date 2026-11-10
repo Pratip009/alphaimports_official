@@ -1008,21 +1008,19 @@ export default function SearchBar({
       fetchProducts(q, controller.signal)
         .then((prods) => {
           if (myReq !== reqIdRef.current) return;
-          const scored: ResultItem[] = prods
-            .map((p) => {
-              const s = scoreProduct(p, lq, carat, gramWeight, mmSize, dims);
-              return s
-                ? ({
-                    type: "product",
-                    item: p,
-                    score: s.score,
-                    matchedOn: s.matchedOn,
-                    matchedField: s.matchedField,
-                  } as ResultItem)
-                : null;
-            })
-            .filter((r): r is ResultItem => r !== null)
-            .sort((a, b) => (b as any).score - (a as any).score);
+          // The server already filtered (every word must match) and ranked
+          // by relevance — keep its order. scoreProduct() is only used here
+          // to label *why* a row matched (Carat / Model # / Size …).
+          const scored: ResultItem[] = prods.map((p, i) => {
+            const s = scoreProduct(p, lq, carat, gramWeight, mmSize, dims);
+            return {
+              type: "product",
+              item: p,
+              score: 100 - i * 0.01,
+              matchedOn: s?.matchedOn ?? p.name,
+              matchedField: s?.matchedField ?? "name",
+            } as ResultItem;
+          });
           setResults(mergeResults(local, scored));
           setLoading(false);
         })
@@ -1204,6 +1202,9 @@ export default function SearchBar({
   const colCount =
     [showCatCol, showProdCol, showAttrCol].filter(Boolean).length || 1;
 
+  // `_cats` is a module-level cache filled asynchronously, so React can't
+  // track it; re-reading it whenever the panel opens is the intent.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const trendingCats = useMemo(() => (_cats ?? []).slice(0, 6), [open]);
   const showEmptyPanel =
     open && !hasQuery && (recent.length > 0 || trendingCats.length > 0);

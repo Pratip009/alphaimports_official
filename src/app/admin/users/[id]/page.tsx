@@ -106,8 +106,8 @@ function formatCurrency(n: number) {
 }
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
-  pending: '#a09a90', paid: '#7ab0c9', processing: '#c9a84c', shipped: '#9ab87a',
-  delivered: '#5a9a5a', cancelled: '#c97a7a', refunded: '#b0a898',
+  pending: '#7f7f7f', paid: '#2f5681', processing: '#1c4874', shipped: '#2d7a52',
+  delivered: '#2d7a52', cancelled: '#990000', refunded: '#999999',
 };
 
 const DEVICE_ICON: Record<string, React.ElementType> = {
@@ -119,16 +119,16 @@ function StatBlock({
   label, value, sub, icon: Icon, accent,
 }: { label: string; value: string; sub?: string; icon: React.ElementType; accent: string }) {
   return (
-    <div className="relative bg-white border border-[#ede9e1] rounded-2xl p-5 overflow-hidden">
+    <div className="relative bg-white border border-[#c6cbd6] rounded-2xl p-5 overflow-hidden">
       <div className="absolute top-0 left-6 right-6 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}40, transparent)` }} />
       <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${accent}15`, border: `1px solid ${accent}25` }}>
         <Icon size={17} strokeWidth={1.7} style={{ color: accent }} />
       </div>
-      <div className="font-['Cormorant_Garamond',serif] text-[1.7rem] font-medium text-[#1a1714] leading-none mb-1">
+      <div className=" text-[1.7rem] font-medium text-[#222222] leading-none mb-1">
         {value}
       </div>
-      <div className="text-[0.7rem] text-[#a09a90] tracking-wide uppercase font-medium">{label}</div>
-      {sub && <div className="text-[0.68rem] text-[#c4bdb2] mt-1">{sub}</div>}
+      <div className="text-[0.7rem] text-[#7f7f7f] tracking-wide uppercase font-medium">{label}</div>
+      {sub && <div className="text-[0.68rem] text-[#999999] mt-1">{sub}</div>}
     </div>
   );
 }
@@ -159,7 +159,7 @@ export default function AdminUserDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-[0.8rem] text-[#a09a90]">Loading user…</div>
+        <div className="text-[0.8rem] text-[#7f7f7f]">Loading user…</div>
       </div>
     );
   }
@@ -167,8 +167,8 @@ export default function AdminUserDetailPage() {
   if (error || !data) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <p className="text-[0.85rem] text-[#c97a7a]">{error || 'User not found'}</p>
-        <Link href="/admin/users" className="text-[0.75rem] text-[#c9a84c] hover:underline">← Back to Users</Link>
+        <p className="text-[0.85rem] text-[#990000]">{error || 'User not found'}</p>
+        <Link href="/admin/users" className="text-[0.75rem] text-[#1c4874] hover:underline">← Back to Users</Link>
       </div>
     );
   }
@@ -180,36 +180,36 @@ export default function AdminUserDetailPage() {
       {/* ── Back link ── */}
       <Link
         href="/admin/users"
-        className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium text-[#a09a90] hover:text-[#c9a84c] transition-colors mb-6"
+        className="inline-flex items-center gap-1.5 text-[0.75rem] font-medium text-[#7f7f7f] hover:text-[#1c4874] transition-colors mb-6"
       >
         <ArrowLeft size={13} strokeWidth={2} /> Back to Users
       </Link>
 
       {/* ── Profile header ── */}
-      <div className="bg-white border border-[#ede9e1] rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
+      <div className="bg-white border border-[#c6cbd6] rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
         <div className="flex items-center gap-4">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center text-[1.4rem] font-bold shrink-0"
             style={{
-              background: user.role === 'admin' ? '#c9a84c20' : '#7ab0c920',
-              color:      user.role === 'admin' ? '#c9a84c'   : '#7ab0c9',
-              border: `1px solid ${user.role === 'admin' ? '#c9a84c30' : '#7ab0c930'}`,
+              background: user.role === 'admin' ? '#1c487420' : '#2f568120',
+              color:      user.role === 'admin' ? '#1c4874'   : '#2f5681',
+              border: `1px solid ${user.role === 'admin' ? '#1c487430' : '#2f568130'}`,
             }}
           >
                         <AvatarImage src={user.avatarUrl} name={user.name} email={user.email} className="w-full h-full rounded-full object-cover" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h1 className="font-['Cormorant_Garamond',serif] text-[1.8rem] font-medium text-[#1a1714] leading-none">
+              <h1 className=" text-[1.8rem] font-medium text-[#222222] leading-none">
                 {user.name}
               </h1>
               {user.role === 'admin' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#1c4874]/10 text-[#1c4874] border border-[#1c4874]/20">
                   <Crown size={9} strokeWidth={2} /> Admin
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-[#8a8278]">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-[#7f7f7f]">
               <span className="flex items-center gap-1.5"><Mail size={12} strokeWidth={1.8} />{user.email}</span>
               {user.phone && <span className="flex items-center gap-1.5"><Phone size={12} strokeWidth={1.8} />{user.phone}</span>}
               {user.address?.city && (
@@ -229,7 +229,7 @@ export default function AdminUserDetailPage() {
           </div>
         </div>
         {user.memoStatus && user.memoStatus !== 'none' && (
-          <span className="self-start sm:self-center text-[0.65rem] font-semibold tracking-wide uppercase px-3 py-1.5 rounded-full bg-[#faf9f7] border border-[#ede9e1] text-[#4a4540]">
+          <span className="self-start sm:self-center text-[0.65rem] font-semibold tracking-wide uppercase px-3 py-1.5 rounded-full bg-[#f5f7fb] border border-[#c6cbd6] text-[#555555]">
             Memo: {user.memoStatus}
           </span>
         )}
@@ -238,62 +238,62 @@ export default function AdminUserDetailPage() {
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatBlock
-          label="Total Spent" value={formatCurrency(purchases.totalSpent)} icon={DollarSign} accent="#c9a84c"
+          label="Total Spent" value={formatCurrency(purchases.totalSpent)} icon={DollarSign} accent="#1c4874"
           sub={`${purchases.completedOrderCount} paid order${purchases.completedOrderCount === 1 ? '' : 's'}`}
         />
         <StatBlock
-          label="Orders Placed" value={String(purchases.orderCount)} icon={ShoppingBag} accent="#7ab0c9"
+          label="Orders Placed" value={String(purchases.orderCount)} icon={ShoppingBag} accent="#2f5681"
           sub={purchases.lastOrderAt ? `Last order ${timeAgo(purchases.lastOrderAt)}` : 'No orders yet'}
         />
         <StatBlock
-          label="Screen Time" value={formatDuration(analytics.totalScreenTime)} icon={Clock} accent="#9ab87a"
+          label="Screen Time" value={formatDuration(analytics.totalScreenTime)} icon={Clock} accent="#2d7a52"
           sub={`${analytics.sessionCount} session${analytics.sessionCount === 1 ? '' : 's'} tracked`}
         />
         <StatBlock
-          label="Last Active" value={timeAgo(analytics.lastActiveAt)} icon={Activity} accent="#a87ac9"
+          label="Last Active" value={timeAgo(analytics.lastActiveAt)} icon={Activity} accent="#7d88aa"
           sub={analytics.totalPageViews ? `${analytics.totalPageViews} page views` : 'No activity yet'}
         />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* ── Orders ── */}
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden flex flex-col">
-          <div className="px-5 py-4 border-b border-[#ede9e1]">
-            <h2 className="text-[0.85rem] font-semibold text-[#1a1714]">Purchase History</h2>
-            <p className="text-[0.68rem] text-[#a09a90] mt-0.5">
+        <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden flex flex-col">
+          <div className="px-5 py-4 border-b border-[#c6cbd6]">
+            <h2 className="text-[0.85rem] font-semibold text-[#222222]">Purchase History</h2>
+            <p className="text-[0.68rem] text-[#7f7f7f] mt-0.5">
               Avg order value {formatCurrency(purchases.avgOrderValue)}
             </p>
           </div>
           <div className="flex-1 overflow-auto max-h-[520px]">
             {orders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <ShoppingBag size={26} strokeWidth={1.2} className="text-[#d4cfc8] mb-3" />
-                <p className="text-[0.78rem] text-[#b0a898]">No orders yet</p>
+                <ShoppingBag size={26} strokeWidth={1.2} className="text-[#999999] mb-3" />
+                <p className="text-[0.78rem] text-[#999999]">No orders yet</p>
               </div>
             ) : (
               orders.map((o) => (
-                <div key={o._id} className="px-5 py-3.5 border-b border-[#f5f3ef] hover:bg-[#faf9f7] transition-colors">
+                <div key={o._id} className="px-5 py-3.5 border-b border-[#e3e6ee] hover:bg-[#f5f7fb] transition-colors">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[0.78rem] font-medium text-[#1a1714]">
+                    <span className="text-[0.78rem] font-medium text-[#222222]">
                       {o.items.length} item{o.items.length === 1 ? '' : 's'}
                     </span>
-                    <span className="text-[0.82rem] font-semibold text-[#1a1714]">{formatCurrency(o.totalAmount)}</span>
+                    <span className="text-[0.82rem] font-semibold text-[#222222]">{formatCurrency(o.totalAmount)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[0.68rem] text-[#a09a90] truncate max-w-[60%]">
+                    <span className="text-[0.68rem] text-[#7f7f7f] truncate max-w-[60%]">
                       {o.items.map((it) => it.name).join(', ')}
                     </span>
                     <div className="flex items-center gap-2 shrink-0">
                       <span
                         className="text-[0.62rem] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full"
                         style={{
-                          color: ORDER_STATUS_COLORS[o.status] ?? '#8a8278',
-                          background: `${ORDER_STATUS_COLORS[o.status] ?? '#8a8278'}15`,
+                          color: ORDER_STATUS_COLORS[o.status] ?? '#7f7f7f',
+                          background: `${ORDER_STATUS_COLORS[o.status] ?? '#7f7f7f'}15`,
                         }}
                       >
                         {o.status}
                       </span>
-                      <span className="text-[0.65rem] text-[#c4bdb2]">{formatDate(o.createdAt)}</span>
+                      <span className="text-[0.65rem] text-[#999999]">{formatDate(o.createdAt)}</span>
                     </div>
                   </div>
                 </div>
@@ -303,19 +303,19 @@ export default function AdminUserDetailPage() {
         </div>
 
         {/* ── Screen time / sessions ── */}
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden flex flex-col">
-          <div className="px-5 py-4 border-b border-[#ede9e1]">
-            <h2 className="text-[0.85rem] font-semibold text-[#1a1714]">Recent Sessions</h2>
-            <p className="text-[0.68rem] text-[#a09a90] mt-0.5">
+        <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden flex flex-col">
+          <div className="px-5 py-4 border-b border-[#c6cbd6]">
+            <h2 className="text-[0.85rem] font-semibold text-[#222222]">Recent Sessions</h2>
+            <p className="text-[0.68rem] text-[#7f7f7f] mt-0.5">
               {analytics.firstSeenAt ? `Tracking since ${formatDate(analytics.firstSeenAt)}` : 'No sessions tracked yet'}
             </p>
           </div>
           <div className="flex-1 overflow-auto max-h-[520px]">
             {analytics.recentSessions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-                <Clock size={26} strokeWidth={1.2} className="text-[#d4cfc8] mb-3" />
-                <p className="text-[0.78rem] text-[#b0a898]">No sessions recorded</p>
-                <p className="text-[0.68rem] text-[#c4bdb2] mt-1">
+                <Clock size={26} strokeWidth={1.2} className="text-[#999999] mb-3" />
+                <p className="text-[0.78rem] text-[#999999]">No sessions recorded</p>
+                <p className="text-[0.68rem] text-[#999999] mt-1">
                   Screen time is tracked from the moment this account logs in.
                 </p>
               </div>
@@ -323,15 +323,15 @@ export default function AdminUserDetailPage() {
               analytics.recentSessions.map((s) => {
                 const DeviceIcon = DEVICE_ICON[s.device?.type ?? ''] ?? Monitor;
                 return (
-                  <div key={s.sessionId} className="px-5 py-3.5 border-b border-[#f5f3ef] hover:bg-[#faf9f7] transition-colors">
+                  <div key={s.sessionId} className="px-5 py-3.5 border-b border-[#e3e6ee] hover:bg-[#f5f7fb] transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-[#1a1714]">
-                        <DeviceIcon size={13} strokeWidth={1.8} className="text-[#c4bdb2]" />
+                      <span className="flex items-center gap-1.5 text-[0.78rem] font-medium text-[#222222]">
+                        <DeviceIcon size={13} strokeWidth={1.8} className="text-[#999999]" />
                         {formatDuration(s.duration)}
                       </span>
-                      <span className="text-[0.68rem] text-[#a09a90]">{formatDateTime(s.startedAt)}</span>
+                      <span className="text-[0.68rem] text-[#7f7f7f]">{formatDateTime(s.startedAt)}</span>
                     </div>
-                    <div className="flex items-center justify-between text-[0.68rem] text-[#a09a90]">
+                    <div className="flex items-center justify-between text-[0.68rem] text-[#7f7f7f]">
                       <span className="truncate max-w-[65%]">
                         {s.entryPage || '/'} {s.exitPage && s.exitPage !== s.entryPage ? `→ ${s.exitPage}` : ''}
                       </span>

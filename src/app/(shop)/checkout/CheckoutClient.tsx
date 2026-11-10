@@ -630,7 +630,7 @@ export default function CheckoutPage({
         }
       })
       .catch(() => router.push("/login"));
-  }, []);
+  }, [apiFetch, router]); // both stable — still runs once on mount
 
   // Bring the top of the card into view whenever the step changes, so the
   // person always starts a new step (address / rates / payment) from the top

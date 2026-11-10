@@ -11,8 +11,8 @@
  */
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef, FormEvent, Suspense } from "react";
 import { useCart } from "@/hooks/useCart";
 import CartSidebar from "./CartSidebar";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -74,7 +74,30 @@ function subcategoryHref(catSlug: string, sub: NavSubcategory) {
     : `/products?category=${catSlug}&subcategory=${sub.slug}`;
 }
 
+/** "› Products", or "› Search Results" when /products is showing a search. */
+function ProductsCrumb() {
+  const sp = useSearchParams();
+  const searching = !!(sp.get("search") || sp.get("q"))?.trim();
+  return (
+    <span style={{ display: "inline-flex" }}>
+      <span className="ai-chev">›</span>
+      <span className="ai-crumb-cur">{searching ? "Search Results" : "Products"}</span>
+    </span>
+  );
+}
+
+/** Breadcrumb labels that the generic title-casing below gets wrong. */
+const SEGMENT_LABELS: Record<string, string> = {
+  faq: "F.A.Q.",
+  "e-catalog": "E-Catalog",
+  "certificates-appraisal": "Certificates & Appraisal",
+  "terms-and-conditions": "Terms & Conditions",
+  "ask-for-catalog": "Ask for a Catalog",
+  "where-is-my-order": "Where Is My Order",
+};
+
 function prettySegment(seg: string) {
+  if (SEGMENT_LABELS[seg]) return SEGMENT_LABELS[seg];
   return decodeURIComponent(seg)
     .replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -682,7 +705,18 @@ export default function Navbar({
               <div className="ai-acctbar-inner">
                 <div className="ai-crumbs" aria-label="Breadcrumb">
                   <Link href="/">Home</Link>
-                  {segments.slice(0, 3).map((seg, i) => {
+                  {pathname === "/products" ? (
+                    <Suspense
+                      fallback={
+                        <span style={{ display: "inline-flex" }}>
+                          <span className="ai-chev">›</span>
+                          <span className="ai-crumb-cur">Products</span>
+                        </span>
+                      }
+                    >
+                      <ProductsCrumb />
+                    </Suspense>
+                  ) : segments.slice(0, 3).map((seg, i) => {
                     const href =
                       (pathname.startsWith("/category/") ? "/category/" : "/") +
                       segments.slice(0, i + 1).join("/");

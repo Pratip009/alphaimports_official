@@ -3,7 +3,7 @@ import Order, { IOrder } from '@/models/Order';
 import { withAdmin, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { buildTrackingUrl } from '@/models/ORDER_SHIPPING_FIELDS';
-import { Resend } from 'resend';
+import { resend } from '@/lib/resend';
 import { orderShippedEmailHtml } from '@/lib/email-templates';
 import mongoose from 'mongoose';
 import DropshipOrder from '@/models/DropshipOrder';
@@ -52,7 +52,6 @@ async function updateDropship(id: string, body: any) {
   return successResponse(await getUnifiedDropshipOrder(id));
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 export const PUT = withAdmin(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {

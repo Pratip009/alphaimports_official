@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import dbConnect from "@/lib/db";
 import ContactMessage from "@/models/ContactMessage";
 import { z } from "zod";
@@ -12,6 +13,9 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ipLimit = await rateLimit(req, { id: 'contact-ip', limit: 5, windowSec: 600 });
+  if (!ipLimit.success) return rateLimitResponse(ipLimit, "Too many messages sent. Please try again in a few minutes.");
+
   try {
     const body = await req.json();
     const parsed = schema.safeParse(body);

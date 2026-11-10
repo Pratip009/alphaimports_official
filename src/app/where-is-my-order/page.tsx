@@ -33,11 +33,11 @@ const page = () => {
 
       {/* Tracking Options */}
       <div>
-        <h2 className="text-2xl font-semibold text-[#1a1714] mb-4">
+        <h2 className="fp-h2">
           Track Your Order
         </h2>
 
-        <ul className="list-disc pl-6 space-y-3">
+        <ul className="fp-list">
           <li>Tracking number provided after shipment</li>
 
           <li>
@@ -51,24 +51,24 @@ const page = () => {
       </div>
 
       {/* Assistance Box */}
-      <div className="rounded-2xl border border-[#e8e2d9] bg-[#fffdf9] p-6">
-        <h3 className="text-xl font-semibold text-[#1a1714] mb-3">
+      <div className="fp-box">
+        <h3 className="fp-h3">
           Need Assistance?
         </h3>
 
-        <p className="leading-8 text-[#4d463f]">
+        <p>
           If you need help locating your order or tracking shipment
           information, please contact our support team.
         </p>
 
-        <div className="mt-5">
-          <p className="text-sm uppercase tracking-[0.2em] font-semibold text-[#c9a84c] mb-2">
+        <div className="fp-stack">
+          <p className="fp-eyebrow">
             Support Email
           </p>
 
           <a
             href="mailto:orders@alphaimports.com"
-            className="text-[#1a1714] font-medium hover:text-[#c9a84c] transition-colors"
+            className="cl-link"
           >
             orders@alphaimports.com
           </a>

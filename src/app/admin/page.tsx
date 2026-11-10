@@ -1,14 +1,12 @@
 'use client';
+/**
+ * Admin dashboard in the classic storefront style: bordered panels with
+ * small-caps gradient headers, plain tables and "Result Pages" pagination.
+ */
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  Gem, UploadCloud, Layers, ShoppingBag, ArrowRight,
-  Users, TrendingUp, Package, Crown, ChevronLeft, ChevronRight, Search,
-  HomeIcon, BookOpen, Mail,
-} from 'lucide-react';
 import { useAuthFetch } from '@/hooks/useAuthFetch';
 import { useAuth } from '@/hooks/useAuth';
-
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Stats {
@@ -35,16 +33,18 @@ interface UsersData {
   limit: number;
 }
 
-// ─── Nav links ────────────────────────────────────────────────────────────────
-const NAV_LINKS = [
-  { href: '/',     label: 'Home',      icon: HomeIcon, desc: 'Home Page',            accent: '#c2c97a' },
-  { href: '/admin/products',   label: 'Products',    icon: Gem,         desc: 'Manage catalogue',           accent: '#c9a84c' },
-  { href: '/admin/upload',     label: 'Bulk Upload', icon: UploadCloud, desc: 'CSV / Excel import',         accent: '#7ab0c9' },
-  { href: '/admin/categories', label: 'Categories',  icon: Layers,      desc: 'Categories & subcategories', accent: '#9ab87a' },
-  { href: '/admin/orders',     label: 'Orders',      icon: ShoppingBag, desc: 'Customer orders',            accent: '#c97a7a' },
-  { href: '/admin/contacts',   label: 'Contacts',    icon: Users,       desc: 'Manage customer contacts',   accent: '#7ac9a8' },
-  { href: '/admin/blogs',       label: 'Blog',        icon: BookOpen,    desc: 'Create & manage blog posts', accent: '#a87ac9' },
-  { href: '/admin/newsletter',  label: 'Newsletter',  icon: Mail,        desc: 'Campaigns & subscribers',    accent: '#0ea5e9' },
+const PAGE_SIZE = 8;
+
+// ─── Quick links ──────────────────────────────────────────────────────────────
+const QUICK_LINKS = [
+  { href: '/admin/products',   label: 'Products',    desc: 'Add, edit and price the catalogue' },
+  { href: '/admin/upload',     label: 'Bulk Upload', desc: 'Import products from CSV / Excel' },
+  { href: '/admin/categories', label: 'Categories',  desc: 'Categories and subcategories' },
+  { href: '/admin/orders',     label: 'Orders',      desc: 'Process and ship customer orders' },
+  { href: '/admin/contacts',   label: 'Contacts',    desc: 'Customer enquiries' },
+  { href: '/admin/blogs',      label: 'Blog',        desc: 'Write and publish posts' },
+  { href: '/admin/newsletter', label: 'Newsletter',  desc: 'Campaigns and subscribers' },
+  { href: '/',                 label: 'Storefront',  desc: 'Open the public website' },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -57,54 +57,18 @@ function timeAgo(iso: string) {
   const days = Math.floor(diff / 86400000);
   if (days === 0) return 'Today';
   if (days === 1) return 'Yesterday';
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return `${days} days ago`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo ago`;
-  return `${Math.floor(months / 12)}y ago`;
+  if (months < 12) return `${months} mo ago`;
+  return `${Math.floor(months / 12)} yr ago`;
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({
-  label, value, sub, icon: Icon, accent, delay,
-}: {
-  label: string; value: number; sub?: string;
-  icon: React.ElementType; accent: string; delay: number;
-}) {
-  const [displayed, setDisplayed] = useState(0);
-
-  useEffect(() => {
-    if (!value) return;
-    let start = 0;
-    const step = Math.ceil(value / 30);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= value) { setDisplayed(value); clearInterval(timer); }
-      else setDisplayed(start);
-    }, 30);
-    return () => clearInterval(timer);
-  }, [value]);
-
+function Stat({ label, value, note, loading }: { label: string; value?: number; note?: string; loading: boolean }) {
   return (
-    <div
-      className="relative bg-white border border-[#ede9e1] rounded-2xl p-5 overflow-hidden group hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all duration-300"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="absolute top-0 left-6 right-6 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}40, transparent)` }} />
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${accent}15`, border: `1px solid ${accent}25` }}>
-          <Icon size={17} strokeWidth={1.7} style={{ color: accent }} />
-        </div>
-        {sub && (
-          <span className="text-[0.65rem] font-semibold tracking-widest uppercase px-2 py-1 rounded-full" style={{ background: `${accent}12`, color: accent }}>
-            {sub}
-          </span>
-        )}
-      </div>
-      <div className="font-['Cormorant_Garamond',serif] text-[2rem] font-medium text-[#1a1714] leading-none mb-1 tabular-nums">
-        {displayed.toLocaleString()}
-      </div>
-      <div className="text-[0.72rem] text-[#a09a90] tracking-wide uppercase font-medium">{label}</div>
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 0%, ${accent}06 0%, transparent 70%)` }} />
+    <div className="dsh-stat">
+      <div className="dsh-stat-label">{label}</div>
+      <div className="dsh-stat-value">{loading ? '…' : (value ?? 0).toLocaleString()}</div>
+      <div className="dsh-stat-note">{note ?? '\u00a0'}</div>
     </div>
   );
 }
@@ -120,248 +84,253 @@ export default function AdminDashboard() {
   const [search, setSearch]       = useState('');
   const [statsLoading, setStatsLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
 
-  // Fetch stats — wait for the auth cookie check (/api/auth/me) to resolve
+  // Wait for the auth cookie check (/api/auth/me) before fetching.
   useEffect(() => {
     if (authLoading || !user) return;
     setStatsLoading(true);
+    setStatsError(false);
     authFetch('/api/admin/stats')
       .then(r => r.json())
       .then(j => setStats(j.data))
-      .catch((e: unknown) => console.error('[stats]', e))
+      .catch((e: unknown) => { console.error('[stats]', e); setStatsError(true); })
       .finally(() => setStatsLoading(false));
   }, [authLoading, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch users — wait for auth, re-run when page changes
   useEffect(() => {
     if (authLoading || !user) return;
     setUsersLoading(true);
-    authFetch(`/api/admin/users?page=${page}&limit=8`)
+    authFetch(`/api/admin/users?page=${page}&limit=${PAGE_SIZE}`)
       .then(r => r.json())
       .then(j => setUsersData(j.data))
-      .catch((e: unknown) => console.error('[stats]', e))
+      .catch((e: unknown) => console.error('[users]', e))
       .finally(() => setUsersLoading(false));
   }, [authLoading, user, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const q = search.trim().toLowerCase();
   const filteredUsers = usersData?.users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+    u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
   ) ?? [];
 
-  const totalPages = usersData ? Math.ceil(usersData.total / 8) : 1;
+  const total = usersData?.total ?? 0;
+  const totalPages = usersData ? Math.max(1, Math.ceil(total / PAGE_SIZE)) : 1;
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+
+  // Up to 10 page numbers around the current page.
+  const start = Math.max(1, Math.min(page - 4, totalPages - 9));
+  const pages = Array.from({ length: Math.min(10, totalPages) }, (_, i) => start + i);
+
+  const growth = stats?.users.growth;
 
   return (
-    <div className="min-h-screen">
+    <div className="dsh">
+      <style>{DASH_CSS}</style>
 
-      {/* ── Header ── */}
-      <div className="mb-8">
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#c9a84c] font-semibold mb-2">◆ Alpha Gemstone</p>
-            <h1 className="font-['Cormorant_Garamond',serif] text-[2.6rem] font-medium text-[#1a1714] tracking-tight leading-none">
-              Dashboard
-            </h1>
-          </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-[0.7rem] text-[#a09a90] tracking-wide">
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
-            <p className="text-[0.65rem] text-[#c9a84c] tracking-widest uppercase mt-0.5 font-semibold">Admin Console</p>
-          </div>
+      <h1>Dashboard</h1>
+      <p className="dsh-intro">
+        Welcome back{user?.name ? `, ${user.name}` : ''}. Here is how the store looks today.
+      </p>
+      {statsError && (
+        <p className="dsh-error" role="alert">
+          The store figures could not be loaded. Refresh the page to try again.
+        </p>
+      )}
+
+      {/* ── Figures ── */}
+      <section className="dsh-box" aria-label="Store figures">
+        <h2 className="dsh-head">Store Figures</h2>
+        <div className="dsh-stats">
+          <Stat label="Total products" value={stats?.products.total} loading={statsLoading}
+            note={stats ? `+${stats.products.newThisMonth} added this month` : undefined} />
+          <Stat label="Active listings" value={stats?.products.active} loading={statsLoading}
+            note={stats && stats.products.total ? `${Math.round((stats.products.active / stats.products.total) * 100)}% of catalogue` : undefined} />
+          <Stat label="Registered users" value={stats?.users.total} loading={statsLoading}
+            note={growth !== undefined ? `${growth > 0 ? '+' : ''}${growth}% vs last month` : undefined} />
+          <Stat label="Categories" value={stats?.categories.total} loading={statsLoading} />
         </div>
-        <div className="mt-5 h-px bg-gradient-to-r from-[#c9a84c]/30 via-[#ede9e1] to-transparent" />
-      </div>
+      </section>
 
-      {/* ── Stat cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <StatCard label="Total Products"  value={stats?.products.total   ?? 0} sub={stats ? `+${stats.products.newThisMonth} this mo` : undefined} icon={Package} accent="#c9a84c" delay={0}   />
-        <StatCard label="Active Listings" value={stats?.products.active  ?? 0} icon={Gem}    accent="#9ab87a" delay={60}  />
-        <StatCard label="Total Users"     value={stats?.users.total      ?? 0} sub={stats?.users.growth !== undefined ? `${stats.users.growth > 0 ? '+' : ''}${stats.users.growth}% MoM` : undefined} icon={Users}  accent="#7ab0c9" delay={120} />
-        <StatCard label="Categories"      value={stats?.categories.total ?? 0} icon={Layers} accent="#c97a7a" delay={180} />
-      </div>
+      <div className="dsh-cols">
+        {/* ── Left column ── */}
+        <div className="dsh-left">
+          <section className="dsh-box">
+            <h2 className="dsh-head">Quick Access</h2>
+            <ul className="dsh-links">
+              {QUICK_LINKS.map(l => (
+                <li key={l.href}>
+                  <Link href={l.href} target={l.href === '/' ? '_blank' : undefined}>{l.label}</Link>
+                  <span>{l.desc}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-      {/* ── Two-column layout ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[300px_1fr] gap-6">
+          <section className="dsh-box">
+            <h2 className="dsh-head">This Month</h2>
+            <div className="dsh-month">
+              <div><b>{statsLoading ? '…' : `+${stats?.users.newThisMonth ?? 0}`}</b> new users registered</div>
+              <div><b>{statsLoading ? '…' : `+${stats?.products.newThisMonth ?? 0}`}</b> products added</div>
+            </div>
+          </section>
+        </div>
 
-        {/* ── Left: Quick nav ── */}
-        <div className="flex flex-col gap-3">
-          <h2 className="text-[0.65rem] tracking-[0.2em] uppercase text-[#a09a90] font-semibold mb-1">Quick Access</h2>
+        {/* ── User registry ── */}
+        <section className="dsh-box dsh-users" aria-label="User registry">
+          <h2 className="dsh-head">User Registry</h2>
 
-          {NAV_LINKS.map(({ href, label, icon: Icon, desc, accent }) => (
-            <Link
-              key={href}
-              href={href}
-              className="group flex items-center gap-4 bg-white border border-[#ede9e1] rounded-xl px-4 py-3.5 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)] transition-all duration-200"
-            >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110" style={{ background: `${accent}15`, border: `1px solid ${accent}25` }}>
-                <Icon size={16} strokeWidth={1.6} style={{ color: accent }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[0.82rem] font-semibold text-[#1a1714]">{label}</div>
-                <div className="text-[0.7rem] text-[#a09a90]">{desc}</div>
-              </div>
-              <ArrowRight size={14} strokeWidth={2} className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" style={{ color: accent }} />
-            </Link>
-          ))}
+          <div className="dsh-toolbar">
+            <span>
+              {usersData
+                ? <><b>{usersData.total.toLocaleString()}</b> users · <b>{usersData.adminCount}</b> admin · <b>{usersData.userCount}</b> customers</>
+                : '\u00a0'}
+            </span>
+            <label className="dsh-search">
+              <span>Search this page:</span>
+              <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Name or email" />
+            </label>
+          </div>
 
-          {/* New users callout */}
-          {stats && (
-            <div className="mt-1 bg-gradient-to-br from-[#c9a84c]/8 to-[#c9a84c]/4 border border-[#c9a84c]/20 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp size={13} strokeWidth={2} className="text-[#c9a84c]" />
-                <span className="text-[0.65rem] tracking-widest uppercase text-[#c9a84c] font-semibold">This Month</span>
-              </div>
-              <div className="font-['Cormorant_Garamond',serif] text-[1.8rem] font-medium text-[#1a1714] leading-none">
-                +{stats.users.newThisMonth}
-              </div>
-              <div className="text-[0.7rem] text-[#a09a90] mt-0.5">new users registered</div>
+          <div className="dsh-table-wrap">
+            <table className="dsh-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="dsh-skel"><td colSpan={4}><span /></td></tr>
+                  ))
+                ) : filteredUsers.length === 0 ? (
+                  <tr><td colSpan={4} className="dsh-empty">
+                    {q ? `No users on this page match “${search.trim()}”.` : 'No users yet.'}
+                  </td></tr>
+                ) : (
+                  filteredUsers.map(u => (
+                    <tr key={u._id}>
+                      <td className="dsh-name">
+                        <Link href={`/admin/users/${u._id}`}>{u.name}</Link>
+                      </td>
+                      <td className="dsh-email">{u.email}</td>
+                      <td>
+                        <span className={`dsh-role ${u.role === 'admin' ? 'is-admin' : ''}`}>
+                          {u.role === 'admin' ? 'Admin' : 'Customer'}
+                        </span>
+                      </td>
+                      <td title={formatDate(u.createdAt)}>{timeAgo(u.createdAt)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {usersData && (
+            <div className="dsh-pager">
+              <span>Displaying <b>{from}</b> to <b>{to}</b> (of <b>{total.toLocaleString()}</b> users)</span>
+              <nav aria-label="User pages">
+                Result Pages:
+                {page > 1 && <button type="button" onClick={() => setPage(page - 1)}>[&lt;&lt; Prev]</button>}
+                {pages.map(p => p === page
+                  ? <b key={p} aria-current="page">{p}</b>
+                  : <button type="button" key={p} onClick={() => setPage(p)}>{p}</button>)}
+                {page < totalPages && <button type="button" onClick={() => setPage(page + 1)}>[Next &gt;&gt;]</button>}
+              </nav>
             </div>
           )}
-        </div>
-
-        {/* ── Right: User table ── */}
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden flex flex-col">
-
-          {/* Table header */}
-          {/* Table header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#ede9e1]">
-            <div>
-              <h2 className="text-[0.85rem] font-semibold text-[#1a1714]">User Registry</h2>
-              <p className="text-[0.68rem] text-[#a09a90] mt-0.5">
-                {usersData
-                  ? `${usersData.total} total · ${usersData.adminCount} admin · ${usersData.userCount} customers`
-                  : '—'}
-              </p>
-            </div>
-            <div className="relative hidden sm:block">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c4bdb2]" strokeWidth={2} />
-              <input
-                type="text"
-                placeholder="Search users…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-2 text-[0.72rem] bg-[#faf9f7] border border-[#ede9e1] rounded-lg outline-none focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20 transition-all w-44 placeholder:text-[#c4bdb2]"
-              />
-            </div>
-          </div>
-
-          {/* Column headers */}
-          <div className="grid grid-cols-[1fr_1.4fr_80px_90px] px-5 py-2.5 border-b border-[#ede9e1] bg-[#faf9f7]">
-            {['Name', 'Email', 'Role', 'Joined'].map(h => (
-              <span key={h} className="text-[0.6rem] tracking-[0.15em] uppercase text-[#b0a898] font-semibold">{h}</span>
-            ))}
-          </div>
-
-          {/* Rows */}
-          <div className="flex-1 overflow-auto">
-            {usersLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="grid grid-cols-[1fr_1.4fr_80px_90px] px-5 py-3.5 border-b border-[#f5f3ef] animate-pulse">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-[#ede9e1]" />
-                    <div className="h-3 w-20 bg-[#ede9e1] rounded" />
-                  </div>
-                  <div className="h-3 w-32 bg-[#ede9e1] rounded self-center" />
-                  <div className="h-5 w-12 bg-[#ede9e1] rounded-full self-center" />
-                  <div className="h-3 w-16 bg-[#ede9e1] rounded self-center" />
-                </div>
-              ))
-            ) : filteredUsers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Users size={28} strokeWidth={1.2} className="text-[#d4cfc8] mb-3" />
-                <p className="text-[0.78rem] text-[#b0a898]">No users found</p>
-              </div>
-            ) : (
-              filteredUsers.map((user, i) => (
-                <div
-                  key={user._id}
-                  className="grid grid-cols-[1fr_1.4fr_80px_90px] px-5 py-3.5 border-b border-[#f5f3ef] hover:bg-[#faf9f7] transition-colors duration-150"
-                  style={{ animationDelay: `${i * 30}ms` }}
-                >
-                  {/* Name + avatar */}
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[0.65rem] font-bold shrink-0"
-                      style={{
-                        background: user.role === 'admin' ? '#c9a84c20' : '#7ab0c920',
-                        color:      user.role === 'admin' ? '#c9a84c'   : '#7ab0c9',
-                        border: `1px solid ${user.role === 'admin' ? '#c9a84c30' : '#7ab0c930'}`,
-                      }}
-                    >
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-[0.78rem] font-medium text-[#1a1714] truncate">{user.name}</span>
-                  </div>
-
-                  {/* Email */}
-                  <span className="text-[0.72rem] text-[#8a8278] truncate self-center pr-2">{user.email}</span>
-
-                  {/* Role badge */}
-                  <div className="self-center">
-                    {user.role === 'admin' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/20">
-                        <Crown size={9} strokeWidth={2} /> Admin
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#7ab0c9]/10 text-[#7ab0c9] border border-[#7ab0c9]/20">
-                        <Users size={9} strokeWidth={2} /> User
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Joined */}
-                  <span className="text-[0.68rem] text-[#a09a90] self-center" title={formatDate(user.createdAt)}>
-                    {timeAgo(user.createdAt)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Pagination */}
-          {!usersLoading && usersData && totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-[#ede9e1] bg-[#faf9f7]">
-              <span className="text-[0.68rem] text-[#a09a90]">Page {page} of {totalPages}</span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="w-7 h-7 rounded-lg border border-[#ede9e1] flex items-center justify-center hover:border-[#c9a84c]/40 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                >
-                  <ChevronLeft size={13} strokeWidth={2} className="text-[#6b6560]" />
-                </button>
-
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const p = page <= 3 ? i + 1
-                    : page >= totalPages - 2 ? totalPages - 4 + i
-                    : page - 2 + i;
-                  if (p < 1 || p > totalPages) return null;
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className="w-7 h-7 rounded-lg text-[0.7rem] font-semibold transition-all"
-                      style={p === page
-                        ? { background: '#c9a84c', color: '#fff', border: '1px solid #c9a84c' }
-                        : { background: 'transparent', color: '#6b6560', border: '1px solid #ede9e1' }}
-                    >
-                      {p}
-                    </button>
-                  );
-                })}
-
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="w-7 h-7 rounded-lg border border-[#ede9e1] flex items-center justify-center hover:border-[#c9a84c]/40 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                >
-                  <ChevronRight size={13} strokeWidth={2} className="text-[#6b6560]" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+          <div className="dsh-more"><Link href="/admin/users">Manage all users »</Link></div>
+        </section>
       </div>
     </div>
   );
 }
+
+const DASH_CSS = `
+  .dsh { font-size: 11px; color: #222; }
+  .dsh h1 { margin: 2px 0 2px; }
+  .dsh-intro { margin: 0 0 14px; color: #7f7f7f; font-size: 12px; }
+  .dsh-error { margin: 0 0 12px; padding: 6px 10px; border: 1px solid #e0a3a3; background: #fdf0f0; color: #990000; }
+
+  .dsh-box { border: 1px solid #a6aec5; background: #fff; margin-bottom: 16px; }
+  .dsh-head {
+    margin: 0; padding: 4px 14px 5px; color: #fff; font-size: 12px; font-weight: bold;
+    font-variant: small-caps; letter-spacing: .3px;
+    background: linear-gradient(to bottom, #7d90c5 0, #bec9e4 2px, #a9b4d3 100%);
+  }
+
+  .dsh-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dsh-stat { padding: 12px 14px; border-left: 1px solid #e3e6ee; }
+  .dsh-stat:first-child { border-left: 0; }
+  .dsh-stat-label { color: #7f7f7f; font-size: 11px; }
+  .dsh-stat-value { color: #1c4874; font-size: 24px; font-weight: bold; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .dsh-stat-note { color: #555; font-size: 10px; }
+
+  .dsh-cols { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .dsh-left .dsh-box:last-child { margin-bottom: 0; }
+
+  .dsh-links { list-style: none; margin: 0; padding: 6px 0; }
+  .dsh-links li { padding: 5px 14px; border-bottom: 1px dotted #dfe2ea; }
+  .dsh-links li:last-child { border-bottom: 0; }
+  .dsh-links a { display: block; color: #003366; font-weight: bold; }
+  .dsh-links a::before { content: "\\00BB"; color: #999; margin-right: 6px; font-weight: normal; }
+  .dsh-links a:hover { text-decoration: underline; }
+  .dsh-links span { display: block; color: #7f7f7f; font-size: 10px; padding-left: 14px; }
+
+  .dsh-month { padding: 10px 14px; line-height: 20px; color: #555; }
+  .dsh-month b { color: #1c4874; font-size: 14px; margin-right: 4px; }
+
+  .dsh-toolbar {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 10px; background: #dfe2ea; border-bottom: 1px solid #a6aec5; color: #555;
+  }
+  .dsh-toolbar b { color: #000; }
+  .dsh-search { display: inline-flex; align-items: center; gap: 6px; color: #555; }
+  .dsh-search input { font-size: 11px; border: 1px solid #333; height: 20px; padding: 0 4px; width: 170px; background: #fff; }
+
+  .dsh-table-wrap { overflow-x: auto; }
+  .dsh-table { width: 100%; border-collapse: collapse; }
+  .dsh-table th {
+    text-align: left; font-size: 10px; font-weight: bold; color: #000; padding: 3px 8px;
+    border-left: 1px solid #fff; white-space: nowrap;
+  }
+  .dsh-table th:first-child { border-left: 0; }
+  .dsh-table td { padding: 7px 8px; border-bottom: 1px solid #eee; color: #555; vertical-align: middle; }
+  .dsh-table tbody tr:hover td { background: #f5f7fb; }
+  .dsh-name a { color: #003366; font-weight: bold; }
+  .dsh-name a:hover { text-decoration: underline; }
+  .dsh-email { word-break: break-all; }
+  .dsh-role { display: inline-block; padding: 0 6px; border: 1px solid #a6aec5; background: #eef2f8; color: #333; font-size: 10px; }
+  .dsh-role.is-admin { border-color: #1c4874; background: #1c4874; color: #fff; }
+  .dsh-empty { text-align: center; padding: 26px 10px !important; color: #7f7f7f; }
+  .dsh-skel span { display: block; height: 12px; background: #eef0f5; }
+
+  .dsh-pager {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap;
+    padding: 8px 10px; color: #7f7f7f; font-size: 10px;
+  }
+  .dsh-pager b { color: #333; }
+  .dsh-pager nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .dsh-pager button { background: none; border: 0; padding: 0; cursor: pointer; color: #0000ee; text-decoration: underline; font-size: 10px; }
+  .dsh-pager button:hover { color: #003366; }
+  .dsh-more { padding: 0 10px 8px; text-align: right; }
+  .dsh-more a { color: #003366; font-weight: bold; }
+  .dsh-more a:hover { text-decoration: underline; }
+
+  @media (max-width: 1100px) {
+    .dsh-cols { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .dsh-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dsh-stat:nth-child(3) { border-left: 0; }
+    .dsh-stat:nth-child(n+3) { border-top: 1px solid #e3e6ee; }
+    .dsh, .dsh-links span, .dsh-pager, .dsh-pager button { font-size: 12px; }
+    .dsh-search input { height: 30px; font-size: 14px; width: 100%; }
+    .dsh-search { width: 100%; }
+  }
+`;

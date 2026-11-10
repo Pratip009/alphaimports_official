@@ -108,13 +108,13 @@ interface Pagination {
 const STATUS_CONFIG: Record<string, {
   label: string; bg: string; text: string; border: string; dot: string; icon: React.ElementType;
 }> = {
-  pending:    { label: 'Pending',    bg: '#fef9ec', text: '#92400e', border: '#fde68a', dot: '#f59e0b', icon: Clock },
+  pending:    { label: 'Pending',    bg: '#eef2f8', text: '#92400e', border: '#fde68a', dot: '#f59e0b', icon: Clock },
   paid:       { label: 'Paid',       bg: '#f0fdf4', text: '#15803d', border: '#86efac', dot: '#22c55e', icon: CheckCircle },
   processing: { label: 'Processing', bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe', dot: '#3b82f6', icon: RefreshCw },
   shipped:    { label: 'Shipped',    bg: '#f5f3ff', text: '#6d28d9', border: '#ddd6fe', dot: '#8b5cf6', icon: Truck },
   delivered:  { label: 'Delivered',  bg: '#f0fdf4', text: '#15803d', border: '#86efac', dot: '#22c55e', icon: CheckCircle },
   cancelled:  { label: 'Cancelled',  bg: '#fef2f2', text: '#dc2626', border: '#fecaca', dot: '#ef4444', icon: XCircle },
-  refunded:   { label: 'Refunded',   bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb', dot: '#9ca3af', icon: RefreshCw },
+  refunded:   { label: 'Refunded',   bg: '#f5f7fb', text: '#555555', border: '#c6cbd6', dot: '#a6aec5', icon: RefreshCw },
 };
 
 const ALL_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
@@ -176,7 +176,7 @@ function Invoice({ order, onClose }: { order: Order; onClose: () => void }) {
     win.document.write(`<!DOCTYPE html><html><head>
       <title>${invoiceNumber}</title>
      
-      <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'DM Sans',sans-serif;background:#fff;color:#1a1714;-webkit-print-color-adjust:exact;print-color-adjust:exact;}@page{margin:0;size:A4;}</style>
+      <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family: Verdana, Geneva, Tahoma, sans-serif;background:#fff;color:#222222;-webkit-print-color-adjust:exact;print-color-adjust:exact;}@page{margin:0;size:A4;}</style>
     </head><body>${content}</body></html>`);
     win.document.close();
     win.focus();
@@ -192,7 +192,7 @@ function Invoice({ order, onClose }: { order: Order; onClose: () => void }) {
         <div className="flex items-center justify-between mb-4 px-1">
           <p className="text-white/50 text-xs font-mono">{invoiceNumber}</p>
           <div className="flex items-center gap-2">
-            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-[#c9a84c] text-white text-xs font-semibold rounded-xl hover:bg-[#b8963e] transition-colors">
+            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-[#1c4874] text-white text-xs font-semibold rounded-xl hover:bg-[#1c4874] transition-colors">
               <Printer size={13} /> Print / Save PDF
             </button>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
@@ -200,68 +200,68 @@ function Invoice({ order, onClose }: { order: Order; onClose: () => void }) {
             </button>
           </div>
         </div>
-        <div ref={invoiceRef} style={{ fontFamily: '"Elms Sans", sans-serif', background: '#fff', padding: '52px 60px', minHeight: '297mm' }}>
+        <div ref={invoiceRef} style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', background: '#fff', padding: '52px 60px', minHeight: '297mm' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 44 }}>
             <div>
-              <div style={{ fontFamily: '"Elms Sans", sans-serif', fontSize: 30, fontWeight: 500, color: '#1a1714', letterSpacing: '-0.5px', lineHeight: 1 }}>
-                Alpha<span style={{ color: '#c9a84c' }}>Imports</span>
+              <div style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: 30, fontWeight: 500, color: '#222222', letterSpacing: '-0.5px', lineHeight: 1 }}>
+                Alpha<span style={{ color: '#1c4874' }}>Imports</span>
               </div>
-              <div style={{ fontSize: 9, color: '#a09a90', marginTop: 6, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Fine Gemstones & Jewellery</div>
+              <div style={{ fontSize: 9, color: '#7f7f7f', marginTop: 6, letterSpacing: '0.18em', textTransform: 'uppercase' }}>Fine Gemstones & Jewellery</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: '"Elms Sans", sans-serif', fontSize: 46, fontWeight: 300, color: '#1a1714', letterSpacing: '-2px', lineHeight: 1 }}>INVOICE</div>
+              <div style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: 46, fontWeight: 300, color: '#222222', letterSpacing: '-2px', lineHeight: 1 }}>INVOICE</div>
               <div style={{ marginTop: 14 }}>
                 {[{ label: 'Invoice No.', value: invoiceNumber, mono: true }, { label: 'Date', value: invoiceDate }, { label: 'Due Date', value: dueDate }].map(({ label, value, mono }) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, marginBottom: 5, fontSize: 12 }}>
-                    <span style={{ color: '#c4bdb2' }}>{label}</span>
-                    <span style={{ fontWeight: 500, color: '#1a1714', fontFamily: mono ? 'monospace' : 'inherit' }}>{value}</span>
+                    <span style={{ color: '#999999' }}>{label}</span>
+                    <span style={{ fontWeight: 500, color: '#222222', fontFamily: mono ? 'monospace' : 'inherit' }}>{value}</span>
                   </div>
                 ))}
                 {isDropship(order) && (
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 12px', borderRadius: 20, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#ecfeff', color: DROPSHIP_ACCENT, border: '1px solid #a5f3fc' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 12px', borderRadius: 3, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#ecfeff', color: DROPSHIP_ACCENT, border: '1px solid #a5f3fc' }}>
                       Dropship Order
                     </span>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 12px', borderRadius: 20, letterSpacing: '0.08em', textTransform: 'uppercase', background: order.paymentStatus === 'completed' ? '#edf7ed' : '#fdf5e6', color: order.paymentStatus === 'completed' ? '#2d6b2d' : '#8b5e1a', border: `1px solid ${order.paymentStatus === 'completed' ? '#80c880' : '#e0c070'}` }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 12px', borderRadius: 3, letterSpacing: '0.08em', textTransform: 'uppercase', background: order.paymentStatus === 'completed' ? '#edf7ed' : '#eef2f8', color: order.paymentStatus === 'completed' ? '#2d6b2d' : '#154273', border: `1px solid ${order.paymentStatus === 'completed' ? '#80c880' : '#1c4874'}` }}>
                     {order.paymentStatus === 'completed' ? '✓ Paid' : 'Pending'}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-          <div style={{ height: 1, background: 'linear-gradient(90deg, #c9a84c50, #ede9e1, transparent)', marginBottom: 36 }} />
+          <div style={{ height: 1, background: 'linear-gradient(90deg, #1c487450, #e3e6ee, transparent)', marginBottom: 36 }} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 40 }}>
             {[
-              { title: isDropship(order) ? 'Bill To (Dropship Seller)' : 'Bill To', lines: [{ text: order.user?.name ?? '—', bold: true, size: 14 }, { text: order.user?.email ?? '—', color: '#6b6560' }] },
+              { title: isDropship(order) ? 'Bill To (Dropship Seller)' : 'Bill To', lines: [{ text: order.user?.name ?? '—', bold: true, size: 14 }, { text: order.user?.email ?? '—', color: '#555555' }] },
               { title: isDropship(order) ? "Ship To (Seller's Customer)" : 'Ship To', lines: [{ text: order.shippingAddress.fullName, bold: true, size: 14 }, { text: order.shippingAddress.addressLine1 }, ...(order.shippingAddress.addressLine2 ? [{ text: order.shippingAddress.addressLine2 }] : []), { text: `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}` }, { text: order.shippingAddress.country }] },
             ].map(({ title, lines }) => (
               <div key={title}>
-                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#a09a90', fontWeight: 600, marginBottom: 12 }}>{title}</div>
+                <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#7f7f7f', fontWeight: 600, marginBottom: 12 }}>{title}</div>
                 {lines.map((line, i) => (
-                  <div key={i} style={{ fontSize: (line as { size?: number }).size ?? 12, fontWeight: (line as { bold?: boolean }).bold ? 500 : 400, color: (line as { bold?: boolean }).bold ? '#1a1714' : ((line as { color?: string }).color ?? '#6b6560'), lineHeight: 1.7 }}>{line.text}</div>
+                  <div key={i} style={{ fontSize: (line as { size?: number }).size ?? 12, fontWeight: (line as { bold?: boolean }).bold ? 500 : 400, color: (line as { bold?: boolean }).bold ? '#222222' : ((line as { color?: string }).color ?? '#555555'), lineHeight: 1.7 }}>{line.text}</div>
                 ))}
               </div>
             ))}
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 28 }}>
             <thead>
-              <tr style={{ background: '#1a1714' }}>
+              <tr style={{ background: '#1c4874' }}>
                 {['Item Description', 'SKU', 'Unit Price', 'Qty', 'Amount'].map((label, i) => (
-                  <th key={label} style={{ padding: '11px 14px', fontSize: 9, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#f0e8d0', textAlign: i === 0 || i === 1 ? 'left' : 'right' }}>{label}</th>
+                  <th key={label} style={{ padding: '11px 14px', fontSize: 9, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#ffffff', textAlign: i === 0 || i === 1 ? 'left' : 'right' }}>{label}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {order.items.map((item, i) => (
-                <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#faf9f7', borderBottom: '1px solid #f0ece6' }}>
-                  <td style={{ padding: '13px 14px', fontSize: 13, color: '#1a1714', fontWeight: 500 }}>{item.name}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 11, color: '#a09a90', fontFamily: 'monospace' }}>{item.product.toString().slice(-8).toUpperCase()}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 13, color: '#5a5249', textAlign: 'right' }}>${item.price.toLocaleString()}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 13, color: '#5a5249', textAlign: 'right' }}>{item.quantity}</td>
-                  <td style={{ padding: '13px 14px', fontSize: 13, fontWeight: 600, color: '#1a1714', textAlign: 'right' }}>${(item.price * item.quantity).toLocaleString()}</td>
+                <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#f5f7fb', borderBottom: '1px solid #e3e6ee' }}>
+                  <td style={{ padding: '13px 14px', fontSize: 13, color: '#222222', fontWeight: 500 }}>{item.name}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 11, color: '#7f7f7f', fontFamily: 'monospace' }}>{item.product.toString().slice(-8).toUpperCase()}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 13, color: '#555555', textAlign: 'right' }}>${item.price.toLocaleString()}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 13, color: '#555555', textAlign: 'right' }}>{item.quantity}</td>
+                  <td style={{ padding: '13px 14px', fontSize: 13, fontWeight: 600, color: '#222222', textAlign: 'right' }}>${(item.price * item.quantity).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -284,19 +284,19 @@ function Invoice({ order, onClose }: { order: Order; onClose: () => void }) {
                   { label: 'Tax', value: `$${order.tax.toFixed(2)}` },
                 ];
               })().map(({ label, value }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f0ece6', fontSize: 13, color: '#6b6560' }}>
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #e3e6ee', fontSize: 13, color: '#555555' }}>
                   <span>{label}</span><span>{value}</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', marginTop: 10, background: '#1a1714', borderRadius: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#f0e8d0', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total Due</span>
-                <span style={{ fontFamily: '"Elms Sans", sans-serif', fontSize: 24, fontWeight: 500, color: '#c9a84c' }}>${order.totalAmount.toLocaleString()}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', marginTop: 10, background: '#1c4874', borderRadius: 3 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#ffffff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Total Due</span>
+                <span style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: 24, fontWeight: 500, color: '#ffffff' }}>${order.totalAmount.toLocaleString()}</span>
               </div>
             </div>
           </div>
-          <div style={{ marginTop: 52, textAlign: 'center', borderTop: '1px solid #f0ece6', paddingTop: 22 }}>
-            <div style={{ fontFamily: '"Elms Sans", sans-serif', fontSize: 15, color: '#c9a84c', fontStyle: 'italic', marginBottom: 6 }}>Alpha Gemstone — Fine Gemstones & Jewellery</div>
-            <div style={{ fontSize: 10, color: '#c4bdb2', letterSpacing: '0.12em' }}>www.alphaimports.com · support@alphaimports.com</div>
+          <div style={{ marginTop: 52, textAlign: 'center', borderTop: '1px solid #e3e6ee', paddingTop: 22 }}>
+            <div style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: 15, color: '#1c4874', fontStyle: 'italic', marginBottom: 6 }}>Alpha Gemstone — Fine Gemstones & Jewellery</div>
+            <div style={{ fontSize: 10, color: '#999999', letterSpacing: '0.12em' }}>www.alphaimports.com · support@alphaimports.com</div>
           </div>
         </div>
       </div>
@@ -306,7 +306,7 @@ function Invoice({ order, onClose }: { order: Order; onClose: () => void }) {
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status, size = 'md' }: { status: string; size?: 'sm' | 'md' }) {
-  const cfg = STATUS_CONFIG[status] ?? { label: status, bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb', dot: '#9ca3af', icon: Package };
+  const cfg = STATUS_CONFIG[status] ?? { label: status, bg: '#f5f7fb', text: '#555555', border: '#c6cbd6', dot: '#a6aec5', icon: Package };
   const Icon = cfg.icon;
   return (
     <span
@@ -359,7 +359,7 @@ function StatusSelect({ orderId, current, onUpdate, dropship = false, paid = tru
     }
   };
 
-  const cfg = STATUS_CONFIG[current] ?? { bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb' };
+  const cfg = STATUS_CONFIG[current] ?? { bg: '#f5f7fb', text: '#555555', border: '#c6cbd6' };
   return (
     <div className="relative">
       <select
@@ -385,9 +385,9 @@ function ShippingChip({ order }: { order: Order }) {
     );
   }
   if (order.shippingCarrier) {
-    return <span className="text-[0.65rem] font-medium text-[#6b6560]">{order.shippingCarrier}</span>;
+    return <span className="text-[0.65rem] font-medium text-[#555555]">{order.shippingCarrier}</span>;
   }
-  return <span className="text-[0.6rem] text-[#c4bdb2]">—</span>;
+  return <span className="text-[0.6rem] text-[#999999]">—</span>;
 }
 
 // ─── Expanded Order Detail ────────────────────────────────────────────────────
@@ -486,7 +486,7 @@ function DropshipPanel({ order, onChange }: {
               onChange={e => { setNotes(e.target.value); setSaved(false); }}
               rows={2}
               className="flex-1 rounded-xl px-3 py-2 text-[0.74rem] outline-none"
-              style={{ background: '#fff', border: '1px solid #a5f3fc', color: '#1a1714' }}
+              style={{ background: '#fff', border: '1px solid #a5f3fc', color: '#222222' }}
               placeholder="e.g. Called seller, customer wants gift wrap"
             />
             <button
@@ -530,40 +530,40 @@ function OrderDetail({ order, onShippingUpdate, onInvoice, onDelete, isDeleting 
   };
 
   return (
-    <div className="border-t" style={{ borderColor: '#f0ece6', background: 'linear-gradient(180deg, #faf9f7 0%, #f5f3f0 100%)' }}>
+    <div className="border-t" style={{ borderColor: '#e3e6ee', background: 'linear-gradient(180deg, #f5f7fb 0%, #f5f7fb 100%)' }}>
       {isDropship(order) && <DropshipPanel order={order} onChange={onShippingUpdate} />}
       <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {/* Customer & Address */}
         <div className="space-y-4">
           <div>
-            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#b0a898] font-bold mb-2.5">
+            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#999999] font-bold mb-2.5">
               {isDropship(order) ? 'Dropship seller (paid Alpha)' : 'Customer'}
             </p>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #c9a84c20, #c9a84c10)', color: '#c9a84c', border: '1.5px solid #c9a84c30' }}>
+                style={{ background: 'linear-gradient(135deg, #1c487420, #1c487410)', color: '#1c4874', border: '1.5px solid #1c487430' }}>
                 {order.user?.name?.charAt(0).toUpperCase() ?? '?'}
               </div>
               <div>
-                <p className="text-[0.8rem] font-semibold text-[#1a1714]">{order.user?.name ?? '—'}</p>
-                <p className="text-[0.65rem] text-[#a09a90]">{order.user?.email ?? '—'}</p>
+                <p className="text-[0.8rem] font-semibold text-[#222222]">{order.user?.name ?? '—'}</p>
+                <p className="text-[0.65rem] text-[#7f7f7f]">{order.user?.email ?? '—'}</p>
               </div>
             </div>
           </div>
           <div>
-            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#b0a898] font-bold mb-2.5">
+            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#999999] font-bold mb-2.5">
               {isDropship(order) ? "Ship To (seller's customer)" : 'Ship To'}
             </p>
             <div className="flex gap-2">
-              <MapPin size={12} className="text-[#c9a84c] flex-shrink-0 mt-0.5" />
-              <div className="text-[0.72rem] text-[#5a5249] leading-relaxed">
-                <p className="font-semibold text-[#1a1714]">{order.shippingAddress.fullName}</p>
+              <MapPin size={12} className="text-[#1c4874] flex-shrink-0 mt-0.5" />
+              <div className="text-[0.72rem] text-[#555555] leading-relaxed">
+                <p className="font-semibold text-[#222222]">{order.shippingAddress.fullName}</p>
                 <p>{order.shippingAddress.addressLine1}</p>
                 {order.shippingAddress.addressLine2 && <p>{order.shippingAddress.addressLine2}</p>}
                 <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}</p>
                 <p className="font-medium">{order.shippingAddress.country}</p>
-                {order.shippingAddress.phone && <p className="text-[#a09a90] mt-0.5">{order.shippingAddress.phone}</p>}
+                {order.shippingAddress.phone && <p className="text-[#7f7f7f] mt-0.5">{order.shippingAddress.phone}</p>}
               </div>
             </div>
           </div>
@@ -571,28 +571,28 @@ function OrderDetail({ order, onShippingUpdate, onInvoice, onDelete, isDeleting 
 
         {/* Items */}
         <div>
-          <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#b0a898] font-bold mb-2.5">Items Ordered</p>
+          <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#999999] font-bold mb-2.5">Items Ordered</p>
           <div className="space-y-2">
             {order.items.map((item, i) => (
-              <div key={i} className="flex items-center gap-2.5 py-2 border-b border-[#ede9e1] last:border-0">
+              <div key={i} className="flex items-center gap-2.5 py-2 border-b border-[#c6cbd6] last:border-0">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden"
-                  style={{ background: '#ede9e1' }}>
+                  style={{ background: '#e3e6ee' }}>
                   {item.image
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={item.image} alt="" className="w-full h-full object-cover" />
-                    : <Gem size={12} style={{ color: '#c9a84c' }} />}
+                    : <Gem size={12} style={{ color: '#1c4874' }} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[0.72rem] font-medium text-[#1a1714] truncate">{item.name}</p>
-                  <p className="text-[0.62rem] text-[#a09a90]">Qty {item.quantity} × ${item.price.toLocaleString()}</p>
+                  <p className="text-[0.72rem] font-medium text-[#222222] truncate">{item.name}</p>
+                  <p className="text-[0.62rem] text-[#7f7f7f]">Qty {item.quantity} × ${item.price.toLocaleString()}</p>
                 </div>
-                <p className="text-[0.75rem] font-semibold text-[#1a1714] flex-shrink-0">${(item.price * item.quantity).toLocaleString()}</p>
+                <p className="text-[0.75rem] font-semibold text-[#222222] flex-shrink-0">${(item.price * item.quantity).toLocaleString()}</p>
               </div>
             ))}
           </div>
 
           {/* Totals */}
-          <div className="mt-3 rounded-xl overflow-hidden border border-[#ede9e1]">
+          <div className="mt-3 rounded-xl overflow-hidden border border-[#c6cbd6]">
             {(() => {
               const fee = order.serviceFee ?? 0;
               const rawShipping = order.shippingRate && order.shippingRate > 0
@@ -605,13 +605,13 @@ function OrderDetail({ order, onShippingUpdate, onInvoice, onDelete, isDeleting 
                 { label: 'Tax', value: `$${order.tax.toFixed(2)}` },
               ];
             })().map(({ label, value }) => (
-              <div key={label} className="flex justify-between px-3 py-1.5 border-b border-[#f0ece6] text-[0.68rem] text-[#8a8278]">
+              <div key={label} className="flex justify-between px-3 py-1.5 border-b border-[#e3e6ee] text-[0.68rem] text-[#7f7f7f]">
                 <span>{label}</span><span>{value}</span>
               </div>
             ))}
-            <div className="flex justify-between items-center px-3 py-2 bg-[#1a1714]">
-              <span className="text-[0.65rem] font-semibold text-[#f0e8d0] tracking-wide uppercase">Total</span>
-              <span className="text-[0.9rem] font-semibold" style={{ fontFamily: '"Elms Sans", sans-serif', color: '#c9a84c' }}>
+            <div className="flex justify-between items-center px-3 py-2 bg-[#1c4874]">
+              <span className="text-[0.65rem] font-semibold text-[#ffffff] tracking-wide uppercase">Total</span>
+              <span className="text-[0.9rem] font-semibold" style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', color: '#ffffff' }}>
                 ${order.totalAmount.toLocaleString()}
               </span>
             </div>
@@ -621,32 +621,32 @@ function OrderDetail({ order, onShippingUpdate, onInvoice, onDelete, isDeleting 
         {/* Payment & Actions */}
         <div className="space-y-4">
           <div>
-            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#b0a898] font-bold mb-2.5">Payment</p>
-            <div className="rounded-xl border border-[#ede9e1] bg-white px-3 py-3 space-y-2">
+            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#999999] font-bold mb-2.5">Payment</p>
+            <div className="rounded-xl border border-[#c6cbd6] bg-white px-3 py-3 space-y-2">
               <div className="flex items-center gap-2">
-                <CreditCard size={13} className="text-[#c9a84c]" />
-                <span className="text-[0.72rem] font-medium text-[#1a1714] capitalize">{order.paymentMethod}</span>
+                <CreditCard size={13} className="text-[#1c4874]" />
+                <span className="text-[0.72rem] font-medium text-[#222222] capitalize">{order.paymentMethod}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[0.65rem] text-[#a09a90]">Status</span>
+                <span className="text-[0.65rem] text-[#7f7f7f]">Status</span>
                 <span className={`text-[0.65rem] font-semibold capitalize ${order.paymentStatus === 'completed' ? 'text-green-600' : 'text-amber-600'}`}>
                   {order.paymentStatus}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[0.65rem] text-[#a09a90]">Ref</span>
-                <span className="font-mono text-[0.62rem] text-[#a09a90]">{order._id.slice(-10).toUpperCase()}</span>
+                <span className="text-[0.65rem] text-[#7f7f7f]">Ref</span>
+                <span className="font-mono text-[0.62rem] text-[#7f7f7f]">{order._id.slice(-10).toUpperCase()}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#b0a898] font-bold mb-2.5">Actions</p>
+            <p className="text-[0.58rem] tracking-[0.2em] uppercase text-[#999999] font-bold mb-2.5">Actions</p>
             <div className="flex flex-col gap-2">
               <button
                 onClick={onInvoice}
                 className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-[0.72rem] font-semibold transition-all hover:opacity-90 active:scale-95"
-                style={{ background: '#1a1714', color: '#c9a84c', border: '1px solid #2d2a24' }}
+                style={{ background: '#1c4874', color: '#ffffff', border: '1px solid #1c4874' }}
               >
                 <FileText size={12} /> Generate Invoice
               </button>
@@ -689,14 +689,14 @@ function StatCard({ label, value, sub, icon: Icon, color }: {
   label: string; value: string; sub: string; icon: React.ElementType; color: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border p-5 flex items-start gap-4 transition-shadow hover:shadow-md" style={{ borderColor: '#ede9e1' }}>
+    <div className="bg-white rounded-2xl border p-5 flex items-start gap-4 transition-shadow hover:shadow-md" style={{ borderColor: '#c6cbd6' }}>
       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15`, border: `1px solid ${color}25` }}>
         <Icon size={18} style={{ color }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[0.62rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-1">{label}</p>
-        <p className="text-xl font-semibold text-[#1a1714] leading-none mb-1" style={{ fontFamily: '"Elms Sans", sans-serif' }}>{value}</p>
-        <p className="text-[0.65rem] text-[#b0a898]">{sub}</p>
+        <p className="text-[0.62rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-1">{label}</p>
+        <p className="text-xl font-semibold text-[#222222] leading-none mb-1" style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif' }}>{value}</p>
+        <p className="text-[0.65rem] text-[#999999]">{sub}</p>
       </div>
     </div>
   );
@@ -872,27 +872,27 @@ export default function AdminOrdersPage() {
       <div className="mb-7">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[0.62rem] tracking-[0.25em] uppercase mb-2 font-bold" style={{ color: '#c9a84c' }}>
+            <p className="text-[0.62rem] tracking-[0.25em] uppercase mb-2 font-bold" style={{ color: '#1c4874' }}>
               ◆ Admin Console
             </p>
-            <h1 style={{ fontFamily: '"Elms Sans", sans-serif', fontSize: '2.4rem', fontWeight: 400, color: '#1a1714', letterSpacing: '-0.5px', lineHeight: 1 }}>
+            <h1 style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: '2.4rem', fontWeight: 400, color: '#222222', letterSpacing: '-0.5px', lineHeight: 1 }}>
               Order Management
             </h1>
           </div>
           {pagination && (
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl border" style={{ background: '#faf9f7', borderColor: '#ede9e1' }}>
-              <ShoppingBag size={14} style={{ color: '#c9a84c' }} />
-              <span className="text-[0.72rem] font-semibold text-[#1a1714]">{pagination.total}</span>
-              <span className="text-[0.68rem] text-[#a09a90]">total orders</span>
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl border" style={{ background: '#f5f7fb', borderColor: '#c6cbd6' }}>
+              <ShoppingBag size={14} style={{ color: '#1c4874' }} />
+              <span className="text-[0.72rem] font-semibold text-[#222222]">{pagination.total}</span>
+              <span className="text-[0.68rem] text-[#7f7f7f]">total orders</span>
             </div>
           )}
         </div>
-        <div className="mt-4 h-px" style={{ background: 'linear-gradient(90deg, #c9a84c40, #ede9e1, transparent)' }} />
+        <div className="mt-4 h-px" style={{ background: 'linear-gradient(90deg, #1c487440, #e3e6ee, transparent)' }} />
       </div>
 
       {/* ── Stats ──────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-7">
-        <StatCard label="Page Revenue" value={`$${revenue.toLocaleString()}`} sub="Paid orders on this page" icon={DollarSign} color="#c9a84c" />
+        <StatCard label="Page Revenue" value={`$${revenue.toLocaleString()}`} sub="Paid orders on this page" icon={DollarSign} color="#1c4874" />
         <StatCard label="Pending Review" value={String(pendingCount)} sub="Need attention" icon={AlertCircle} color="#f59e0b" />
         <StatCard label="Shipped / Done" value={String(shippedCount)} sub="In transit or delivered" icon={Truck} color="#6d28d9" />
         <button
@@ -914,7 +914,7 @@ export default function AdminOrdersPage() {
           { value: 'dropship', label: 'Dropship orders', count: counts?.dropship, icon: Send },
         ] as const).map(({ value, label, count, icon: Icon }) => {
           const active = sourceFilter === value && !attentionOnly;
-          const accent = value === 'dropship' ? DROPSHIP_ACCENT : '#1a1714';
+          const accent = value === 'dropship' ? DROPSHIP_ACCENT : '#1c4874';
           return (
             <button
               key={value || 'all'}
@@ -928,11 +928,11 @@ export default function AdminOrdersPage() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[0.78rem] font-semibold transition-all"
               style={active
                 ? { background: accent, color: '#fff', border: `1px solid ${accent}` }
-                : { background: '#fff', color: '#5a5249', border: '1px solid #ede9e1' }}
+                : { background: '#fff', color: '#555555', border: '1px solid #c6cbd6' }}
             >
               <Icon size={14} /> {label}
               {count !== undefined && (
-                <span className="px-1.5 py-0.5 rounded-md text-[0.66rem]" style={{ background: active ? 'rgba(255,255,255,0.2)' : '#f5f3f0' }}>
+                <span className="px-1.5 py-0.5 rounded-md text-[0.66rem]" style={{ background: active ? 'rgba(255,255,255,0.2)' : '#f5f7fb' }}>
                   {count}
                 </span>
               )}
@@ -960,11 +960,11 @@ export default function AdminOrdersPage() {
       )}
 
       {/* ── Filter + Search bar ─────────────────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border mb-1.5 overflow-hidden" style={{ borderColor: '#ede9e1' }}>
-        <div className="flex flex-wrap items-center gap-3 px-5 py-3.5 border-b" style={{ borderColor: '#f0ece6' }}>
+      <div className="bg-white rounded-2xl border mb-1.5 overflow-hidden" style={{ borderColor: '#c6cbd6' }}>
+        <div className="flex flex-wrap items-center gap-3 px-5 py-3.5 border-b" style={{ borderColor: '#e3e6ee' }}>
           {/* Status pills */}
           <div className="flex items-center gap-1.5 flex-wrap flex-1">
-            <Filter size={12} className="text-[#b0a898] mr-1" />
+            <Filter size={12} className="text-[#999999] mr-1" />
             {[{ label: 'All', value: '' }, ...(sourceFilter === 'dropship' ? DROPSHIP_STATUSES : ALL_STATUSES).map(s => ({ label: statusLabel(s, sourceFilter === 'dropship'), value: s }))].map(({ label, value }) => {
               const active = statusFilter === value;
               const cfg = value ? STATUS_CONFIG[value] : null;
@@ -973,8 +973,8 @@ export default function AdminOrdersPage() {
                   className="px-2.5 py-1 rounded-full text-[0.63rem] font-semibold tracking-wide transition-all"
                   style={
                     active && cfg ? { background: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }
-                    : active ? { background: '#1a1714', color: '#f0e8d0', border: '1px solid #2d2a24' }
-                    : { background: '#f5f3f0', color: '#8a8278', border: '1px solid #ede9e1' }
+                    : active ? { background: '#1c4874', color: '#ffffff', border: '1px solid #1c4874' }
+                    : { background: '#f5f7fb', color: '#7f7f7f', border: '1px solid #c6cbd6' }
                   }>
                   {label}
                 </button>
@@ -983,12 +983,12 @@ export default function AdminOrdersPage() {
           </div>
           {/* Search */}
           <div className="relative flex-shrink-0">
-            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c4bdb2]" />
+            <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#999999]" />
             <input
               type="text" placeholder="Search order #, name, email, seller, product…"
               value={search} onChange={e => setSearch(e.target.value)}
               className="pl-8 pr-3 py-2 text-[0.72rem] rounded-xl outline-none transition-all w-72"
-              style={{ background: '#faf9f7', border: '1px solid #ede9e1', color: '#1a1714' }}
+              style={{ background: '#f5f7fb', border: '1px solid #c6cbd6', color: '#222222' }}
             />
           </div>
         </div>
@@ -1003,7 +1003,7 @@ export default function AdminOrdersPage() {
               <button
                 onClick={() => setSelectedIds(new Set())}
                 className="px-3 py-1.5 rounded-lg text-[0.68rem] font-semibold transition-colors"
-                style={{ color: '#8a8278' }}
+                style={{ color: '#7f7f7f' }}
               >
                 Cancel
               </button>
@@ -1027,13 +1027,13 @@ export default function AdminOrdersPage() {
             checked={filtered.length > 0 && filtered.every(o => selectedIds.has(o._id))}
             onChange={toggleSelectAll}
             disabled={filtered.length === 0}
-            className="w-3.5 h-3.5 rounded cursor-pointer accent-[#c9a84c]"
+            className="w-3.5 h-3.5 rounded cursor-pointer accent-[#1c4874]"
           />
           <span />
           {['Order', 'Customer', 'Amount', 'Payment', 'Shipping', 'Status', ''].map((h, i) => (
-            <span key={i} className="text-[0.58rem] tracking-[0.18em] uppercase font-bold" style={{ color: '#b0a898' }}>
+            <span key={i} className="text-[0.58rem] tracking-[0.18em] uppercase font-bold" style={{ color: '#999999' }}>
               {h === 'Order' ? (
-                <button className="flex items-center gap-1 hover:text-[#8a7060] transition-colors" onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}>
+                <button className="flex items-center gap-1 hover:text-[#7f7f7f] transition-colors" onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}>
                   {h} {sortDir === 'desc' ? <ChevronDown size={9} /> : <ChevronUp size={9} />}
                 </button>
               ) : h}
@@ -1045,21 +1045,21 @@ export default function AdminOrdersPage() {
         <div>
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="grid items-center px-5 py-4 border-t animate-pulse" style={{ gridTemplateColumns: '22px 28px 1.1fr 1.5fr 0.8fr 80px 110px 100px 68px', borderColor: '#f5f3ef' }}>
-                <div className="w-3.5 h-3.5 rounded bg-[#ede9e1]" />
-                <div className="w-5 h-5 rounded-lg bg-[#ede9e1]" />
+              <div key={i} className="grid items-center px-5 py-4 border-t animate-pulse" style={{ gridTemplateColumns: '22px 28px 1.1fr 1.5fr 0.8fr 80px 110px 100px 68px', borderColor: '#e3e6ee' }}>
+                <div className="w-3.5 h-3.5 rounded bg-[#e3e6ee]" />
+                <div className="w-5 h-5 rounded-lg bg-[#e3e6ee]" />
                 {[100, 150, 70, 60, 80, 80, 40].map((w, j) => (
-                  <div key={j} className="h-3 bg-[#ede9e1] rounded-lg" style={{ width: w }} />
+                  <div key={j} className="h-3 bg-[#e3e6ee] rounded-lg" style={{ width: w }} />
                 ))}
               </div>
             ))
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 border-t" style={{ borderColor: '#f5f3ef' }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#faf9f7', border: '1px solid #ede9e1' }}>
-                <ShoppingBag size={22} strokeWidth={1.2} className="text-[#d4cfc8]" />
+            <div className="flex flex-col items-center justify-center py-20 border-t" style={{ borderColor: '#e3e6ee' }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#f5f7fb', border: '1px solid #c6cbd6' }}>
+                <ShoppingBag size={22} strokeWidth={1.2} className="text-[#999999]" />
               </div>
-              <p className="text-[0.82rem] font-medium text-[#b0a898] mb-1">No orders found</p>
-              <p className="text-[0.7rem] text-[#c4bdb2]">
+              <p className="text-[0.82rem] font-medium text-[#999999] mb-1">No orders found</p>
+              <p className="text-[0.7rem] text-[#999999]">
                 {debouncedSearch ? `Nothing matches “${debouncedSearch}”.` : 'Try adjusting your filters.'}
               </p>
             </div>
@@ -1069,18 +1069,18 @@ export default function AdminOrdersPage() {
               const isSelected = selectedIds.has(order._id);
               const isDeleting = deletingIds.has(order._id);
               return (
-                <div key={order._id} className="border-t" style={{ borderColor: '#f5f3ef' }}>
+                <div key={order._id} className="border-t" style={{ borderColor: '#e3e6ee' }}>
                   {/* Row */}
                   <div
                     className="grid items-center px-5 py-3.5 cursor-pointer transition-colors group"
                     style={{
                       gridTemplateColumns: '22px 28px 1.1fr 1.5fr 0.8fr 80px 110px 100px 68px',
-                      background: isSelected ? '#fef2f2' : isExpanded ? '#faf9f7' : undefined,
+                      background: isSelected ? '#fef2f2' : isExpanded ? '#f5f7fb' : undefined,
                       opacity: isDeleting ? 0.5 : 1,
                       boxShadow: isDropship(order) ? `inset 3px 0 0 ${DROPSHIP_ACCENT}` : undefined,
                     }}
                     onClick={() => setExpandedId(isExpanded ? null : order._id)}
-                    onMouseEnter={e => { if (!isExpanded && !isSelected) (e.currentTarget as HTMLDivElement).style.background = '#fdfcfb'; }}
+                    onMouseEnter={e => { if (!isExpanded && !isSelected) (e.currentTarget as HTMLDivElement).style.background = '#f5f7fb'; }}
                     onMouseLeave={e => { if (!isExpanded && !isSelected) (e.currentTarget as HTMLDivElement).style.background = ''; }}
                   >
                     {/* Select checkbox */}
@@ -1090,18 +1090,18 @@ export default function AdminOrdersPage() {
                         checked={isSelected}
                         onChange={() => toggleSelect(order._id)}
                         disabled={isDeleting}
-                        className="w-3.5 h-3.5 rounded cursor-pointer accent-[#c9a84c]"
+                        className="w-3.5 h-3.5 rounded cursor-pointer accent-[#1c4874]"
                       />
                     </div>
 
                     {/* Expand icon */}
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all" style={{ background: isExpanded ? '#c9a84c20' : '#f0ece6', color: isExpanded ? '#c9a84c' : '#c4bdb2' }}>
+                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all" style={{ background: isExpanded ? '#1c487420' : '#eef0f5', color: isExpanded ? '#1c4874' : '#999999' }}>
                       {isExpanded ? <ChevronUp size={10} strokeWidth={2.5} /> : <ChevronDown size={10} strokeWidth={2.5} />}
                     </div>
 
                     {/* Order ID + date */}
                     <div>
-                      <p className="font-mono text-[0.67rem] font-bold text-[#1a1714] tracking-wide">
+                      <p className="font-mono text-[0.67rem] font-bold text-[#222222] tracking-wide">
                         #{order._id.slice(-8).toUpperCase()}
                       </p>
                       {isDropship(order) && (
@@ -1113,22 +1113,22 @@ export default function AdminOrdersPage() {
                         </div>
                       )}
                       <div className="flex items-center gap-1 mt-0.5">
-                        <Calendar size={9} className="text-[#c4bdb2]" />
-                        <p className="text-[0.6rem] text-[#b0a898]">{timeAgo(order.createdAt)}</p>
+                        <Calendar size={9} className="text-[#999999]" />
+                        <p className="text-[0.6rem] text-[#999999]">{timeAgo(order.createdAt)}</p>
                       </div>
                     </div>
 
                     {/* Customer */}
                     <div className="flex items-center gap-2.5 min-w-0 pr-3">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-[0.6rem] font-bold flex-shrink-0"
-                        style={{ background: '#c9a84c18', color: '#c9a84c', border: '1.5px solid #c9a84c25' }}>
+                        style={{ background: '#1c487418', color: '#1c4874', border: '1.5px solid #1c487425' }}>
                         {order.user?.name?.charAt(0).toUpperCase() ?? '?'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[0.73rem] font-semibold text-[#1a1714] truncate">{order.user?.name ?? '—'}</p>
-                        <p className="text-[0.62rem] text-[#a09a90] truncate">
+                        <p className="text-[0.73rem] font-semibold text-[#222222] truncate">{order.user?.name ?? '—'}</p>
+                        <p className="text-[0.62rem] text-[#7f7f7f] truncate">
                           {isDropship(order)
-                            ? <>Seller · ships to <span className="text-[#5a5249]">{order.shippingAddress?.fullName}</span></>
+                            ? <>Seller · ships to <span className="text-[#555555]">{order.shippingAddress?.fullName}</span></>
                             : (order.user?.email ?? '—')}
                         </p>
                       </div>
@@ -1136,10 +1136,10 @@ export default function AdminOrdersPage() {
 
                     {/* Amount */}
                     <div>
-                      <p className="text-[0.85rem] font-semibold text-[#1a1714]" style={{ fontFamily: '"Elms Sans", sans-serif' }}>
+                      <p className="text-[0.85rem] font-semibold text-[#222222]" style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif' }}>
                         ${order.totalAmount.toLocaleString()}
                       </p>
-                      <p className="text-[0.6rem] text-[#b0a898] truncate">
+                      <p className="text-[0.6rem] text-[#999999] truncate">
                         {isDropship(order)
                           ? `${order.items[0]?.quantity ?? 1} × ${order.items[0]?.name ?? 'item'}`
                           : `${order.items.length} item${order.items.length !== 1 ? 's' : ''}`}
@@ -1172,7 +1172,7 @@ export default function AdminOrdersPage() {
                       <button
                         onClick={() => setInvoiceOrder(order)}
                         className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:scale-105"
-                        style={{ background: '#c9a84c15', color: '#c9a84c', border: '1px solid #c9a84c30' }}
+                        style={{ background: '#1c487415', color: '#1c4874', border: '1px solid #1c487430' }}
                         title="Generate invoice"
                       >
                         <FileText size={11} strokeWidth={2} />
@@ -1207,16 +1207,16 @@ export default function AdminOrdersPage() {
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: '#ede9e1', background: '#faf9f7' }}>
-            <span className="text-[0.68rem] text-[#a09a90]">
-              Page <span className="font-semibold text-[#1a1714]">{page}</span> of {totalPages}
-              {pagination && <span className="ml-2 text-[#c4bdb2]">({pagination.total} total)</span>}
+          <div className="flex items-center justify-between px-5 py-3 border-t" style={{ borderColor: '#c6cbd6', background: '#f5f7fb' }}>
+            <span className="text-[0.68rem] text-[#7f7f7f]">
+              Page <span className="font-semibold text-[#222222]">{page}</span> of {totalPages}
+              {pagination && <span className="ml-2 text-[#999999]">({pagination.total} total)</span>}
             </span>
             <div className="flex items-center gap-1.5">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#c9a84c]/40 hover:bg-white"
-                style={{ borderColor: '#ede9e1' }}>
-                <ChevronLeft size={13} strokeWidth={2} className="text-[#6b6560]" />
+                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#1c4874]/40 hover:bg-white"
+                style={{ borderColor: '#c6cbd6' }}>
+                <ChevronLeft size={13} strokeWidth={2} className="text-[#555555]" />
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const p = page <= 3 ? i + 1 : page >= totalPages - 2 ? totalPages - 4 + i : page - 2 + i;
@@ -1225,16 +1225,16 @@ export default function AdminOrdersPage() {
                   <button key={p} onClick={() => setPage(p)}
                     className="w-8 h-8 rounded-xl text-[0.7rem] font-semibold transition-all"
                     style={p === page
-                      ? { background: '#1a1714', color: '#c9a84c', border: '1px solid #1a1714' }
-                      : { background: 'transparent', color: '#6b6560', border: '1px solid #ede9e1' }}>
+                      ? { background: '#1c4874', color: '#ffffff', border: '1px solid #1c4874' }
+                      : { background: 'transparent', color: '#555555', border: '1px solid #c6cbd6' }}>
                     {p}
                   </button>
                 );
               })}
               <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#c9a84c]/40 hover:bg-white"
-                style={{ borderColor: '#ede9e1' }}>
-                <ChevronRight size={13} strokeWidth={2} className="text-[#6b6560]" />
+                className="w-8 h-8 rounded-xl border flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#1c4874]/40 hover:bg-white"
+                style={{ borderColor: '#c6cbd6' }}>
+                <ChevronRight size={13} strokeWidth={2} className="text-[#555555]" />
               </button>
             </div>
           </div>

@@ -1,71 +1,71 @@
-import Navbar from "../ui/Navbar";
-import Footer from "../ui/Footer";
+// Frame for the footer-link information pages (privacy, terms, return &
+// shipping policy, FAQ, help center, …) in the classic Alphaimports style:
+// site header, left Categories/Information sidebar, blue page title, footer.
+//
+// It renders through ClassicPageShell, so these pages match Customer Service
+// and the other classic content pages. Page content uses a few semantic
+// classes defined below instead of per-page Tailwind colours:
+//   .fp-h2      section heading           .fp-h3     sub-heading
+//   .fp-list    bulleted list             .fp-stack  vertical group
+//   .fp-box     boxed panel               .fp-eyebrow small label above a value
+//   .cl-link    (from ClassicPageShell)   blue bold link
+//   .fp-block   put a link on its own line
+
+import ClassicPageShell from "@/components/ui/ClassicPageShell";
 
 type Props = {
   title: string;
+  /** Optional one-line introduction shown under the title. */
+  intro?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export default function FooterPageLayout({
-  title,
-  children,
-}: Props) {
+const FOOTER_PAGE_CSS = `
+  .fp-body { color: #555; font-size: 12px; line-height: 1.75; max-width: 860px; }
+  .fp-body > * + * { margin-top: 14px; }
+  .fp-body p { margin: 0 0 8px; }
+  .fp-body p:last-child { margin-bottom: 0; }
+  .fp-intro { color: #555; font-size: 12px; margin: 0 0 4px; }
+
+  .fp-h2 {
+    margin: 4px 0 6px; padding-bottom: 3px; border-bottom: 1px solid #c9cfdf;
+    color: #1c4874; font-size: 13px; font-weight: bold; line-height: 1.4;
+  }
+  .fp-h3 { margin: 0 0 6px; color: #333; font-size: 12px; font-weight: bold; line-height: 1.4; }
+
+  .fp-list { margin: 0 0 4px; padding-left: 20px; list-style: disc; }
+  .fp-list li { margin: 3px 0; padding-left: 2px; }
+  .fp-list li::marker { color: #1c4874; }
+  .fp-body ol { margin: 0 0 4px; padding-left: 22px; list-style: decimal; }
+
+  .fp-stack > * + * { margin-top: 10px; }
+
+  .fp-box {
+    border: 1px solid #a9b3cf; border-top-right-radius: 8px;
+    background: #e8ebf3; padding: 10px 12px;
+  }
+  .fp-box .fp-h3 { color: #1c4874; }
+
+  .fp-eyebrow { margin: 0 0 1px !important; color: #7f7f7f; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; }
+
+  .fp-block { display: block; width: fit-content; }
+  .fp-body a:not(.cl-link) { color: #1c4874; text-decoration: underline; }
+  .fp-body a:focus-visible { outline: 2px solid #1c4874; outline-offset: 1px; }
+
+  @media (max-width: 600px) {
+    .fp-body { font-size: 13px; }
+    .fp-h2 { font-size: 14px; }
+  }
+`;
+
+export default function FooterPageLayout({ title, intro, children }: Props) {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-
-      {/* Navbar */}
-      <Navbar />
-
-      {/* Main Content */}
-      <main className="flex-1 w-full">
-
-        {/* Hero/Header */}
-        <section className="relative overflow-hidden border-b border-[#e8e2d9]">
-
-          {/* Background Glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#c9a84c10,transparent_40%)] pointer-events-none" />
-
-          {/* Decorative Grid */}
-          <div
-            className="absolute inset-0 opacity-30 pointer-events-none"
-            style={{
-              backgroundImage:
-                "linear-gradient(#c9a84c08 1px, transparent 1px), linear-gradient(90deg, #c9a84c08 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-          />
-
-          <div className="relative max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-28">
-
-            <p className="uppercase tracking-[0.35em] text-[11px] font-bold text-[#c9a84c] mb-5">
-              Alpha Gemstone NY Inc.
-            </p>
-
-            <h1 className="font-serif text-4xl md:text-6xl text-[#1a1714] leading-tight mb-6">
-              {title}
-            </h1>
-
-            <div className="w-28 h-[2px] bg-[#c9a84c]" />
-          </div>
-        </section>
-
-        {/* Content */}
-        <section className="w-full">
-          <div className="max-w-5xl mx-auto px-6 lg:px-10 py-14 lg:py-20">
-
-           
-
-              <div className="space-y-8 text-[15px] md:text-[16px] leading-8 text-[#4d463f]">
-                {children}
-              </div>
-
-          
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    <ClassicPageShell>
+      <style>{FOOTER_PAGE_CSS}</style>
+      <h1 className="cl-title">{title}</h1>
+      {intro && <p className="fp-intro">{intro}</p>}
+      <hr className="cl-rule" />
+      <div className="fp-body">{children}</div>
+    </ClassicPageShell>
   );
 }

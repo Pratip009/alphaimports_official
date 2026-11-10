@@ -1,4 +1,5 @@
 import FooterPageLayout from '@/components/footer-pages/footer-page-layout';
+import ClassicSubscribeBox from '@/components/footer-pages/ClassicSubscribeBox';
 import type { Metadata } from "next";
 
 const SITE_URL =
@@ -33,11 +34,11 @@ const page = () => {
 
       {/* Subscriber Benefits */}
       <div>
-        <h2 className="text-2xl font-semibold text-[#1a1714] mb-4">
+        <h2 className="fp-h2">
           Subscriber Benefits
         </h2>
 
-        <ul className="list-disc pl-6 space-y-3">
+        <ul className="fp-list">
           <li>Exclusive discounts and special offers</li>
 
           <li>Early access to new arrivals</li>
@@ -51,35 +52,11 @@ const page = () => {
       </div>
 
       {/* Subscription Box */}
-      <div className="rounded-2xl border border-[#e8e2d9] bg-[#fffdf9] p-8">
-
-        <h3 className="text-xl font-semibold text-[#1a1714] mb-3">
-          Stay Updated
-        </h3>
-
-        <p className="leading-8 text-[#4d463f] mb-6">
-          Subscribe to receive updates about gemstone collections,
-          colored diamonds, jewelry trends, wholesale specials,
-          and exclusive promotions directly in your inbox.
+      <ClassicSubscribeBox title="Stay Updated">
+        <p>
+          Subscribe to receive updates about gemstone collections, colored diamonds, jewelry trends, wholesale specials, and exclusive promotions directly in your inbox.
         </p>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-
-          <input
-            type="email"
-            placeholder="Enter your email address"
-            className="flex-1 h-12 px-4 rounded-xl border border-[#ddd5c9] bg-white outline-none focus:border-[#c9a84c] transition-colors"
-          />
-
-          <button
-            className="h-12 px-6 rounded-xl bg-[#1a1714] text-white font-medium hover:opacity-90 transition-opacity"
-          >
-            Subscribe
-          </button>
-
-        </div>
-
-      </div>
+      </ClassicSubscribeBox>
 
     </FooterPageLayout>
   );

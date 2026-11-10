@@ -77,17 +77,17 @@ function SummaryCard({
   label, value, icon: Icon, accent,
 }: { label: string; value: string | number; icon: React.ElementType; accent: string }) {
   return (
-    <div className="relative bg-white border border-[#ede9e1] rounded-2xl p-5 overflow-hidden">
+    <div className="relative bg-white border border-[#c6cbd6] rounded-2xl p-5 overflow-hidden">
       <div className="absolute top-0 left-6 right-6 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}40, transparent)` }} />
       <div className="flex items-start justify-between mb-4">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${accent}15`, border: `1px solid ${accent}25` }}>
           <Icon size={17} strokeWidth={1.7} style={{ color: accent }} />
         </div>
       </div>
-      <div className="font-['Cormorant_Garamond',serif] text-[2rem] font-medium text-[#1a1714] leading-none mb-1 tabular-nums">
+      <div className=" text-[2rem] font-medium text-[#222222] leading-none mb-1 tabular-nums">
         {value}
       </div>
-      <div className="text-[0.72rem] text-[#a09a90] tracking-wide uppercase font-medium">{label}</div>
+      <div className="text-[0.72rem] text-[#7f7f7f] tracking-wide uppercase font-medium">{label}</div>
     </div>
   );
 }
@@ -132,23 +132,23 @@ export default function AdminUsersPage() {
       <div className="mb-8">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#c9a84c] font-semibold mb-2">◆ Alpha Gemstone</p>
-            <h1 className="font-['Cormorant_Garamond',serif] text-[2.6rem] font-medium text-[#1a1714] tracking-tight leading-none">
+            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#1c4874] font-semibold mb-2">◆ Alpha Gemstone</p>
+            <h1 className=" text-[2.6rem] font-medium text-[#222222] tracking-tight leading-none">
               Users
             </h1>
-            <p className="text-[0.78rem] text-[#a09a90] mt-2">
+            <p className="text-[0.78rem] text-[#7f7f7f] mt-2">
               All registered accounts — purchases and screen time in one place.
             </p>
           </div>
 
           <div className="relative">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#c4bdb2]" strokeWidth={2} />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#999999]" strokeWidth={2} />
             <input
               type="text"
               placeholder="Search by name or email…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2.5 text-[0.8rem] bg-white border border-[#ede9e1] rounded-xl outline-none focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20 transition-all w-64 placeholder:text-[#c4bdb2]"
+              className="pl-9 pr-4 py-2.5 text-[0.8rem] bg-white border border-[#c6cbd6] rounded-xl outline-none focus:border-[#1c4874]/50 focus:ring-1 focus:ring-[#1c4874]/20 transition-all w-64 placeholder:text-[#999999]"
             />
           </div>
         </div>
@@ -156,65 +156,65 @@ export default function AdminUsersPage() {
 
       {/* ── Summary cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <SummaryCard label="Total Users" value={data?.grandTotal ?? '—'} icon={Users} accent="#c9a84c" />
-        <SummaryCard label="Admins" value={data?.adminCount ?? '—'} icon={Crown} accent="#a87ac9" />
-        <SummaryCard label="Customers" value={data?.userCount ?? '—'} icon={Users} accent="#7ab0c9" />
-        <SummaryCard label="New This Month" value={data ? `+${data.newThisMonth}` : '—'} icon={ArrowUpRight} accent="#9ab87a" />
+        <SummaryCard label="Total Users" value={data?.grandTotal ?? '—'} icon={Users} accent="#1c4874" />
+        <SummaryCard label="Admins" value={data?.adminCount ?? '—'} icon={Crown} accent="#7d88aa" />
+        <SummaryCard label="Customers" value={data?.userCount ?? '—'} icon={Users} accent="#2f5681" />
+        <SummaryCard label="New This Month" value={data ? `+${data.newThisMonth}` : '—'} icon={ArrowUpRight} accent="#2d7a52" />
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-[1.6fr_70px_1fr_1fr_1fr_0.9fr] px-5 py-2.5 border-b border-[#ede9e1] bg-[#faf9f7]">
+      <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden">
+        <div className="grid grid-cols-[1.6fr_70px_1fr_1fr_1fr_0.9fr] px-5 py-2.5 border-b border-[#c6cbd6] bg-[#f5f7fb]">
           {['User', 'Role', 'Orders', 'Total Spent', 'Screen Time', 'Joined'].map(h => (
-            <span key={h} className="text-[0.6rem] tracking-[0.15em] uppercase text-[#b0a898] font-semibold">{h}</span>
+            <span key={h} className="text-[0.6rem] tracking-[0.15em] uppercase text-[#999999] font-semibold">{h}</span>
           ))}
         </div>
 
         <div>
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-[1.6fr_70px_1fr_1fr_1fr_0.9fr] px-5 py-3.5 border-b border-[#f5f3ef] animate-pulse">
+              <div key={i} className="grid grid-cols-[1.6fr_70px_1fr_1fr_1fr_0.9fr] px-5 py-3.5 border-b border-[#e3e6ee] animate-pulse">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[#ede9e1]" />
-                  <div className="h-3 w-28 bg-[#ede9e1] rounded" />
+                  <div className="w-8 h-8 rounded-full bg-[#e3e6ee]" />
+                  <div className="h-3 w-28 bg-[#e3e6ee] rounded" />
                 </div>
-                <div className="h-5 w-12 bg-[#ede9e1] rounded-full self-center" />
-                <div className="h-3 w-10 bg-[#ede9e1] rounded self-center" />
-                <div className="h-3 w-16 bg-[#ede9e1] rounded self-center" />
-                <div className="h-3 w-14 bg-[#ede9e1] rounded self-center" />
-                <div className="h-3 w-16 bg-[#ede9e1] rounded self-center" />
+                <div className="h-5 w-12 bg-[#e3e6ee] rounded-full self-center" />
+                <div className="h-3 w-10 bg-[#e3e6ee] rounded self-center" />
+                <div className="h-3 w-16 bg-[#e3e6ee] rounded self-center" />
+                <div className="h-3 w-14 bg-[#e3e6ee] rounded self-center" />
+                <div className="h-3 w-16 bg-[#e3e6ee] rounded self-center" />
               </div>
             ))
           ) : !data || data.users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Users size={28} strokeWidth={1.2} className="text-[#d4cfc8] mb-3" />
-              <p className="text-[0.78rem] text-[#b0a898]">No users found</p>
+              <Users size={28} strokeWidth={1.2} className="text-[#999999] mb-3" />
+              <p className="text-[0.78rem] text-[#999999]">No users found</p>
             </div>
           ) : (
             data.users.map((u) => (
               <Link
                 key={u._id}
                 href={`/admin/users/${u._id}`}
-                className="grid grid-cols-[1.6fr_70px_1fr_1fr_1fr_0.9fr] px-5 py-3.5 border-b border-[#f5f3ef] hover:bg-[#faf9f7] transition-colors duration-150 group"
+                className="grid grid-cols-[1.6fr_70px_1fr_1fr_1fr_0.9fr] px-5 py-3.5 border-b border-[#e3e6ee] hover:bg-[#f5f7fb] transition-colors duration-150 group"
               >
                 {/* Name + email */}
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-[0.7rem] font-bold shrink-0"
                     style={{
-                      background: u.role === 'admin' ? '#c9a84c20' : '#7ab0c920',
-                      color:      u.role === 'admin' ? '#c9a84c'   : '#7ab0c9',
-                      border: `1px solid ${u.role === 'admin' ? '#c9a84c30' : '#7ab0c930'}`,
+                      background: u.role === 'admin' ? '#1c487420' : '#2f568120',
+                      color:      u.role === 'admin' ? '#1c4874'   : '#2f5681',
+                      border: `1px solid ${u.role === 'admin' ? '#1c487430' : '#2f568130'}`,
                     }}
                   >
                     {u.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[0.78rem] font-medium text-[#1a1714] truncate flex items-center gap-1">
+                    <div className="text-[0.78rem] font-medium text-[#222222] truncate flex items-center gap-1">
                       {u.name}
-                      <ArrowUpRight size={11} strokeWidth={2} className="opacity-0 group-hover:opacity-100 transition-opacity text-[#c9a84c]" />
+                      <ArrowUpRight size={11} strokeWidth={2} className="opacity-0 group-hover:opacity-100 transition-opacity text-[#1c4874]" />
                     </div>
-                    <div className="text-[0.68rem] text-[#a09a90] truncate flex items-center gap-1.5">
+                    <div className="text-[0.68rem] text-[#7f7f7f] truncate flex items-center gap-1.5">
                       <span className="truncate">{u.email}</span>
                       {u.authProviders?.includes('google') && (
                         <span
@@ -231,35 +231,35 @@ export default function AdminUsersPage() {
                 {/* Role */}
                 <div className="self-center">
                   {u.role === 'admin' ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/20">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#1c4874]/10 text-[#1c4874] border border-[#1c4874]/20">
                       <Crown size={9} strokeWidth={2} /> Admin
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#7ab0c9]/10 text-[#7ab0c9] border border-[#7ab0c9]/20">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-semibold tracking-wide bg-[#2f5681]/10 text-[#2f5681] border border-[#2f5681]/20">
                       User
                     </span>
                   )}
                 </div>
 
                 {/* Orders */}
-                <div className="self-center flex items-center gap-1.5 text-[0.75rem] text-[#4a4540]">
-                  <ShoppingBag size={12} strokeWidth={1.8} className="text-[#c4bdb2]" />
+                <div className="self-center flex items-center gap-1.5 text-[0.75rem] text-[#555555]">
+                  <ShoppingBag size={12} strokeWidth={1.8} className="text-[#999999]" />
                   {u.orderCount}
                 </div>
 
                 {/* Total spent */}
-                <div className="self-center text-[0.75rem] font-medium text-[#1a1714]">
+                <div className="self-center text-[0.75rem] font-medium text-[#222222]">
                   {u.totalSpent > 0 ? formatCurrency(u.totalSpent) : '—'}
                 </div>
 
                 {/* Screen time */}
-                <div className="self-center flex items-center gap-1.5 text-[0.75rem] text-[#4a4540]">
-                  <Clock size={12} strokeWidth={1.8} className="text-[#c4bdb2]" />
+                <div className="self-center flex items-center gap-1.5 text-[0.75rem] text-[#555555]">
+                  <Clock size={12} strokeWidth={1.8} className="text-[#999999]" />
                   {formatScreenTime(u.totalScreenTime)}
                 </div>
 
                 {/* Joined */}
-                <span className="self-center text-[0.68rem] text-[#a09a90]" title={formatDate(u.createdAt)}>
+                <span className="self-center text-[0.68rem] text-[#7f7f7f]" title={formatDate(u.createdAt)}>
                   {timeAgo(u.createdAt)}
                 </span>
               </Link>
@@ -269,17 +269,17 @@ export default function AdminUsersPage() {
 
         {/* Pagination */}
         {!loading && data && totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-[#ede9e1] bg-[#faf9f7]">
-            <span className="text-[0.68rem] text-[#a09a90]">
+          <div className="flex items-center justify-between px-5 py-3 border-t border-[#c6cbd6] bg-[#f5f7fb]">
+            <span className="text-[0.68rem] text-[#7f7f7f]">
               Page {page} of {totalPages} · {data.total} user{data.total === 1 ? '' : 's'}
             </span>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="w-7 h-7 rounded-lg border border-[#ede9e1] flex items-center justify-center hover:border-[#c9a84c]/40 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="w-7 h-7 rounded-lg border border-[#c6cbd6] flex items-center justify-center hover:border-[#1c4874]/40 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                <ChevronLeft size={13} strokeWidth={2} className="text-[#6b6560]" />
+                <ChevronLeft size={13} strokeWidth={2} className="text-[#555555]" />
               </button>
 
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -293,8 +293,8 @@ export default function AdminUsersPage() {
                     onClick={() => setPage(p)}
                     className="w-7 h-7 rounded-lg text-[0.7rem] font-semibold transition-all"
                     style={p === page
-                      ? { background: '#c9a84c', color: '#fff', border: '1px solid #c9a84c' }
-                      : { background: 'transparent', color: '#6b6560', border: '1px solid #ede9e1' }}
+                      ? { background: '#1c4874', color: '#fff', border: '1px solid #1c4874' }
+                      : { background: 'transparent', color: '#555555', border: '1px solid #c6cbd6' }}
                   >
                     {p}
                   </button>
@@ -304,9 +304,9 @@ export default function AdminUsersPage() {
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="w-7 h-7 rounded-lg border border-[#ede9e1] flex items-center justify-center hover:border-[#c9a84c]/40 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="w-7 h-7 rounded-lg border border-[#c6cbd6] flex items-center justify-center hover:border-[#1c4874]/40 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                <ChevronRight size={13} strokeWidth={2} className="text-[#6b6560]" />
+                <ChevronRight size={13} strokeWidth={2} className="text-[#555555]" />
               </button>
             </div>
           </div>

@@ -12,8 +12,8 @@ import { useAuthFetch } from '@/hooks/useAuthFetch';
 const RichTextEditor = dynamic(() => import('@/components/editor/RichTextEditor'), {
   ssr: false,
   loading: () => (
-    <div className="border border-[#ede9e1] rounded-xl bg-white min-h-[420px] flex items-center justify-center">
-      <Loader2 size={20} className="text-[#c9a84c] animate-spin" />
+    <div className="border border-[#c6cbd6] rounded-xl bg-white min-h-[420px] flex items-center justify-center">
+      <Loader2 size={20} className="text-[#1c4874] animate-spin" />
     </div>
   ),
 });
@@ -147,7 +147,7 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
 
           {/* Title */}
           <div>
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-2">
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-2">
               Title <span className="text-red-400">*</span>
             </label>
             <input
@@ -155,10 +155,10 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
               value={form.title}
               onChange={e => handleTitleChange(e.target.value)}
               placeholder="Enter a compelling title…"
-              className={`w-full px-4 py-3 text-[1.1rem] font-['Cormorant_Garamond',serif] font-semibold border rounded-xl outline-none bg-white transition-all placeholder:text-[#d4cfc8] ${
+              className={`w-full px-4 py-3 text-[1.1rem] font-semibold border rounded-xl outline-none bg-white transition-all placeholder:text-[#999999] ${
                 errors.title
                   ? 'border-red-300 focus:border-red-400'
-                  : 'border-[#ede9e1] focus:border-[#c9a84c]/60 focus:ring-1 focus:ring-[#c9a84c]/20'
+                  : 'border-[#c6cbd6] focus:border-[#1c4874]/60 focus:ring-1 focus:ring-[#1c4874]/20'
               }`}
             />
             {errors.title && (
@@ -170,22 +170,22 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
 
           {/* Slug */}
           <div>
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-2">Slug</label>
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-2">Slug</label>
             <div className="flex items-center gap-2">
-              <span className="text-[0.72rem] text-[#b0a898] bg-[#f5f3ef] border border-[#ede9e1] border-r-0 px-3 py-2.5 rounded-l-lg whitespace-nowrap">/blogs/</span>
+              <span className="text-[0.72rem] text-[#999999] bg-[#eef0f5] border border-[#c6cbd6] border-r-0 px-3 py-2.5 rounded-l-lg whitespace-nowrap">/blogs/</span>
               <input
                 type="text"
                 value={form.slug}
                 onChange={e => update('slug', slugify(e.target.value))}
                 placeholder="auto-generated-from-title"
-                className="flex-1 px-3 py-2.5 text-[0.78rem] border border-[#ede9e1] rounded-r-lg outline-none bg-white focus:border-[#c9a84c]/50 focus:ring-1 focus:ring-[#c9a84c]/20 placeholder:text-[#c4bdb2]"
+                className="flex-1 px-3 py-2.5 text-[0.78rem] border border-[#c6cbd6] rounded-r-lg outline-none bg-white focus:border-[#1c4874]/50 focus:ring-1 focus:ring-[#1c4874]/20 placeholder:text-[#999999]"
               />
             </div>
           </div>
 
           {/* Short Description */}
           <div>
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-2">
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-2">
               Short Description <span className="text-red-400">*</span>
             </label>
             <textarea
@@ -194,10 +194,10 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
               placeholder="A brief summary shown in blog listings (max 500 chars)…"
               rows={3}
               maxLength={500}
-              className={`w-full px-4 py-3 text-[0.82rem] border rounded-xl outline-none resize-none bg-white transition-all placeholder:text-[#c4bdb2] ${
+              className={`w-full px-4 py-3 text-[0.82rem] border rounded-xl outline-none resize-none bg-white transition-all placeholder:text-[#999999] ${
                 errors.shortDescription
                   ? 'border-red-300'
-                  : 'border-[#ede9e1] focus:border-[#c9a84c]/60 focus:ring-1 focus:ring-[#c9a84c]/20'
+                  : 'border-[#c6cbd6] focus:border-[#1c4874]/60 focus:ring-1 focus:ring-[#1c4874]/20'
               }`}
             />
             <div className="flex justify-between mt-1">
@@ -206,13 +206,13 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
                   <AlertCircle size={11} />{errors.shortDescription}
                 </p>
               )}
-              <p className="ml-auto text-[0.62rem] text-[#c4bdb2]">{form.shortDescription.length}/500</p>
+              <p className="ml-auto text-[0.62rem] text-[#999999]">{form.shortDescription.length}/500</p>
             </div>
           </div>
 
           {/* ── Rich Text Editor ── */}
           <div>
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-2">
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-2">
               Content <span className="text-red-400">*</span>
             </label>
             <RichTextEditor
@@ -230,35 +230,35 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
           </div>
 
           {/* SEO (collapsible) */}
-          <div className="border border-[#ede9e1] rounded-xl overflow-hidden">
+          <div className="border border-[#c6cbd6] rounded-xl overflow-hidden">
             <button
               type="button"
               onClick={() => setSeoOpen(o => !o)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-[#faf9f7] hover:bg-[#f5f3ef] transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 bg-[#f5f7fb] hover:bg-[#eef0f5] transition-colors"
             >
-              <span className="text-[0.72rem] font-semibold text-[#5c5852] tracking-wide">SEO Settings (optional)</span>
+              <span className="text-[0.72rem] font-semibold text-[#555555] tracking-wide">SEO Settings (optional)</span>
               {seoOpen ? <ChevronUp size={14} strokeWidth={2} /> : <ChevronDown size={14} strokeWidth={2} />}
             </button>
             {seoOpen && (
-              <div className="p-4 space-y-4 border-t border-[#ede9e1]">
+              <div className="p-4 space-y-4 border-t border-[#c6cbd6]">
                 <div>
-                  <label className="block text-[0.65rem] tracking-widest uppercase text-[#a09a90] font-semibold mb-1.5">SEO Title</label>
+                  <label className="block text-[0.65rem] tracking-widest uppercase text-[#7f7f7f] font-semibold mb-1.5">SEO Title</label>
                   <input
                     type="text"
                     value={form.seoTitle}
                     onChange={e => update('seoTitle', e.target.value)}
                     placeholder="Custom title for search engines (defaults to post title)"
-                    className="w-full px-3 py-2 text-[0.78rem] border border-[#ede9e1] rounded-lg outline-none focus:border-[#c9a84c]/50 bg-white"
+                    className="w-full px-3 py-2 text-[0.78rem] border border-[#c6cbd6] rounded-lg outline-none focus:border-[#1c4874]/50 bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-[0.65rem] tracking-widest uppercase text-[#a09a90] font-semibold mb-1.5">SEO Description</label>
+                  <label className="block text-[0.65rem] tracking-widest uppercase text-[#7f7f7f] font-semibold mb-1.5">SEO Description</label>
                   <textarea
                     value={form.seoDescription}
                     onChange={e => update('seoDescription', e.target.value)}
                     placeholder="Meta description for search results (150–160 chars recommended)"
                     rows={3}
-                    className="w-full px-3 py-2 text-[0.78rem] border border-[#ede9e1] rounded-lg outline-none resize-none focus:border-[#c9a84c]/50 bg-white"
+                    className="w-full px-3 py-2 text-[0.78rem] border border-[#c6cbd6] rounded-lg outline-none resize-none focus:border-[#1c4874]/50 bg-white"
                   />
                 </div>
               </div>
@@ -270,14 +270,14 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
         <div className="space-y-5">
 
           {/* Publish card */}
-          <div className="bg-white border border-[#ede9e1] rounded-xl p-4">
-            <h3 className="text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-4">Publish</h3>
+          <div className="bg-white border border-[#c6cbd6] rounded-xl p-4">
+            <h3 className="text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-4">Publish</h3>
             <div className="space-y-2">
               <button
                 type="button"
                 onClick={() => handleSave('published')}
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#c9a84c] text-white text-[0.75rem] font-semibold rounded-lg hover:bg-[#b8933b] disabled:opacity-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1c4874] text-white text-[0.75rem] font-semibold rounded-lg hover:bg-[#1c4874] disabled:opacity-50 transition-colors"
               >
                 {saving ? <Loader2 size={14} strokeWidth={2} className="animate-spin" /> : <Send size={14} strokeWidth={2} />}
                 Publish Now
@@ -286,24 +286,24 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
                 type="button"
                 onClick={() => handleSave('draft')}
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#ede9e1] text-[#5c5852] text-[0.75rem] font-semibold rounded-lg hover:bg-[#f5f3ef] disabled:opacity-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#c6cbd6] text-[#555555] text-[0.75rem] font-semibold rounded-lg hover:bg-[#eef0f5] disabled:opacity-50 transition-colors"
               >
                 <Save size={14} strokeWidth={2} /> Save as Draft
               </button>
             </div>
-            <div className="mt-3 pt-3 border-t border-[#f5f3ef]">
+            <div className="mt-3 pt-3 border-t border-[#e3e6ee]">
               <span className={`flex items-center gap-1.5 text-[0.65rem] font-semibold ${
-                form.status === 'published' ? 'text-[#4a7a2a]' : 'text-[#8a6e2a]'
+                form.status === 'published' ? 'text-[#4a7a2a]' : 'text-[#154273]'
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${form.status === 'published' ? 'bg-[#9ab87a]' : 'bg-[#c9a84c]'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${form.status === 'published' ? 'bg-[#2d7a52]' : 'bg-[#1c4874]'}`} />
                 {form.status === 'published' ? 'Published' : 'Draft'}
               </span>
             </div>
           </div>
 
           {/* Category */}
-          <div className="bg-white border border-[#ede9e1] rounded-xl p-4">
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-3">
+          <div className="bg-white border border-[#c6cbd6] rounded-xl p-4">
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-3">
               Category <span className="text-red-400">*</span>
             </label>
             <div className="grid grid-cols-2 gap-1.5">
@@ -314,8 +314,8 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
                   onClick={() => update('category', cat)}
                   className={`px-2.5 py-2 text-[0.65rem] rounded-lg border text-left transition-all ${
                     form.category === cat
-                      ? 'bg-[#c9a84c]/10 border-[#c9a84c]/40 text-[#8a6e2a] font-semibold'
-                      : 'border-[#f0ede8] text-[#8a8278] hover:border-[#ede9e1] hover:bg-[#f5f3ef]'
+                      ? 'bg-[#1c4874]/10 border-[#1c4874]/40 text-[#154273] font-semibold'
+                      : 'border-[#e3e6ee] text-[#7f7f7f] hover:border-[#c6cbd6] hover:bg-[#eef0f5]'
                   }`}
                 >
                   {cat}
@@ -330,8 +330,8 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
           </div>
 
           {/* Featured Image */}
-          <div className="bg-white border border-[#ede9e1] rounded-xl p-4">
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-3">Featured Image</label>
+          <div className="bg-white border border-[#c6cbd6] rounded-xl p-4">
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-3">Featured Image</label>
 
             {form.featuredImage ? (
               <div className="relative">
@@ -350,12 +350,12 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="w-full h-28 border-2 border-dashed border-[#ede9e1] rounded-lg flex flex-col items-center justify-center gap-2 hover:border-[#c9a84c]/40 hover:bg-[#faf9f7] transition-all"
+                className="w-full h-28 border-2 border-dashed border-[#c6cbd6] rounded-lg flex flex-col items-center justify-center gap-2 hover:border-[#1c4874]/40 hover:bg-[#f5f7fb] transition-all"
               >
                 {uploading
-                  ? <Loader2 size={20} className="text-[#c9a84c] animate-spin" />
-                  : <ImageIcon size={20} strokeWidth={1.4} className="text-[#c4bdb2]" />}
-                <span className="text-[0.68rem] text-[#b0a898]">{uploading ? 'Uploading…' : 'Click to upload'}</span>
+                  ? <Loader2 size={20} className="text-[#1c4874] animate-spin" />
+                  : <ImageIcon size={20} strokeWidth={1.4} className="text-[#999999]" />}
+                <span className="text-[0.68rem] text-[#999999]">{uploading ? 'Uploading…' : 'Click to upload'}</span>
               </button>
             )}
 
@@ -364,7 +364,7 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
               value={form.featuredImage}
               onChange={e => update('featuredImage', e.target.value)}
               placeholder="Or paste an image URL…"
-              className="mt-2 w-full px-3 py-2 text-[0.7rem] border border-[#ede9e1] rounded-lg outline-none focus:border-[#c9a84c]/50 bg-white placeholder:text-[#c4bdb2]"
+              className="mt-2 w-full px-3 py-2 text-[0.7rem] border border-[#c6cbd6] rounded-lg outline-none focus:border-[#1c4874]/50 bg-white placeholder:text-[#999999]"
             />
 
             <input
@@ -377,13 +377,13 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
           </div>
 
           {/* Tags */}
-          <div className="bg-white border border-[#ede9e1] rounded-xl p-4">
-            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#a09a90] font-semibold mb-3">Tags</label>
+          <div className="bg-white border border-[#c6cbd6] rounded-xl p-4">
+            <label className="block text-[0.68rem] tracking-[0.15em] uppercase text-[#7f7f7f] font-semibold mb-3">Tags</label>
             <div className="flex gap-1.5 mb-2 flex-wrap">
               {form.tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#f5f3ef] text-[#8a8278] text-[0.65rem] rounded-full border border-[#ede9e1]">
+                <span key={tag} className="flex items-center gap-1 px-2 py-0.5 bg-[#eef0f5] text-[#7f7f7f] text-[0.65rem] rounded-full border border-[#c6cbd6]">
                   #{tag}
-                  <button type="button" onClick={() => removeTag(tag)} className="text-[#b0a898] hover:text-red-400 transition-colors">
+                  <button type="button" onClick={() => removeTag(tag)} className="text-[#999999] hover:text-red-400 transition-colors">
                     <X size={9} />
                   </button>
                 </span>
@@ -391,22 +391,22 @@ export default function BlogEditor({ initialData, blogId, isEdit }: BlogEditorPr
             </div>
             <div className="flex gap-1.5">
               <div className="relative flex-1">
-                <Tag size={11} strokeWidth={2} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#c4bdb2]" />
+                <Tag size={11} strokeWidth={2} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#999999]" />
                 <input
                   type="text"
                   value={tagInput}
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag())}
                   placeholder="Add a tag…"
-                  className="w-full pl-7 pr-3 py-2 text-[0.72rem] border border-[#ede9e1] rounded-lg outline-none focus:border-[#c9a84c]/50 bg-white placeholder:text-[#c4bdb2]"
+                  className="w-full pl-7 pr-3 py-2 text-[0.72rem] border border-[#c6cbd6] rounded-lg outline-none focus:border-[#1c4874]/50 bg-white placeholder:text-[#999999]"
                 />
               </div>
               <button
                 type="button"
                 onClick={addTag}
-                className="w-8 h-8 bg-[#f5f3ef] rounded-lg flex items-center justify-center hover:bg-[#ede9e1] transition-colors"
+                className="w-8 h-8 bg-[#eef0f5] rounded-lg flex items-center justify-center hover:bg-[#e3e6ee] transition-colors"
               >
-                <Plus size={13} strokeWidth={2} className="text-[#6b6560]" />
+                <Plus size={13} strokeWidth={2} className="text-[#555555]" />
               </button>
             </div>
           </div>

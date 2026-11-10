@@ -831,7 +831,11 @@ export async function runEscalationSweep(): Promise<number> {
  */
 export async function syncMemoTrackingStatuses(): Promise<number> {
   await connectDB();
-  let updated = 0;
+  // NOTE: carrier tracking checks below are currently switched off (commented
+  // out), so this always returns 0 and memos never auto-advance to
+  // "with_customer" / "return_in_transit". Restore the blocks (and make this
+  // `let`) to re-enable — each one calls the paid ShipEngine tracking API.
+  const updated = 0;
 
   const outbound = await Memo.find({ status: 'shipped', outboundTrackingNumber: { $exists: true } });
   for (const memo of outbound) {

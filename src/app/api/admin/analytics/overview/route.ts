@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withAdmin } from "@/middleware/auth.middleware";
 import connectDB from "@/lib/db";
 import AnalyticsEvent from "@/models/AnalyticsEvent";
 import AnalyticsSession from "@/models/AnalyticsSession";
 
-export async function GET(request: NextRequest) {
+// Admin only — this route was previously public, exposing traffic data and
+// letting anyone trigger these aggregations.
+export const GET = withAdmin(async (request: NextRequest) => {
   try {
     await connectDB();
 
@@ -13,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
 
-    let startDate = new Date();
+    const startDate = new Date();
 
     if (range === "24h") {
       startDate.setHours(now.getHours() - 24);
@@ -496,4 +499,4 @@ export async function GET(request: NextRequest) {
       }
     );
   }
-}
+});

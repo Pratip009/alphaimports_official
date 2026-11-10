@@ -799,14 +799,17 @@ function RangeSlider({ min, max, step, valueMin, valueMax, onChange, formatLabel
 
   const pct = (v: number) => ((v - min) / (max - min)) * 100;
 
-  const valueFromClientX = (clientX: number) => {
+  // Memoized on the bounds so the drag listeners below re-bind when the
+  // slider's min/max/step change (e.g. narrower price range after filtering)
+  // instead of keeping the bounds from when dragging started.
+  const valueFromClientX = useCallback((clientX: number) => {
     const track = trackRef.current;
     if (!track) return min;
     const rect = track.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     const raw = min + ratio * (max - min);
     return Math.round(raw / step) * step;
-  };
+  }, [min, max, step]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -834,7 +837,7 @@ function RangeSlider({ min, max, step, valueMin, valueMax, onChange, formatLabel
       document.removeEventListener('touchmove', onTouchMove);
       document.removeEventListener('touchend', onUp);
     };
-  }, [valueMin, valueMax, onChange]);
+  }, [valueMin, valueMax, onChange, valueFromClientX]);
 
   return (
     <div className="px-1 pt-1 pb-2 w-56">

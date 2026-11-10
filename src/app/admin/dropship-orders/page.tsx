@@ -153,10 +153,10 @@ export default function DropshipOrdersAdminPage() {
         <span>Open Orders ›</span>
       </a>
       <div className="flex items-center gap-3 mb-6">
-        <Package size={20} style={{ color: '#c9a84c' }} />
+        <Package size={20} style={{ color: '#1c4874' }} />
         <div>
-          <h1 className="text-lg font-bold" style={{ color: '#1a1714' }}>Dropship Orders</h1>
-          <p className="text-xs" style={{ color: '#9c9690' }}>
+          <h1 className="text-lg font-bold" style={{ color: '#222222' }}>Dropship Orders</h1>
+          <p className="text-xs" style={{ color: '#7f7f7f' }}>
             Orders submitted by approved dropship sellers. Only paid orders can move into fulfillment.
           </p>
         </div>
@@ -172,8 +172,8 @@ export default function DropshipOrdersAdminPage() {
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
             style={
               statusFilter === f.value
-                ? { background: '#1a1714', color: '#fff' }
-                : { border: '1px solid #e5e2db', color: '#5c5852' }
+                ? { background: '#1c4874', color: '#fff' }
+                : { border: '1px solid #c6cbd6', color: '#555555' }
             }
           >
             {f.label}
@@ -195,9 +195,9 @@ export default function DropshipOrdersAdminPage() {
       )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin" size={20} style={{ color: '#c9a84c' }} /></div>
+        <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin" size={20} style={{ color: '#1c4874' }} /></div>
       ) : orders.length === 0 ? (
-        <div className="rounded-2xl px-6 py-14 text-center" style={{ border: '1px dashed #e5e2db', color: '#9c9690', background: '#fff' }}>
+        <div className="rounded-2xl px-6 py-14 text-center" style={{ border: '1px dashed #c6cbd6', color: '#7f7f7f', background: '#fff' }}>
           <Package size={22} className="mx-auto mb-2" />
           <p className="text-sm">No dropship orders found.</p>
         </div>
@@ -210,14 +210,14 @@ export default function DropshipOrdersAdminPage() {
             const isOpen = expanded === o._id;
             const unpaid = o.paymentStatus !== 'completed';
             return (
-              <div key={o._id} className="rounded-2xl px-6 py-5" style={{ border: '1px solid #ede9e1', background: '#fff' }}>
+              <div key={o._id} className="rounded-2xl px-6 py-5" style={{ border: '1px solid #c6cbd6', background: '#fff' }}>
                 <div
                   className="flex items-start justify-between flex-wrap gap-4 cursor-pointer"
                   onClick={() => setExpanded(isOpen ? null : o._id)}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="text-sm font-semibold" style={{ color: '#1a1714' }}>
+                      <p className="text-sm font-semibold" style={{ color: '#222222' }}>
                         {o.quantity} × {o.productName}
                       </p>
                       <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: meta.bg, color: meta.color }}>
@@ -227,21 +227,21 @@ export default function DropshipOrdersAdminPage() {
                         {payMeta.label}
                       </span>
                     </div>
-                    <p className="text-xs" style={{ color: '#9c9690' }}>
+                    <p className="text-xs" style={{ color: '#7f7f7f' }}>
                       Seller: {o.sellerBusinessName || o.application?.fullName || '—'} ({o.sellerEmail}) · ${o.amount.toFixed(2)}
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: '#9c9690' }}>
+                    <p className="text-xs mt-0.5" style={{ color: '#7f7f7f' }}>
                       Ship to: {o.customerName} — {o.city}, {o.country}
                     </p>
-                    <p className="text-[0.65rem] mt-1" style={{ color: '#b5b0a8' }}>
+                    <p className="text-[0.65rem] mt-1" style={{ color: '#999999' }}>
                       Submitted {new Date(o.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
                 {isOpen && (
-                  <div className="mt-4 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ borderTop: '1px solid #f0ede6' }}>
-                    <div className="text-xs space-y-1" style={{ color: '#5c5852' }}>
+                  <div className="mt-4 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-6" style={{ borderTop: '1px solid #e3e6ee' }}>
+                    <div className="text-xs space-y-1" style={{ color: '#555555' }}>
                       <p><span className="font-semibold">Product:</span> {o.quantity} × ${o.unitPrice.toFixed(2)} = ${o.productAmount.toFixed(2)}</p>
                       {o.specifications && <p><span className="font-semibold">Notes:</span> {o.specifications}</p>}
                       <p><span className="font-semibold">Address:</span> {o.addressLine1}{o.addressLine2 ? `, ${o.addressLine2}` : ''}, {o.city}{o.state ? `, ${o.state}` : ''} {o.postalCode}, {o.country}</p>
@@ -252,7 +252,7 @@ export default function DropshipOrdersAdminPage() {
                       )}
                       {o.specialInstructions && <p><span className="font-semibold">Instructions:</span> {o.specialInstructions}</p>}
                       {o.labelUrl && (
-                        <p><a href={o.labelUrl} target="_blank" rel="noreferrer" className="font-semibold underline" style={{ color: '#c9a84c' }}>Download shipping label →</a></p>
+                        <p><a href={o.labelUrl} target="_blank" rel="noreferrer" className="font-semibold underline" style={{ color: '#1c4874' }}>Download shipping label →</a></p>
                       )}
                     </div>
 
@@ -267,20 +267,20 @@ export default function DropshipOrdersAdminPage() {
                           disabled={saving === o._id}
                           onClick={() => purchaseLabel(o._id)}
                           className="w-full px-3 py-2 rounded-lg text-xs font-semibold disabled:opacity-60"
-                          style={{ border: '1px solid #c9a84c', color: '#c9a84c' }}
+                          style={{ border: '1px solid #1c4874', color: '#1c4874' }}
                         >
                           {saving === o._id ? 'Purchasing…' : 'Purchase Shipping Label'}
                         </button>
                       )}
                       <div>
-                        <label className="block text-[11px] font-semibold mb-1" style={{ color: '#1a1714' }}>Status</label>
+                        <label className="block text-[11px] font-semibold mb-1" style={{ color: '#222222' }}>Status</label>
                         <select
                           value={draft.status}
                           onChange={(e) =>
                             setDrafts((prev) => ({ ...prev, [o._id]: { ...draft, status: e.target.value as Status } }))
                           }
                           className="w-full rounded-lg px-3 py-2 text-xs"
-                          style={{ border: '1px solid #e5e2db' }}
+                          style={{ border: '1px solid #c6cbd6' }}
                         >
                           {STATUS_OPTIONS.map((s) => (
                             <option
@@ -294,32 +294,32 @@ export default function DropshipOrdersAdminPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold mb-1" style={{ color: '#1a1714' }}>Tracking Number</label>
+                        <label className="block text-[11px] font-semibold mb-1" style={{ color: '#222222' }}>Tracking Number</label>
                         <input
                           value={draft.trackingNumber}
                           onChange={(e) =>
                             setDrafts((prev) => ({ ...prev, [o._id]: { ...draft, trackingNumber: e.target.value } }))
                           }
                           className="w-full rounded-lg px-3 py-2 text-xs"
-                          style={{ border: '1px solid #e5e2db' }}
+                          style={{ border: '1px solid #c6cbd6' }}
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-semibold mb-1" style={{ color: '#1a1714' }}>Tracking URL</label>
+                        <label className="block text-[11px] font-semibold mb-1" style={{ color: '#222222' }}>Tracking URL</label>
                         <input
                           value={draft.trackingUrl}
                           onChange={(e) =>
                             setDrafts((prev) => ({ ...prev, [o._id]: { ...draft, trackingUrl: e.target.value } }))
                           }
                           className="w-full rounded-lg px-3 py-2 text-xs"
-                          style={{ border: '1px solid #e5e2db' }}
+                          style={{ border: '1px solid #c6cbd6' }}
                         />
                       </div>
                       <button
                         disabled={saving === o._id}
                         onClick={() => saveOrder(o._id)}
                         className="px-4 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                        style={{ background: '#1a1714' }}
+                        style={{ background: '#1c4874' }}
                       >
                         {saving === o._id ? 'Saving…' : 'Save Changes'}
                       </button>

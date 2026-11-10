@@ -12,8 +12,8 @@ import dynamic from 'next/dynamic';
 const RichTextEditor = dynamic(() => import('@/components/editor/RichTextEditor'), {
   ssr: false,
   loading: () => (
-    <div className="border border-[#ede9e1] rounded-xl bg-white min-h-[280px] flex items-center justify-center">
-      <Loader2 size={20} className="text-[#c9a84c] animate-spin" />
+    <div className="border border-[#c6cbd6] rounded-xl bg-white min-h-[280px] flex items-center justify-center">
+      <Loader2 size={20} className="text-[#1c4874] animate-spin" />
     </div>
   ),
 });
@@ -75,18 +75,18 @@ function StatCard({ label, value, sub, icon: Icon, accent }: {
   icon: React.ElementType; accent: string;
 }) {
   return (
-    <div className="bg-white border border-[#ede9e1] rounded-2xl p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all duration-300">
+    <div className="bg-white border border-[#c6cbd6] rounded-2xl p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all duration-300">
       <div className="absolute top-0 left-6 right-6 h-px" style={{ background: `linear-gradient(90deg,transparent,${accent}40,transparent)` }} />
       <div className="flex items-start justify-between mb-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${accent}15`, border: `1px solid ${accent}25` }}>
           <Icon size={15} strokeWidth={1.7} style={{ color: accent }} />
         </div>
       </div>
-      <div className="font-['Cormorant_Garamond',serif] text-[2rem] font-medium text-[#1a1714] leading-none mb-1 tabular-nums">
+      <div className=" text-[2rem] font-medium text-[#222222] leading-none mb-1 tabular-nums">
         {typeof value === 'number' ? value.toLocaleString() : value}
       </div>
-      <div className="text-[0.7rem] text-[#a09a90] tracking-wide uppercase font-medium">{label}</div>
-      {sub && <div className="mt-1 text-[0.65rem] text-[#c9a84c] font-medium truncate">{sub}</div>}
+      <div className="text-[0.7rem] text-[#7f7f7f] tracking-wide uppercase font-medium">{label}</div>
+      {sub && <div className="mt-1 text-[0.65rem] text-[#1c4874] font-medium truncate">{sub}</div>}
     </div>
   );
 }
@@ -95,7 +95,7 @@ function StatCard({ label, value, sub, icon: Icon, accent }: {
 
 function StatusBadge({ status }: { status: Campaign['status'] | Subscriber['status'] }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    draft:         { bg: '#f1f5f9', color: '#64748b', label: 'Draft' },
+    draft:         { bg: '#f5f7fb', color: '#7f7f7f', label: 'Draft' },
     sending:       { bg: '#fef3c7', color: '#92400e', label: 'Sending' },
     sent:          { bg: '#dcfce7', color: '#15803d', label: 'Sent' },
     active:        { bg: '#dcfce7', color: '#15803d', label: 'Active' },
@@ -175,36 +175,36 @@ function CampaignForm({
     <div className="space-y-5">
       {/* Title */}
       <div>
-        <label className="block text-[0.72rem] font-semibold text-[#a09a90] uppercase tracking-widest mb-1.5">Campaign Title</label>
+        <label className="block text-[0.72rem] font-semibold text-[#7f7f7f] uppercase tracking-widest mb-1.5">Campaign Title</label>
         <input
           value={form.title}
           onChange={e => update('title', e.target.value)}
           placeholder="Q3 Gemstone Launch"
           className="w-full px-3.5 py-2.5 text-[0.83rem] rounded-lg border outline-none transition-colors"
-          style={{ border: errors.title ? '1.5px solid #ef4444' : '1.5px solid #e4e4e7', background: '#fafaf9' }}
+          style={{ border: errors.title ? '1.5px solid #ef4444' : '1.5px solid #c6cbd6', background: '#f5f7fb' }}
         />
         {errors.title && <p className="mt-1 text-[0.67rem] text-red-500">{errors.title}</p>}
       </div>
 
       {/* Subject */}
       <div>
-        <label className="block text-[0.72rem] font-semibold text-[#a09a90] uppercase tracking-widest mb-1.5">Email Subject</label>
+        <label className="block text-[0.72rem] font-semibold text-[#7f7f7f] uppercase tracking-widest mb-1.5">Email Subject</label>
         <input
           value={form.subject}
           onChange={e => update('subject', e.target.value)}
           placeholder="Discover our latest gemstone arrivals"
           className="w-full px-3.5 py-2.5 text-[0.83rem] rounded-lg border outline-none transition-colors"
-          style={{ border: errors.subject ? '1.5px solid #ef4444' : '1.5px solid #e4e4e7', background: '#fafaf9' }}
+          style={{ border: errors.subject ? '1.5px solid #ef4444' : '1.5px solid #c6cbd6', background: '#f5f7fb' }}
         />
         {errors.subject && <p className="mt-1 text-[0.67rem] text-red-500">{errors.subject}</p>}
       </div>
 
       {/* Banner Image */}
       <div>
-        <label className="block text-[0.72rem] font-semibold text-[#a09a90] uppercase tracking-widest mb-1.5">Banner Image (optional)</label>
+        <label className="block text-[0.72rem] font-semibold text-[#7f7f7f] uppercase tracking-widest mb-1.5">Banner Image (optional)</label>
         <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0])} />
         {form.image ? (
-          <div className="relative rounded-xl overflow-hidden border border-[#ede9e1] group">
+          <div className="relative rounded-xl overflow-hidden border border-[#c6cbd6] group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={form.image} alt="banner" className="w-full max-h-48 object-cover" />
             <button
@@ -218,7 +218,7 @@ function CampaignForm({
           <button
             onClick={() => imageInputRef.current?.click()}
             disabled={uploading}
-            className="w-full py-8 rounded-xl border-2 border-dashed border-[#e4e4e7] flex flex-col items-center gap-2 text-[#a09a90] hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors"
+            className="w-full py-8 rounded-xl border-2 border-dashed border-[#c6cbd6] flex flex-col items-center gap-2 text-[#7f7f7f] hover:border-[#1c4874] hover:text-[#1c4874] transition-colors"
           >
             {uploading ? <Loader2 size={22} className="animate-spin" /> : <ImageIcon size={22} strokeWidth={1.5} />}
             <span className="text-[0.72rem] font-medium">{uploading ? 'Uploading…' : 'Click to upload banner image'}</span>
@@ -228,7 +228,7 @@ function CampaignForm({
 
       {/* Message */}
       <div>
-        <label className="block text-[0.72rem] font-semibold text-[#a09a90] uppercase tracking-widest mb-1.5">Message Content</label>
+        <label className="block text-[0.72rem] font-semibold text-[#7f7f7f] uppercase tracking-widest mb-1.5">Message Content</label>
         <RichTextEditor
           value={form.message}
           onChange={val => update('message', val)}
@@ -237,10 +237,10 @@ function CampaignForm({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#ede9e1]">
+      <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#c6cbd6]">
         <button
           onClick={onCancel}
-          className="px-5 py-2.5 rounded-lg text-[0.78rem] font-semibold text-[#64748b] border border-[#e4e4e7] hover:bg-[#f8f8f7] transition-colors"
+          className="px-5 py-2.5 rounded-lg text-[0.78rem] font-semibold text-[#7f7f7f] border border-[#c6cbd6] hover:bg-[#f5f7fb] transition-colors"
         >
           Cancel
         </button>
@@ -248,7 +248,7 @@ function CampaignForm({
           onClick={handleSave}
           disabled={saving}
           className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[0.78rem] font-semibold text-white transition-all hover:opacity-90"
-          style={{ background: '#0f172a' }}
+          style={{ background: '#1c4874' }}
         >
           {saving ? <Loader2 size={14} className="animate-spin" /> : null}
           Save as Draft
@@ -429,7 +429,7 @@ export default function AdminNewsletterPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={24} className="text-[#c9a84c] animate-spin" />
+        <Loader2 size={24} className="text-[#1c4874] animate-spin" />
       </div>
     );
   }
@@ -440,15 +440,15 @@ export default function AdminNewsletterPage() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-['Cormorant_Garamond',serif] text-[2rem] font-semibold text-[#1a1714] leading-none mb-1">
+          <h1 className=" text-[2rem] font-semibold text-[#222222] leading-none mb-1">
             Newsletter
           </h1>
-          <p className="text-[0.75rem] text-[#a09a90] tracking-widest uppercase">Campaigns &amp; Subscribers</p>
+          <p className="text-[0.75rem] text-[#7f7f7f] tracking-widest uppercase">Campaigns &amp; Subscribers</p>
         </div>
         <button
           onClick={() => { setShowForm(true); setEditingCampaign(null); }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[0.78rem] font-semibold text-white transition-all hover:opacity-90 active:scale-95"
-          style={{ background: '#0f172a' }}
+          style={{ background: '#1c4874' }}
         >
           <Plus size={15} strokeWidth={2} />
           New Campaign
@@ -457,7 +457,7 @@ export default function AdminNewsletterPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Subscribers" value={loadingStats ? '—' : stats?.totalSubscribers ?? 0} icon={Users} accent="#c9a84c" />
+        <StatCard label="Total Subscribers" value={loadingStats ? '—' : stats?.totalSubscribers ?? 0} icon={Users} accent="#1c4874" />
         <StatCard label="Active Subscribers" value={loadingStats ? '—' : stats?.activeSubscribers ?? 0} icon={CheckCircle2} accent="#16a34a" />
         <StatCard label="Total Campaigns" value={loadingStats ? '—' : stats?.totalCampaigns ?? 0} icon={Mail} accent="#6366f1" />
         <StatCard
@@ -473,11 +473,11 @@ export default function AdminNewsletterPage() {
       {(showForm || editingCampaign) && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditingCampaign(null); } }}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#ede9e1]">
-              <h2 className="font-['Cormorant_Garamond',serif] text-[1.3rem] font-semibold text-[#1a1714]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#c6cbd6]">
+              <h2 className=" text-[1.3rem] font-semibold text-[#222222]">
                 {editingCampaign ? 'Edit Campaign' : 'New Campaign'}
               </h2>
-              <button onClick={() => { setShowForm(false); setEditingCampaign(null); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#a09a90] hover:bg-[#f4f1ec] transition-colors">
+              <button onClick={() => { setShowForm(false); setEditingCampaign(null); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7f7f7f] hover:bg-[#eef0f5] transition-colors">
                 <X size={16} />
               </button>
             </div>
@@ -502,40 +502,40 @@ export default function AdminNewsletterPage() {
       {previewCampaign && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={e => { if (e.target === e.currentTarget) setPreviewCampaign(null); }}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#ede9e1]">
-              <h2 className="font-['Cormorant_Garamond',serif] text-[1.3rem] font-semibold text-[#1a1714]">Campaign Preview</h2>
-              <button onClick={() => setPreviewCampaign(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#a09a90] hover:bg-[#f4f1ec] transition-colors">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#c6cbd6]">
+              <h2 className=" text-[1.3rem] font-semibold text-[#222222]">Campaign Preview</h2>
+              <button onClick={() => setPreviewCampaign(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7f7f7f] hover:bg-[#eef0f5] transition-colors">
                 <X size={16} />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <p className="text-[0.67rem] text-[#a09a90] uppercase tracking-widest mb-0.5">Subject</p>
-                <p className="text-[0.88rem] font-semibold text-[#1a1714]">{previewCampaign.subject}</p>
+                <p className="text-[0.67rem] text-[#7f7f7f] uppercase tracking-widest mb-0.5">Subject</p>
+                <p className="text-[0.88rem] font-semibold text-[#222222]">{previewCampaign.subject}</p>
               </div>
               {previewCampaign.image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={previewCampaign.image} alt="banner" className="w-full rounded-xl object-cover max-h-56" />
               )}
               <div>
-                <p className="text-[0.67rem] text-[#a09a90] uppercase tracking-widest mb-2">Message</p>
+                <p className="text-[0.67rem] text-[#7f7f7f] uppercase tracking-widest mb-2">Message</p>
                 <div
-                  className="prose prose-sm max-w-none text-[#374151] text-[0.85rem]"
+                  className="prose prose-sm max-w-none text-[#555555] text-[0.85rem]"
                   dangerouslySetInnerHTML={{ __html: previewCampaign.message }}
                 />
               </div>
-              <div className="flex items-center gap-3 pt-4 border-t border-[#ede9e1]">
+              <div className="flex items-center gap-3 pt-4 border-t border-[#c6cbd6]">
                 {previewCampaign.status === 'draft' && (
                   <button
                     onClick={() => { setPreviewCampaign(null); handleSendCampaign(previewCampaign._id); }}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[0.78rem] font-semibold text-white transition-all hover:opacity-90"
-                    style={{ background: '#0f172a' }}
+                    style={{ background: '#1c4874' }}
                   >
                     <Send size={14} />
                     Send Now
                   </button>
                 )}
-                <button onClick={() => setPreviewCampaign(null)} className="px-4 py-2.5 rounded-xl text-[0.78rem] font-semibold text-[#64748b] border border-[#e4e4e7] hover:bg-[#f8f8f7] transition-colors">
+                <button onClick={() => setPreviewCampaign(null)} className="px-4 py-2.5 rounded-xl text-[0.78rem] font-semibold text-[#7f7f7f] border border-[#c6cbd6] hover:bg-[#f5f7fb] transition-colors">
                   Close
                 </button>
               </div>
@@ -545,12 +545,12 @@ export default function AdminNewsletterPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-[#f4f1ec] p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-[#eef0f5] p-1 rounded-xl w-fit">
         {(['campaigns', 'subscribers'] as Tab[]).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 rounded-lg text-[0.75rem] font-semibold capitalize tracking-wide transition-all ${activeTab === tab ? 'bg-white text-[#1a1714] shadow-sm' : 'text-[#a09a90] hover:text-[#1a1714]'}`}
+            className={`px-5 py-2 rounded-lg text-[0.75rem] font-semibold capitalize tracking-wide transition-all ${activeTab === tab ? 'bg-white text-[#222222] shadow-sm' : 'text-[#7f7f7f] hover:text-[#222222]'}`}
           >
             {tab}
           </button>
@@ -559,33 +559,33 @@ export default function AdminNewsletterPage() {
 
       {/* ── Campaigns Tab ── */}
       {activeTab === 'campaigns' && (
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#ede9e1] flex items-center justify-between">
-            <h2 className="font-semibold text-[0.88rem] text-[#1a1714]">Campaign History</h2>
-            <span className="text-[0.72rem] text-[#a09a90]">{campPagination?.total ?? 0} campaigns</span>
+        <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#c6cbd6] flex items-center justify-between">
+            <h2 className="font-semibold text-[0.88rem] text-[#222222]">Campaign History</h2>
+            <span className="text-[0.72rem] text-[#7f7f7f]">{campPagination?.total ?? 0} campaigns</span>
           </div>
 
           {campLoading ? (
-            <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#c9a84c] animate-spin" /></div>
+            <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#1c4874] animate-spin" /></div>
           ) : campaigns.length === 0 ? (
-            <div className="py-20 flex flex-col items-center gap-3 text-[#a09a90]">
+            <div className="py-20 flex flex-col items-center gap-3 text-[#7f7f7f]">
               <Mail size={32} strokeWidth={1.2} />
               <p className="text-[0.8rem]">No campaigns yet. Create your first one.</p>
             </div>
           ) : (
-            <div className="divide-y divide-[#f4f1ec]">
+            <div className="divide-y divide-[#e3e6ee]">
               {campaigns.map(camp => (
-                <div key={camp._id} className="px-6 py-4 flex items-center gap-4 hover:bg-[#faf8f4] transition-colors">
+                <div key={camp._id} className="px-6 py-4 flex items-center gap-4 hover:bg-[#f5f7fb] transition-colors">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-semibold text-[0.85rem] text-[#1a1714] truncate">{camp.title}</span>
+                      <span className="font-semibold text-[0.85rem] text-[#222222] truncate">{camp.title}</span>
                       <StatusBadge status={camp.status} />
                     </div>
-                    <p className="text-[0.72rem] text-[#a09a90] truncate">{camp.subject}</p>
+                    <p className="text-[0.72rem] text-[#7f7f7f] truncate">{camp.subject}</p>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[0.67rem] text-[#c9c4bb]">{formatDate(camp.createdAt)}</span>
+                      <span className="text-[0.67rem] text-[#999999]">{formatDate(camp.createdAt)}</span>
                       {camp.status === 'sent' && (
-                        <span className="text-[0.67rem] text-[#c9c4bb]">{camp.totalRecipients.toLocaleString()} recipients</span>
+                        <span className="text-[0.67rem] text-[#999999]">{camp.totalRecipients.toLocaleString()} recipients</span>
                       )}
                     </div>
                   </div>
@@ -594,7 +594,7 @@ export default function AdminNewsletterPage() {
                     <button
                       onClick={() => setPreviewCampaign(camp)}
                       title="Preview"
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#a09a90] hover:bg-[#f4f1ec] transition-colors"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7f7f7f] hover:bg-[#eef0f5] transition-colors"
                     >
                       <Eye size={15} />
                     </button>
@@ -604,7 +604,7 @@ export default function AdminNewsletterPage() {
                         <button
                           onClick={() => { setEditingCampaign(camp); setShowForm(false); }}
                           title="Edit"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#a09a90] hover:bg-[#f4f1ec] transition-colors"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7f7f7f] hover:bg-[#eef0f5] transition-colors"
                         >
                           <Edit2 size={15} />
                         </button>
@@ -640,13 +640,13 @@ export default function AdminNewsletterPage() {
           )}
 
           {campPagination && campPagination.totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-[#ede9e1] flex items-center justify-between">
-              <span className="text-[0.72rem] text-[#a09a90]">Page {campPage} of {campPagination.totalPages}</span>
+            <div className="px-6 py-4 border-t border-[#c6cbd6] flex items-center justify-between">
+              <span className="text-[0.72rem] text-[#7f7f7f]">Page {campPage} of {campPagination.totalPages}</span>
               <div className="flex gap-1.5">
-                <button disabled={campPage <= 1} onClick={() => setCampPage(p => p - 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#e4e4e7] text-[#64748b] disabled:opacity-40 hover:bg-[#f4f1ec] transition-colors">
+                <button disabled={campPage <= 1} onClick={() => setCampPage(p => p - 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#c6cbd6] text-[#7f7f7f] disabled:opacity-40 hover:bg-[#eef0f5] transition-colors">
                   <ChevronLeft size={15} />
                 </button>
-                <button disabled={campPage >= campPagination.totalPages} onClick={() => setCampPage(p => p + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#e4e4e7] text-[#64748b] disabled:opacity-40 hover:bg-[#f4f1ec] transition-colors">
+                <button disabled={campPage >= campPagination.totalPages} onClick={() => setCampPage(p => p + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#c6cbd6] text-[#7f7f7f] disabled:opacity-40 hover:bg-[#eef0f5] transition-colors">
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -657,20 +657,20 @@ export default function AdminNewsletterPage() {
 
       {/* ── Subscribers Tab ── */}
       {activeTab === 'subscribers' && (
-        <div className="bg-white border border-[#ede9e1] rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#ede9e1] flex flex-col sm:flex-row sm:items-center gap-3">
-            <h2 className="font-semibold text-[0.88rem] text-[#1a1714] shrink-0">Subscribers</h2>
+        <div className="bg-white border border-[#c6cbd6] rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#c6cbd6] flex flex-col sm:flex-row sm:items-center gap-3">
+            <h2 className="font-semibold text-[0.88rem] text-[#222222] shrink-0">Subscribers</h2>
 
             <div className="flex-1 flex items-center gap-2">
               {/* Search */}
               <div className="relative flex-1 max-w-64">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a09a90]" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7f7f7f]" />
                 <input
                   type="text"
                   placeholder="Search email…"
                   value={subSearch}
                   onChange={e => { setSubSearch(e.target.value); setSubPage(1); }}
-                  className="w-full pl-8 pr-3 py-2 text-[0.78rem] rounded-lg border border-[#e4e4e7] bg-[#fafaf9] outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full pl-8 pr-3 py-2 text-[0.78rem] rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] outline-none focus:border-[#1c4874] transition-colors"
                 />
               </div>
 
@@ -678,7 +678,7 @@ export default function AdminNewsletterPage() {
               <select
                 value={subStatus}
                 onChange={e => { setSubStatus(e.target.value as typeof subStatus); setSubPage(1); }}
-                className="px-3 py-2 text-[0.78rem] rounded-lg border border-[#e4e4e7] bg-[#fafaf9] text-[#374151] outline-none cursor-pointer"
+                className="px-3 py-2 text-[0.78rem] rounded-lg border border-[#c6cbd6] bg-[#f5f7fb] text-[#555555] outline-none cursor-pointer"
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -689,7 +689,7 @@ export default function AdminNewsletterPage() {
             <button
               onClick={handleExportCsv}
               disabled={exportingCsv}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.75rem] font-semibold text-[#374151] border border-[#e4e4e7] hover:bg-[#f4f1ec] transition-colors shrink-0"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.75rem] font-semibold text-[#555555] border border-[#c6cbd6] hover:bg-[#eef0f5] transition-colors shrink-0"
             >
               {exportingCsv ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
               Export CSV
@@ -697,9 +697,9 @@ export default function AdminNewsletterPage() {
           </div>
 
           {subLoading ? (
-            <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#c9a84c] animate-spin" /></div>
+            <div className="flex justify-center py-16"><Loader2 size={22} className="text-[#1c4874] animate-spin" /></div>
           ) : subscribers.length === 0 ? (
-            <div className="py-20 flex flex-col items-center gap-3 text-[#a09a90]">
+            <div className="py-20 flex flex-col items-center gap-3 text-[#7f7f7f]">
               <Users size={32} strokeWidth={1.2} />
               <p className="text-[0.8rem]">No subscribers found.</p>
             </div>
@@ -707,18 +707,18 @@ export default function AdminNewsletterPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[#f4f1ec]">
-                    <th className="px-6 py-3 text-left text-[0.67rem] font-bold text-[#a09a90] uppercase tracking-widest">Email</th>
-                    <th className="px-6 py-3 text-left text-[0.67rem] font-bold text-[#a09a90] uppercase tracking-widest">Status</th>
-                    <th className="px-6 py-3 text-left text-[0.67rem] font-bold text-[#a09a90] uppercase tracking-widest">Subscribed</th>
+                  <tr className="border-b border-[#e3e6ee]">
+                    <th className="px-6 py-3 text-left text-[0.67rem] font-bold text-[#7f7f7f] uppercase tracking-widest">Email</th>
+                    <th className="px-6 py-3 text-left text-[0.67rem] font-bold text-[#7f7f7f] uppercase tracking-widest">Status</th>
+                    <th className="px-6 py-3 text-left text-[0.67rem] font-bold text-[#7f7f7f] uppercase tracking-widest">Subscribed</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#f4f1ec]">
+                <tbody className="divide-y divide-[#e3e6ee]">
                   {subscribers.map(sub => (
-                    <tr key={sub._id} className="hover:bg-[#faf8f4] transition-colors">
-                      <td className="px-6 py-3.5 text-[0.82rem] text-[#1a1714] font-medium">{sub.email}</td>
+                    <tr key={sub._id} className="hover:bg-[#f5f7fb] transition-colors">
+                      <td className="px-6 py-3.5 text-[0.82rem] text-[#222222] font-medium">{sub.email}</td>
                       <td className="px-6 py-3.5"><StatusBadge status={sub.status} /></td>
-                      <td className="px-6 py-3.5 text-[0.78rem] text-[#a09a90]">{formatDate(sub.subscribedAt)}</td>
+                      <td className="px-6 py-3.5 text-[0.78rem] text-[#7f7f7f]">{formatDate(sub.subscribedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -727,13 +727,13 @@ export default function AdminNewsletterPage() {
           )}
 
           {subPagination && subPagination.totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-[#ede9e1] flex items-center justify-between">
-              <span className="text-[0.72rem] text-[#a09a90]">Page {subPage} of {subPagination.totalPages}</span>
+            <div className="px-6 py-4 border-t border-[#c6cbd6] flex items-center justify-between">
+              <span className="text-[0.72rem] text-[#7f7f7f]">Page {subPage} of {subPagination.totalPages}</span>
               <div className="flex gap-1.5">
-                <button disabled={subPage <= 1} onClick={() => setSubPage(p => p - 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#e4e4e7] text-[#64748b] disabled:opacity-40 hover:bg-[#f4f1ec] transition-colors">
+                <button disabled={subPage <= 1} onClick={() => setSubPage(p => p - 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#c6cbd6] text-[#7f7f7f] disabled:opacity-40 hover:bg-[#eef0f5] transition-colors">
                   <ChevronLeft size={15} />
                 </button>
-                <button disabled={subPage >= subPagination.totalPages} onClick={() => setSubPage(p => p + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#e4e4e7] text-[#64748b] disabled:opacity-40 hover:bg-[#f4f1ec] transition-colors">
+                <button disabled={subPage >= subPagination.totalPages} onClick={() => setSubPage(p => p + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center border border-[#c6cbd6] text-[#7f7f7f] disabled:opacity-40 hover:bg-[#eef0f5] transition-colors">
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -743,7 +743,7 @@ export default function AdminNewsletterPage() {
       )}
 
       {/* Info banner */}
-      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#fef9ec] border border-[#fde68a]">
+      <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-[#eef2f8] border border-[#fde68a]">
         <AlertCircle size={15} strokeWidth={1.8} className="text-[#92400e] mt-0.5 shrink-0" />
         <p className="text-[0.72rem] text-[#78350f] leading-relaxed">
           Campaigns are sent in batches of 50 to respect Resend rate limits. Large lists may take a few minutes. The page will reflect the final status once sending completes.

@@ -33,11 +33,11 @@ const page = () => {
 
       {/* Shipping Partners */}
       <div>
-        <h2 className="text-2xl font-semibold text-[#1a1714] mb-4">
+        <h2 className="fp-h2">
           Shipping Partners
         </h2>
 
-        <ul className="list-disc pl-6 space-y-2">
+        <ul className="fp-list">
           <li>FedEx</li>
           <li>UPS</li>
           <li>USPS</li>
@@ -46,11 +46,11 @@ const page = () => {
 
       {/* Important Notes */}
       <div>
-        <h2 className="text-2xl font-semibold text-[#1a1714] mb-4">
+        <h2 className="fp-h2">
           Important Notes
         </h2>
 
-        <ul className="list-disc pl-6 space-y-3">
+        <ul className="fp-list">
           <li>Orders ship after payment verification.</li>
 
           <li>

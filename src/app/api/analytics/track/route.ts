@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import connectDB from "@/lib/db";
 import AnalyticsEvent from "@/models/AnalyticsEvent";
 import AnalyticsSession from "@/models/AnalyticsSession";
@@ -39,6 +40,9 @@ userId?: string;
 }
 
 export async function POST(request: NextRequest) {
+  const ipLimit = await rateLimit(request, { id: 'analytics-track-ip', limit: 120, windowSec: 60 });
+  if (!ipLimit.success) return rateLimitResponse(ipLimit);
+
   try {
     const body: AnalyticsPayload = await request.json();
 

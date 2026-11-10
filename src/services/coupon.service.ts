@@ -1,8 +1,8 @@
 import Coupon, { ICoupon } from '@/models/Coupon';
 import { Resend } from 'resend';
+import { resend } from '@/lib/resend';
 import { couponEmailHtml } from '@/lib/email-templates';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 const DISCOUNT_PERCENT = 10;   // 10% off subtotal

@@ -20,9 +20,9 @@ type ReviewRow = {
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span style={{ color: "#c8a24a", fontSize: 13, letterSpacing: 1 }}>
+    <span style={{ color: "#cc6633", fontSize: 13, letterSpacing: 1 }}>
       {"★".repeat(rating)}
-      <span style={{ color: "#e2ddd0" }}>{"★".repeat(5 - rating)}</span>
+      <span style={{ color: "#999999" }}>{"★".repeat(5 - rating)}</span>
     </span>
   );
 }
@@ -138,7 +138,7 @@ export default function AdminReviewsPage() {
     <div className="p-8 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a1a1a]">Product Reviews</h1>
+          <h1 className="text-2xl font-bold text-[#222222]">Product Reviews</h1>
           <p className="text-sm text-gray-500 mt-1">{total} total review{total === 1 ? "" : "s"}</p>
         </div>
         <div className="flex gap-2">
@@ -147,7 +147,7 @@ export default function AdminReviewsPage() {
               key={f}
               onClick={() => { setFilter(f); setPage(1); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-md border ${
-                filter === f ? "bg-[#0f0e0c] text-white border-[#0f0e0c]" : "bg-white text-gray-600 border-gray-200"
+                filter === f ? "bg-[#1c4874] text-white border-[#1c4874]" : "bg-white text-gray-600 border-gray-200"
               }`}
             >
               {f === "" ? "All" : f === "no" ? "Needs Reply" : "Replied"}
@@ -205,8 +205,8 @@ export default function AdminReviewsPage() {
               )}
 
               {r.adminReply ? (
-                <div className="mt-3 border-l-2 border-[#c8a24a] bg-[#faf7f0] rounded-r-md px-3 py-2">
-                  <div className="text-[10px] font-bold uppercase tracking-wide text-[#0f0e0c]">Your Reply</div>
+                <div className="mt-3 border-l-2 border-[#1c4874] bg-[#eef2f8] rounded-r-md px-3 py-2">
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-[#222222]">Your Reply</div>
                   <p className="text-xs text-gray-700 mt-1">{r.adminReply.text}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="text-[10px] text-gray-400">{fmt(r.adminReply.repliedAt)}</span>
@@ -227,7 +227,7 @@ export default function AdminReviewsPage() {
                   <button
                     onClick={() => postReply(r._id)}
                     disabled={busy === r._id || !(replyDrafts[r._id] || "").trim()}
-                    className="text-xs px-3 py-2 rounded-md bg-[#0f0e0c] text-white disabled:opacity-40"
+                    className="text-xs px-3 py-2 rounded-md bg-[#1c4874] text-white disabled:opacity-40"
                   >
                     Reply
                   </button>

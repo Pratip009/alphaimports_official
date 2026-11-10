@@ -17,7 +17,7 @@ import {
 } from "recharts";
 import type { AnalyticsData } from "./page";
 
-const DEVICE_COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626"];
+const DEVICE_COLORS = ["#1c4874", "#2d7a52", "#a6aec5", "#990000"];
 
 export function VisitorsChart({
   dailyVisitors,
@@ -36,7 +36,7 @@ export function VisitorsChart({
           type="monotone"
           dataKey="visitors"
           name="Visitors"
-          stroke="#2563eb"
+          stroke="#1c4874"
           strokeWidth={3}
           dot={false}
         />
@@ -44,7 +44,7 @@ export function VisitorsChart({
           type="monotone"
           dataKey="pageViews"
           name="Page Views"
-          stroke="#16a34a"
+          stroke="#2d7a52"
           strokeWidth={3}
           dot={false}
         />
@@ -96,7 +96,7 @@ export function EventsChart({
         <XAxis type="number" />
         <YAxis type="category" dataKey="event" width={120} />
         <Tooltip />
-        <Bar dataKey="count" name="Events" fill="#2563eb" radius={[0, 6, 6, 0]} />
+        <Bar dataKey="count" name="Events" fill="#1c4874" radius={[0, 2, 2, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

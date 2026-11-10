@@ -37,16 +37,16 @@ export default function DropshipPipelineBar() {
   return (
     <div
       className="mb-6 rounded-2xl px-5 py-4 flex items-center gap-1 flex-wrap"
-      style={{ border: '1px solid #ede9e1', background: '#fff' }}
+      style={{ border: '1px solid #c6cbd6', background: '#fff' }}
     >
       {stages.map((s, i) => (
         <div key={s.label} className="flex items-center gap-1">
           <div className="flex flex-col items-center px-3 py-1 min-w-[92px]">
-            <span className="text-lg font-bold" style={{ color: '#1a1714' }}>{s.value}</span>
-            <span className="text-[10px] text-center leading-tight" style={{ color: '#9c9690' }}>{s.label}</span>
+            <span className="text-lg font-bold" style={{ color: '#222222' }}>{s.value}</span>
+            <span className="text-[10px] text-center leading-tight" style={{ color: '#7f7f7f' }}>{s.label}</span>
           </div>
           {i < stages.length - 1 && (
-            <ArrowRight size={14} style={{ color: '#d8d3c9' }} className="flex-shrink-0" />
+            <ArrowRight size={14} style={{ color: '#999999' }} className="flex-shrink-0" />
           )}
         </div>
       ))}

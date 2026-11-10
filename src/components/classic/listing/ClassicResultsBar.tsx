@@ -13,6 +13,7 @@ export default function ClassicResultsBar({
   limit,
   searchParams,
   basePath = "/products",
+  alwaysShowPages = false,
 }: {
   page: number;
   totalPages: number;
@@ -20,6 +21,8 @@ export default function ClassicResultsBar({
   limit: number;
   searchParams: Record<string, string>;
   basePath?: string;
+  /** Show "Result Pages: 1" even when there's only one page (search results). */
+  alwaysShowPages?: boolean;
 }) {
   const from = total === 0 ? 0 : (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
@@ -43,7 +46,7 @@ export default function ClassicResultsBar({
       <div className="crb-count">
         Displaying <b>{from}</b> to <b>{to}</b> (of <b>{total.toLocaleString()}</b> products)
       </div>
-      {totalPages > 1 && (
+      {(totalPages > 1 || (alwaysShowPages && totalPages === 1)) && (
         <nav className="crb-pages" aria-label="Result pages">
           Result Pages:
           {page > 1 && (

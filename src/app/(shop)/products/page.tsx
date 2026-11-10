@@ -7,6 +7,7 @@ import ClassicSidebar from "@/components/classic/ClassicSidebar";
 import ClassicProductCard from "@/components/classic/listing/ClassicProductCard";
 import ClassicFilterPanel from "@/components/classic/listing/ClassicFilterPanel";
 import ClassicResultsBar from "@/components/classic/listing/ClassicResultsBar";
+import ClassicSearchResults from "@/components/classic/listing/ClassicSearchResults";
 import ShareButton from "@/components/classic/listing/ShareButton";
 import { ProductCardStyles } from "@/components/products/ProductCard";
 import { getNavCategories } from "@/lib/getNavCategories";
@@ -223,25 +224,28 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   };
 
   const categorySelection = parseCategoryFilterSelectionFromObject(sp);
+  const query = (sp.q ?? sp.search ?? "").trim();
 
   // Product list, page info and the "New Products" strip run in parallel.
   const [{ products, total, page, limit, categoryFilters }, info, newest] = await Promise.all([
     listProductsWithCategoryFilters(params, categorySelection),
     getListingInfo(sp.category, sp.subcategory),
-    listProducts({
-      category: sp.category,
-      subcategory: sp.subcategory,
-      subSubcategory: sp.subSubcategory,
-      sortBy: "newest",
-      page: 1,
-      limit: 3,
-    }).catch(() => ({ products: [] as Record<string, unknown>[] })),
+    // The "New Products" strip isn't shown on search results.
+    query
+      ? Promise.resolve({ products: [] as Record<string, unknown>[] })
+      : listProducts({
+          category: sp.category,
+          subcategory: sp.subcategory,
+          subSubcategory: sp.subSubcategory,
+          sortBy: "newest",
+          page: 1,
+          limit: 3,
+        }).catch(() => ({ products: [] as Record<string, unknown>[] })),
   ]);
 
   const totalPages = Math.ceil(total / limit);
   const productType = resolveProductType(sp, products[0] as Record<string, unknown> | undefined);
 
-  const query = sp.q ?? sp.search;
   const firstProduct = products[0] as Record<string, unknown> | undefined;
   const subSubName = (firstProduct?.subSubcategory as { name?: string } | undefined)?.name;
   const fallbackTitle =
@@ -254,6 +258,43 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
   const month = new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "America/New_York" }).format(new Date());
   const newProducts = (newest.products as Record<string, unknown>[]).map(serializeProduct);
+
+  // ── Search results: old-site "Products meeting the search criteria" table ──
+  if (query) {
+    return (
+      <>
+        <style>{CLASSIC_LISTING_CSS}</style>
+        <div className="cl">
+          <ClassicSidebar activeCategorySlug={sp.category} activeSubSlug={sp.subcategory} />
+
+          <main className="cl-main">
+            <h1 className="cs-head">Products meeting the search criteria</h1>
+            <p className="cs-crit">title: {query}</p>
+            <ActiveFilterChips searchParams={sp} />
+
+            <section className="cs-box" aria-label="Search results">
+              <ClassicResultsBar
+                page={page}
+                totalPages={Math.max(totalPages, products.length ? 1 : 0)}
+                total={total}
+                limit={limit}
+                searchParams={sp}
+                alwaysShowPages
+              />
+              {products.length === 0 ? (
+                <p className="cs-empty">There is no product that matches the search criteria.</p>
+              ) : (
+                <ClassicSearchResults products={products.map((p: Record<string, unknown>) => serializeProduct(p))} />
+              )}
+              {totalPages > 1 && (
+                <ClassicResultsBar page={page} totalPages={totalPages} total={total} limit={limit} searchParams={sp} />
+              )}
+            </section>
+          </main>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -539,6 +580,63 @@ const CLASSIC_LISTING_CSS = `
     background: linear-gradient(to bottom, #7d90c5 0, #bec9e4 2px, #a9b4d3 100%);
   }
   .cl-grid-new { border: 0; padding: 20px 4px 14px; }
+
+  /* Search results (old-site "Products meeting the search criteria") */
+  .cs-head { margin: 4px 0 0; color: #a6aec5; font: bold 19px Verdana, Geneva, sans-serif; }
+  .cs-crit { margin: 2px 0 0; color: #777; font: 16px Arial, Helvetica, sans-serif; overflow-wrap: anywhere; }
+  .cs-box { margin-top: 42px; border: 1px solid #c6c6c6; padding: 14px 8px 8px; }
+  .cs-box .crb { padding: 0 2px 14px; }
+  .cs-empty { border: 1px solid #a6aec5; padding: 30px 12px; text-align: center; color: #7f7f7f; }
+  .csr { width: 100%; border-collapse: collapse; border: 1px solid #a6aec5; table-layout: auto; }
+  .csr th {
+    background: linear-gradient(to bottom, #b7c0da 0, #ccd3e6 100%); color: #000;
+    font: bold 10px Verdana, Geneva, sans-serif; text-align: left;
+    padding: 3px 6px; border-left: 1px solid #fff; white-space: nowrap;
+  }
+  .csr th:first-child { border-left: 0; }
+  .csr td {
+    height: 106px; padding: 0 6px; vertical-align: middle; color: #7f7f7f; font-size: 10px;
+    border-left: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;
+  }
+  .csr td:first-child { border-left: 0; }
+  .csr tbody tr:last-child td { border-bottom: 0; }
+  .csr .csr-img-h, .csr .csr-img { width: 112px; text-align: center; }
+  .csr-img a { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; }
+  .csr-img img { width: 40px; height: 40px; object-fit: contain; }
+  .csr-model { width: 82px; white-space: nowrap; }
+  .csr-name a { color: #7f7f7f; }
+  .csr-name a:hover { color: #003366; text-decoration: underline !important; }
+  .csr .csr-num { text-align: right; white-space: nowrap; width: 52px; }
+  .csr-num s { color: #990000; margin-right: 5px; }
+  .csr .csr-buy-h { text-align: center; width: 82px; }
+  .csr-buy { text-align: center; }
+  .csr-buy button {
+    background: #ccd6e3; border: 1px solid #7f8aa8; color: #333; cursor: pointer;
+    font: 10px Verdana, Geneva, sans-serif; padding: 2px 12px; min-width: 75px;
+  }
+  .csr-buy button:hover:not(:disabled) { background: #b8c5d8; color: #000; }
+  .csr-buy button:focus-visible, .csr-name a:focus-visible { outline: 2px solid #003366; outline-offset: 1px; }
+  .csr-buy button:disabled { opacity: .6; cursor: default; }
+  .csr tr.is-out img { opacity: .55; }
+
+  @media (max-width: 760px) {
+    .cs-head { font-size: 17px; }
+    .cs-box { margin-top: 20px; padding: 10px 6px 6px; }
+    .csr thead { display: none; }
+    .csr, .csr tbody { display: block; }
+    .csr tr {
+      display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 2px;
+      padding: 10px 6px; border-bottom: 1px solid #e6e6e6; align-items: center;
+    }
+    .csr td { display: block; height: auto; padding: 0; border: 0; font-size: 12px; width: auto !important; }
+    .csr .csr-img { grid-row: 1 / span 3; }
+    .csr-img a, .csr-img img { width: 56px; height: 56px; }
+    .csr .csr-model { grid-column: 2; font-size: 11px; }
+    .csr .csr-name { grid-column: 2 / span 2; }
+    .csr .csr-num { grid-column: 2; text-align: left; color: #333; }
+    .csr .csr-buy { grid-column: 3; grid-row: 3; }
+    .csr-buy button { padding: 6px 14px; font-size: 12px; }
+  }
 
   @media (max-width: 900px) {
     .cl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -30,15 +30,6 @@ export default function JewelryModal({
   }, [delay, storageKey]);
 
   useEffect(() => {
-    if (!visible) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [visible]);
-
-  useEffect(() => {
     document.body.style.overflow = visible ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [visible]);
@@ -52,6 +43,15 @@ export default function JewelryModal({
       onDismiss?.();
     }, 300);
   }, [storageKey, onDismiss]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [visible, closeModal]);
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) closeModal();

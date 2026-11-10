@@ -1,9 +1,9 @@
 import { Resend } from 'resend';
+import { resend } from '@/lib/resend';
 import NewsletterSubscriber from '@/models/NewsletterSubscriber';
 import NewsletterCampaign, { INewsletterCampaign } from '@/models/NewsletterCampaign';
 import { newsletterEmailHtml } from '@/lib/email-templates';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphagemstone.com';
 const BATCH_SIZE = 50;

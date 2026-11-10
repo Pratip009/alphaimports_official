@@ -1,21 +1,11 @@
-import GemsPromise from "@/components/ui/GemsPromise";
-import HeroCarousel from "@/components/ui/Herocarousel";
 import ShopByCategory from "@/components/ui/Shopbycategory";
-import TrustBadges from "@/components/ui/TrustBadges";
-import Testimonials from "@/components/ui/Testimonials";
-import SpecialsMarquee from "@/components/ui/Specialsmarquee";
-import FeaturedInNews from "@/components/ui/FeaturedInNews";
-import JewelryModal from "@/components/ui/Jewelrymodal";
-import { connectDB } from "@/lib/db";
-import HeroSlide from "@/models/HeroSlide";
-import BestSellersMarquee from "@/components/ui/BestSellersMarquee";
-import WorldShipping from "@/components/ui/WorldShipping";
-import BirthstoneCarousel from "@/components/ui/BirthstoneCarousel";
-import AwardsAccolades from "@/components/ui/AwardsAccolades";
-import OurCollectionSection from "@/components/ui/OurCollectionSection";
-import MetalPriceTicker from "@/components/ui/MetalPriceTicker";
-import CertificationMarquee from "@/components/ui/CertificationMarquee";
-import CompleteSource from "@/components/home/CompleteSource";
+
+// Only "Shop by category" is live on the home page right now; the other
+// sections are commented out below. The hero-slide database query that fed
+// the (commented-out) carousel used to run on every regeneration anyway —
+// it's removed. To bring the carousel back, re-import HeroCarousel, HeroSlide
+// and connectDB, fetch active slides (HeroSlide.find({ isActive: true })
+// sorted by displayOrder) and pass them as initialSlides.
 
 // Statically generate this page (ISR): built once, served from cache, and
 // silently regenerated in the background at most once every 5 minutes.
@@ -24,24 +14,7 @@ import CompleteSource from "@/components/home/CompleteSource";
 // /admin/hero-slides still show up within ~5 min without a redeploy.
 export const revalidate = 300;
 
-// Pre-fetch hero slides at build/revalidation time so the carousel renders
-// immediately with data — no client-side loading skeleton on first paint.
-async function getHeroSlides() {
-  try {
-    await connectDB();
-    const slides = await HeroSlide.find({ isActive: true })
-      .sort({ displayOrder: 1, createdAt: 1 })
-      .lean();
-    // lean() returns POJO but _id / dates aren't serialisable — convert to plain JSON
-    return JSON.parse(JSON.stringify(slides));
-  } catch {
-    return [];
-  }
-}
-
-export default async function HomePage() {
-  const initialSlides = await getHeroSlides();
-
+export default function HomePage() {
   return (
     <main className="w-full">
       {/* <section className="overflow-hidden">

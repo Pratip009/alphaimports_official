@@ -6,7 +6,12 @@ export interface IOtp extends Document {
   purpose: 'signup' | 'reset_password';
   pendingName?: string;
   pendingPassword?: string;
+  /** TTL: when MongoDB deletes the record (retention, not code validity). */
   expiresAt: Date;
+  /** When the code itself stops working. Older records have none — use expiresAt. */
+  codeExpiresAt?: Date;
+  /** Replaced by a newer code. Kept (until expiresAt) so rate limits can count it. */
+  superseded?: boolean;
   verified: boolean;
   attempts: number;
   createdAt: Date;
@@ -39,6 +44,8 @@ const OtpSchema = new Schema<IOtp>(
       required: true,
       index: { expireAfterSeconds: 0 },
     },
+    codeExpiresAt: { type: Date },
+    superseded: { type: Boolean, default: false },
     verified: { type: Boolean, default: false },
     attempts: { type: Number, default: 0 },
   },
@@ -46,6 +53,7 @@ const OtpSchema = new Schema<IOtp>(
 );
 
 OtpSchema.index({ email: 1, purpose: 1 });
+OtpSchema.index({ email: 1, purpose: 1, createdAt: -1 });
 
 const Otp = (() => {
   if (mongoose.models && mongoose.models.Otp) {

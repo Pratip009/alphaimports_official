@@ -23,6 +23,9 @@ const CLASSIC_CSS = `
     align-items: start;
   }
   .cl-main { min-width: 0; padding-top: 4px; line-height: 1.7; }
+  /* global.css sets h1–h4 to the "Elms Sans" display face; classic content
+     pages use Verdana throughout, like the original site. */
+  .cl-main h1, .cl-main h2, .cl-main h3, .cl-main h4 { font-family: inherit; letter-spacing: normal; }
   .cl-main p { margin: 0 0 8px; }
   .cl-main strong { color: #333; }
   .cl-title { font-size: 15px; font-weight: bold; color: #4f72a8; margin: 2px 0 8px; line-height: 1.3; }

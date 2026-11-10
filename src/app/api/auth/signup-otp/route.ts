@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { z } from 'zod';
 import { connectDB } from '@/lib/db';
 import '@/lib/registerModels';
@@ -20,6 +21,9 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ipLimit = await rateLimit(req, { id: 'signup-otp-ip', limit: 5, windowSec: 900 });
+  if (!ipLimit.success) return rateLimitResponse(ipLimit);
+
   try {
     await connectDB();
     const body = await req.json();

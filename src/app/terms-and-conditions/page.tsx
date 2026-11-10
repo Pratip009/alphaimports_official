@@ -33,11 +33,11 @@ const page = () => {
 
       {/* Terms List */}
       <div>
-        <h2 className="text-2xl font-semibold text-[#1a1714] mb-4">
+        <h2 className="fp-h2">
           Terms of Use
         </h2>
 
-        <ul className="list-disc pl-6 space-y-3">
+        <ul className="fp-list">
           <li>
             Product images may appear larger for display purposes.
           </li>
@@ -72,12 +72,12 @@ const page = () => {
       </div>
 
       {/* Additional Notice */}
-      <div className="rounded-2xl border border-[#e8e2d9] bg-[#fffdf9] p-6">
-        <h3 className="text-xl font-semibold text-[#1a1714] mb-3">
+      <div className="fp-box">
+        <h3 className="fp-h3">
           Legal Notice
         </h3>
 
-        <p className="leading-8 text-[#4d463f]">
+        <p>
           Alpha Gemstone NY Inc. reserves the right to update or modify
           these terms at any time without prior notice. Continued use
           of the website constitutes acceptance of any revised terms.

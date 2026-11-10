@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { connectDB } from '@/lib/db';
 import { subscribeEmail } from '@/services/newsletter.service';
 import { successResponse, errorResponse } from '@/lib/api-response';
@@ -9,6 +10,9 @@ const subscribeSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ipLimit = await rateLimit(req, { id: 'newsletter-ip', limit: 5, windowSec: 600 });
+  if (!ipLimit.success) return rateLimitResponse(ipLimit);
+
   try {
     await connectDB();
     const body = await req.json();

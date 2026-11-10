@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { resend } from '@/lib/resend';
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db';
 import DropshipApplication, {
@@ -29,7 +30,6 @@ import {
   adminNewDropshipOrderEmailHtml,
 } from '@/lib/email-templates';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@alphagemstone.com';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphagemstone.com';
 const ADMIN_NOTIFICATION_EMAILS = (process.env.ADMIN_NOTIFICATION_EMAILS || '')
