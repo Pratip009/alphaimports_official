@@ -5,6 +5,8 @@ import { useAuth } from './useAuth';
 
 export const cartEvents = {
   refresh: () => window.dispatchEvent(new Event('cart:refresh')),
+  // Ask the Navbar to slide the cart sidebar open (e.g. from Quick View).
+  open: () => window.dispatchEvent(new Event('cart:open')),
 };
 
 export function useCart() {
@@ -16,19 +18,16 @@ export function useCart() {
   const fetchRef = useRef<() => Promise<void>>();
 
   fetchRef.current = async () => {
-  if (!user) { setCartCount(0); return; }
-  try {
-    const data = await apiFetch('/api/cart');
-   
-    const items = data?.data?.cart?.items ?? [];
-    const count = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
-   
-    setCartCount(count);
-  } catch (err) {
-    
-    setCartCount(0);
-  }
-};
+    if (!user) { setCartCount(0); return; }
+    try {
+      const data = await apiFetch('/api/cart');
+      const items = data?.data?.cart?.items ?? [];
+      const count = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+      setCartCount(count);
+    } catch (err) {
+      setCartCount(0);
+    }
+  };
 
   // Fetch once auth is done loading
   useEffect(() => {

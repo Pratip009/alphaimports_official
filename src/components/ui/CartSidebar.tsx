@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { useApi } from "@/hooks/useApi";
+import { optimizedImageUrl } from "@/lib/image-url";
 import { cartEvents } from "@/hooks/useCart";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -40,10 +41,11 @@ export default function CartSidebar({
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   // Keep the panel/backdrop mounted for the duration of the close
-  // animation instead of yanking them out of the DOM instantly — this is
-  // what makes the close feel as polished as the open.
+  // animation instead of yanking them out of the DOM instantly.
   const [mounted, setMounted] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const PANEL_TRANSITION_MS = 380;
@@ -79,10 +81,9 @@ export default function CartSidebar({
       })
       .catch(() => setCart(null))
       .finally(() => setLoading(false));
-  }, [open, apiFetch]); // apiFetch is memoized, so this still re-runs only when `open` changes
+  }, [open, apiFetch]);
 
-  // Lock body scroll while the panel is visible (mounted covers the
-  // closing-animation window too, so scroll doesn't jump back early).
+  // Lock body scroll while the panel is visible
   useEffect(() => {
     document.body.style.overflow = mounted ? "hidden" : "";
     return () => {
@@ -90,14 +91,39 @@ export default function CartSidebar({
     };
   }, [mounted]);
 
-  // Close on Escape
+  // Close on Escape, keep Tab focus inside the panel, and hand focus back
+  // to whatever opened the cart once it closes.
   useEffect(() => {
     if (!open) return;
+    const prevFocus = document.activeElement as HTMLElement | null;
+    const focusTimer = setTimeout(() => closeBtnRef.current?.focus(), 60);
     const handle = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab" && panelRef.current) {
+        const els = panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled])',
+        );
+        if (!els.length) return;
+        const firstEl = els[0];
+        const lastEl = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        } else if (!e.shiftKey && document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
     };
     window.addEventListener("keydown", handle);
-    return () => window.removeEventListener("keydown", handle);
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener("keydown", handle);
+      prevFocus?.focus?.();
+    };
   }, [open, onClose]);
 
   const updateQty = async (
@@ -126,15 +152,14 @@ export default function CartSidebar({
         method: "PUT",
         body: JSON.stringify({ productId, quantity: newQty }),
       });
-      
+
       // Try all possible response shapes
       const cartData = d.data?.cart ?? d.data ?? d;
       const totals = d.data?.totals ?? d.totals ?? null;
       if (cartData?.items) {
         setCart({ items: cartData.items.filter((item: CartItem) => !!item.product), totals });
       }
-      // Keep the navbar badge (useCart) in sync — it only recomputes on
-      // this event, not on every cart mutation.
+      // Keep the navbar badge (useCart) in sync
       cartEvents.refresh();
     } catch {
       // Revert by re-fetching
@@ -149,695 +174,584 @@ export default function CartSidebar({
     }
   };
 
- const removeItem = async (itemId: string, productId: string) => {
-  // Optimistic update instantly
-  setCart((prev) => {
-    if (!prev) return prev;
-    return {
-      ...prev,
-      items: prev.items.filter((item) => item._id !== itemId),
-    };
-  });
+  const removeItem = async (itemId: string, productId: string) => {
+    // Optimistic update instantly
+    setCart((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        items: prev.items.filter((item) => item._id !== itemId),
+      };
+    });
 
-  setUpdatingId(itemId);
-  try {
-    const d = await apiFetch(`/api/cart?productId=${productId}`, { method: 'DELETE' });
-    const cartData = d.data?.cart ?? d.data ?? d;
-    const totals = d.data?.totals ?? d.totals ?? null;
-    if (cartData?.items) {
-      setCart({ items: cartData.items.filter((item: CartItem) => !!item.product), totals });
+    setUpdatingId(itemId);
+    try {
+      const d = await apiFetch(`/api/cart?productId=${productId}`, { method: "DELETE" });
+      const cartData = d.data?.cart ?? d.data ?? d;
+      const totals = d.data?.totals ?? d.totals ?? null;
+      if (cartData?.items) {
+        setCart({ items: cartData.items.filter((item: CartItem) => !!item.product), totals });
+      }
+    } catch (err) {
+      console.error("Failed to remove cart item:", err);
+      apiFetch("/api/cart").then((d) =>
+        setCart({
+          items: (d.data.cart.items || []).filter((item: CartItem) => !!item.product),
+          totals: d.data.totals,
+        }),
+      );
+    } finally {
+      // Always fire this so the navbar badge never shows a stale count.
+      cartEvents.refresh();
+      setUpdatingId(null);
     }
-  } catch (err) {
-    console.error('Failed to remove cart item:', err);
-    apiFetch('/api/cart').then((d) =>
-      setCart({
-        items: (d.data.cart.items || []).filter((item: CartItem) => !!item.product),
-        totals: d.data.totals,
-      })
-    );
-  } finally {
-    // Always fire this — even if the block above threw — so the navbar
-    // badge (useCart) never gets left showing a stale count.
-    cartEvents.refresh();
+  };
 
-    setUpdatingId(null);
-  }
-};
+  const items = (cart?.items ?? []).filter((item) => !!item.product);
+  const pieceCount = items.reduce((n, item) => n + item.quantity, 0);
+  // While an optimistic update is in flight the server totals lag behind
+  // the edited quantities, so derive the figure from the lines themselves.
+  const computedSubtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+  const subtotal =
+    updatingId || cart?.totals?.subtotal == null
+      ? computedSubtotal
+      : cart.totals.subtotal;
 
-  const items = cart?.items ?? [];
-  const subtotal = cart?.totals?.subtotal ?? 0;
+  const money = (n: number) =>
+    n.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    });
 
   return (
     <>
-      <style>{`
-        @keyframes spinLoader {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes shimmerCart {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        @keyframes cartItemIn {
-          from { opacity: 0; transform: translateX(14px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        .cart-item-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 14px;
-          padding: 16px 0;
-          border-bottom: 1px solid #f0eeff;
-          transition: background 0.15s;
-          animation: cartItemIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-        }
-        .cart-item-row:last-child { border-bottom: none; }
-        .qty-btn {
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1.5px solid #e0ddf5;
-          border-radius: 8px;
-          background: #faf9ff;
-          cursor: pointer;
-          font-size: 15px;
-          font-weight: 600;
-          color: #0f3460;
-          font-family: "Elms Sans", sans-serif;
-          transition: background 0.12s, border-color 0.12s, transform 0.1s;
-          flex-shrink: 0;
-        }
-        .qty-btn:hover:not(:disabled) {
-          background: #ede9fe;
-          border-color: #a5b4fc;
-          transform: scale(1.08);
-        }
-        .qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .remove-btn {
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #c4b5fd;
-          padding: 4px;
-          border-radius: 6px;
-          transition: color 0.15s, background 0.15s;
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-        }
-        .remove-btn:hover { color: #dc2626; background: #fff5f5; }
-        .checkout-btn {
-          display: block;
-          width: 100%;
-          text-align: center;
-          padding: 15px 24px;
-          background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 60%, #7c3aed 100%);
-          color: #fff;
-          font-family: "Elms Sans", sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          border-radius: 12px;
-          text-decoration: none;
-          border: none;
-          cursor: pointer;
-          box-shadow: 0 4px 20px rgba(79,70,229,0.35);
-          transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
-        }
-        .checkout-btn:hover {
-          opacity: 0.93;
-          transform: translateY(-1px);
-          box-shadow: 0 8px 28px rgba(79,70,229,0.45);
-        }
-        .view-cart-link {
-          display: block;
-          text-align: center;
-          padding: 11px 24px;
-          border: 1.5px solid #e0ddf5;
-          color: #0f3460;
-          font-family: "Elms Sans", sans-serif;
-          font-size: 13.5px;
-          font-weight: 500;
-          border-radius: 12px;
-          text-decoration: none;
-          transition: background 0.15s, border-color 0.15s;
-          margin-top: 10px;
-        }
-        .view-cart-link:hover { background: #f5f3ff; border-color: #a5b4fc; }
-        .cart-img {
-          width: 72px;
-          height: 72px;
-          border-radius: 10px;
-          object-fit: cover;
-          background: #f5f3ff;
-          flex-shrink: 0;
-          border: 1px solid #ede9fe;
-        }
-        .cart-img-placeholder {
-          width: 72px;
-          height: 72px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, #f5f3ff, #ede9fe);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          border: 1px solid #ede9fe;
-        }
-        .shimmer-line {
-          border-radius: 6px;
-          background: linear-gradient(90deg, #f0eefc 25%, #e4e0f8 50%, #f0eefc 75%);
-          background-size: 200% 100%;
-          animation: shimmerCart 1.4s ease infinite;
-        }
-      `}</style>
+      <style>{CART_CSS}</style>
 
-      {/* Backdrop — stays mounted through the close animation and fades
-          smoothly rather than vanishing the instant `open` flips false. */}
+      {/* Backdrop — stays mounted through the close animation. */}
       {mounted && (
         <div
           ref={overlayRef}
-          className="fixed inset-0 z-[998]"
+          className="cs-backdrop"
           style={{
-            background: "rgba(15, 15, 30, 0.45)",
-            backdropFilter: open ? "blur(3px)" : "blur(0px)",
-            WebkitBackdropFilter: open ? "blur(3px)" : "blur(0px)",
             opacity: open ? 1 : 0,
-            transition: `opacity ${PANEL_TRANSITION_MS}ms cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter ${PANEL_TRANSITION_MS}ms ease`,
+            transition: `opacity ${PANEL_TRANSITION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
           }}
           onClick={onClose}
         />
       )}
 
-      {/* Panel */}
       {mounted && (
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Shopping Cart"
-        className="fixed top-0 right-0 h-full z-[999] flex flex-col"
-        style={{
-          width: "min(420px, 100vw)",
-          background: "#ffffff",
-          boxShadow: open
-            ? "-12px 0 56px rgba(79,70,229,0.18)"
-            : "-4px 0 16px rgba(79,70,229,0.06)",
-          transform: open ? "translateX(0)" : "translateX(100%)",
-          transition: `transform ${PANEL_TRANSITION_MS}ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow ${PANEL_TRANSITION_MS}ms ease`,
-          willChange: "transform",
-          fontFamily: '"Elms Sans", sans-serif',
-        }}
-      >
-        {/* Header */}
-        <div
+        <aside
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cs-title"
+          className="cs-panel"
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "20px 24px",
-            borderBottom: "1px solid #f0eeff",
-            background: "linear-gradient(to right, #faf9ff, #ffffff)",
-            flexShrink: 0,
+            transform: open ? "translateX(0)" : "translateX(100%)",
+            transition: `transform ${PANEL_TRANSITION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                background: "linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)",
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(79,70,229,0.3)",
-              }}
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"
-                  stroke="#ffffff"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <line
-                  x1="3"
-                  y1="6"
-                  x2="21"
-                  y2="6"
-                  stroke="#ffffff"
-                  strokeWidth="1.7"
-                />
-                <path
-                  d="M16 10a4 4 0 01-8 0"
-                  stroke="#a5b4fc"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-            <div>
-              <p
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "#1a1a2e",
-                  lineHeight: 1.2,
-                }}
-              >
-                Your Cart
-              </p>
-              {!loading && (
-                <p style={{ fontSize: 11.5, color: "#9f9fc0", marginTop: 1 }}>
-                  {items.length} {items.length === 1 ? "item" : "items"}
-                </p>
+          {/* Header */}
+          <header className="cs-header">
+            <h2 id="cs-title" className="cs-title">
+              Your cart
+              {!loading && pieceCount > 0 && (
+                <span className="cs-count">
+                  {pieceCount} {pieceCount === 1 ? "piece" : "pieces"}
+                </span>
               )}
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            aria-label="Close cart"
-            style={{
-              width: 36,
-              height: 36,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#f5f3ff",
-              border: "none",
-              borderRadius: 10,
-              cursor: "pointer",
-              color: "#0f3460",
-              transition: "background 0.15s, transform 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#ede9fe";
-              e.currentTarget.style.transform = "rotate(90deg)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#f5f3ff";
-              e.currentTarget.style.transform = "rotate(0deg)";
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path
-                d="M1 1l12 12M13 1L1 13"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Body */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "8px 24px",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          {/* Loading skeleton */}
-          {loading && (
-            <div style={{ paddingTop: 16 }}>
-             {[1, 2, 3].map((i) => (
-  <div key={`skeleton-${i}`} style={{ display: 'flex', gap: 14, padding: '16px 0', borderBottom: '1px solid #f0eeff' }}>
-    <div className="shimmer-line" style={{ width: 72, height: 72, borderRadius: 10, flexShrink: 0 }} />
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
-      <div className="shimmer-line" style={{ height: 13, width: '75%' }} />
-      <div className="shimmer-line" style={{ height: 11, width: '40%' }} />
-      <div className="shimmer-line" style={{ height: 28, width: 90, marginTop: 6 }} />
-    </div>
-  </div>
-))}
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!loading && items.length === 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "60px 20px",
-                textAlign: "center",
-              }}
+            </h2>
+            <button
+              ref={closeBtnRef}
+              type="button"
+              onClick={onClose}
+              aria-label="Close cart"
+              className="cs-close"
             >
-              <div
-                style={{
-                  width: 80,
-                  height: 80,
-                  background: "linear-gradient(135deg, #f5f3ff, #ede9fe)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 20,
-                }}
-              >
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"
-                    stroke="#a5b4fc"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <line
-                    x1="3"
-                    y1="6"
-                    x2="21"
-                    y2="6"
-                    stroke="#a5b4fc"
-                    strokeWidth="1.5"
-                  />
-                  <path
-                    d="M16 10a4 4 0 01-8 0"
-                    stroke="#c4b5fd"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <p
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: "#1a1a2e",
-                  marginBottom: 8,
-                }}
-              >
-                Your cart is empty
-              </p>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#9f9fc0",
-                  lineHeight: 1.6,
-                  maxWidth: 240,
-                }}
-              >
-                Discover our collection of fine gemstones and add your
-                favorites.
-              </p>
-              <Link
-                href="/products"
-                onClick={onClose}
-                style={{
-                  marginTop: 24,
-                  display: "inline-block",
-                  padding: "10px 24px",
-                  background: "linear-gradient(135deg, #0f3460, #7c3aed)",
-                  color: "#fff",
-                  borderRadius: 10,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
-                }}
-              >
-                Shop Now
-              </Link>
-            </div>
-          )}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
+          </header>
 
-          {/* Items */}
-          {!loading && items.length > 0 && (
-            <div>
-              {items.filter((item) => !!item.product).map((item,index) => {
-                const isUpdating = updatingId === item._id;
-                const imgSrc = item.product.images?.[0];
-                return (
-                  <div
-                    key={item._id ?? `item-${index}`}
-                    className="cart-item-row"
-                    style={{
-                      opacity: isUpdating ? 0.6 : 1,
-                      transition: "opacity 0.2s",
-                      animationDelay: `${Math.min(index, 6) * 45}ms`,
-                    }}
-                  >
-                    {/* Image */}
-                    {imgSrc ? (
-                      <img
-                        src={imgSrc}
-                        alt={item.product.name}
-                        className="cart-img"
-                      />
-                    ) : (
-                      <div className="cart-img-placeholder">
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                        >
-                          <polygon
-                            points="16,3 29,12 16,29 3,12"
-                            stroke="#c4b5fd"
-                            strokeWidth="1.5"
-                            fill="none"
-                          />
-                          <polygon
-                            points="16,3 29,12 16,15 3,12"
-                            stroke="#a5b4fc"
-                            strokeWidth="1"
-                            fill="none"
-                            opacity="0.7"
-                          />
-                        </svg>
-                      </div>
-                    )}
-
-                    {/* Details */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontSize: 13.5,
-                          fontWeight: 600,
-                          color: "#1a1a2e",
-                          marginBottom: 3,
-                          lineHeight: 1.4,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {item.product.name}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: 13,
-                          color: "#7c3aed",
-                          fontWeight: 600,
-                          marginBottom: 10,
-                        }}
-                      >
-                        ${(item.price * item.quantity).toFixed(2)}
-                        <span
-                          style={{
-                            fontSize: 11,
-                            color: "#9f9fc0",
-                            fontWeight: 400,
-                            marginLeft: 4,
-                          }}
-                        >
-                          (${item.price.toFixed(2)} ea)
-                        </span>
-                      </p>
-
-                      {/* Qty controls */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                        }}
-                      >
-                        <button
-                          className="qty-btn"
-                          onClick={() =>
-                            updateQty(
-                              item._id,
-                              -1,
-                              item.quantity,
-                              item.product._id,
-                            )
-                          }
-                          disabled={isUpdating}
-                          aria-label="Decrease quantity"
-                        >
-                          −
-                        </button>
-                        <span
-                          style={{
-                            minWidth: 24,
-                            textAlign: "center",
-                            fontSize: 13.5,
-                            fontWeight: 600,
-                            color: "#1a1a2e",
-                          }}
-                        >
-                          {isUpdating ? (
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              style={{
-                                animation: "spinLoader 0.8s linear infinite",
-                                display: "inline-block",
-                              }}
-                            >
-                              <circle
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="#c4b5fd"
-                                strokeWidth="2.5"
-                              />
-                              <path
-                                d="M12 2a10 10 0 0110 10"
-                                stroke="#0f3460"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          ) : (
-                            item.quantity
-                          )}
-                        </span>
-                        <button
-                          className="qty-btn"
-                          onClick={() =>
-                            updateQty(
-                              item._id,
-                              1,
-                              item.quantity,
-                              item.product._id,
-                            )
-                          }
-                          disabled={isUpdating}
-                          aria-label="Increase quantity"
-                        >
-                          +
-                        </button>
-
-                        <button
-                          className="remove-btn"
-                          onClick={() => removeItem(item._id, item.product._id)}
-                         disabled={!!updatingId}
-                          aria-label="Remove item"
-                          style={{ marginLeft: 4 }}
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                          >
-                            <path
-                              d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10"
-                              stroke="currentColor"
-                              strokeWidth="1.6"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </button>
-                      </div>
+          {/* Body */}
+          <div className="cs-body">
+            {loading && (
+              <div aria-busy="true" aria-label="Loading your cart">
+                {[0, 1, 2].map((i) => (
+                  <div key={`sk-${i}`} className="cs-line">
+                    <div className="cs-shimmer cs-thumb" />
+                    <div className="cs-line-main">
+                      <div className="cs-shimmer" style={{ height: 14, width: "80%" }} />
+                      <div className="cs-shimmer" style={{ height: 12, width: "35%", marginTop: 8 }} />
+                      <div className="cs-shimmer" style={{ height: 32, width: 104, marginTop: 14 }} />
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
 
-        {/* Footer */}
-        {!loading && items.length > 0 && (
-          <div
-            style={{
-              flexShrink: 0,
-              padding: "20px 24px 28px",
-              borderTop: "1px solid #f0eeff",
-              background: "linear-gradient(to top, #faf9ff, #ffffff)",
-            }}
-          >
-            {/* Order summary */}
-            <div style={{ marginBottom: 18 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 8,
-                }}
-              >
-                <span style={{ fontSize: 13, color: "#7c7c9a" }}>Subtotal</span>
-                <span
-                  style={{ fontSize: 13, fontWeight: 500, color: "#1a1a2e" }}
-                >
-                  ${subtotal.toFixed(2)}
-                </span>
+            {!loading && items.length === 0 && (
+              <div className="cs-empty">
+                <svg width="56" height="56" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                  <path d="M14 8h20l8 10-18 22L6 18l8-10z" stroke="#c9b48a" strokeWidth="1.4" strokeLinejoin="round" />
+                  <path d="M6 18h36M18 8l-4 10 10 22M30 8l4 10-10 22M14 18l10-10 10 10" stroke="#c9b48a" strokeWidth="1" strokeLinejoin="round" opacity="0.7" />
+                </svg>
+                <p className="cs-empty-title">Your cart is empty</p>
+                <p className="cs-empty-text">
+                  Pieces you add from the catalog will appear here, ready for checkout.
+                </p>
+                <Link href="/products" onClick={onClose} className="cs-btn cs-btn-primary cs-empty-cta">
+                  Browse the catalog
+                </Link>
               </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 4,
-                }}
-              >
-                <span style={{ fontSize: 13, color: "#7c7c9a" }}>Shipping</span>
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontStyle: "italic",
-                    color: "#9a9ab5",
-                    fontWeight: 500,
-                  }}
-                >
-                  Calculated at checkout
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "12px 0 0",
-                  borderTop: "1.5px solid #ede9fe",
-                  marginTop: 10,
-                }}
-              >
-                <span
-                  style={{ fontSize: 15, fontWeight: 700, color: "#1a1a2e" }}
-                >
-                  Total
-                </span>
-                <span
-                  style={{ fontSize: 17, fontWeight: 800, color: "#0f3460" }}
-                >
-                  ${subtotal.toFixed(2)}
-                </span>
-              </div>
-            </div>
+            )}
 
-            <Link href="/checkout" onClick={onClose} className="checkout-btn">
-              Proceed to Checkout →
-            </Link>
-            <Link href="/cart" onClick={onClose} className="view-cart-link">
-              View Full Cart
-            </Link>
+            {!loading && items.length > 0 && (
+              <ul className="cs-list">
+                {items.map((item, index) => {
+                  const isUpdating = updatingId === item._id;
+                  const imgSrc = item.product.images?.[0];
+                  return (
+                    <li
+                      key={item._id ?? `item-${index}`}
+                      className={`cs-line ${isUpdating ? "is-updating" : ""}`}
+                      style={{ animationDelay: `${Math.min(index, 6) * 40}ms` }}
+                    >
+                      <div className="cs-thumb">
+                        {imgSrc ? (
+                          <img
+                            src={optimizedImageUrl(imgSrc, { width: 200 })}
+                            alt=""
+                            draggable={false}
+                          />
+                        ) : (
+                          <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                            <path d="M14 8h20l8 10-18 22L6 18l8-10z" stroke="#c9b48a" strokeWidth="2" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+
+                      <div className="cs-line-main">
+                        <div className="cs-line-top">
+                          <p className="cs-name">{item.product.name}</p>
+                          <p className="cs-linetotal">{money(item.price * item.quantity)}</p>
+                        </div>
+                        {item.quantity > 1 && (
+                          <p className="cs-unit">{money(item.price)} each</p>
+                        )}
+
+                        <div className="cs-line-bottom">
+                          <div className="cs-stepper" role="group" aria-label={`Quantity of ${item.product.name}`}>
+                            <button
+                              type="button"
+                              onClick={() => updateQty(item._id, -1, item.quantity, item.product._id)}
+                              disabled={isUpdating}
+                              aria-label={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                            <span aria-live="polite">
+                              {isUpdating ? <span className="cs-spin" aria-label="Updating" /> : item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => updateQty(item._id, 1, item.quantity, item.product._id)}
+                              disabled={isUpdating}
+                              aria-label="Increase quantity"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                                <path d="M2 6h8M6 2v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="cs-remove"
+                            onClick={() => removeItem(item._id, item.product._id)}
+                            disabled={!!updatingId}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
-        )}
-      </div>
+
+          {/* Footer */}
+          {!loading && items.length > 0 && (
+            <footer className="cs-footer">
+              <dl className="cs-sums">
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd className="cs-subtotal">{money(subtotal)}</dd>
+                </div>
+                <div>
+                  <dt>Shipping</dt>
+                  <dd className="cs-muted">Calculated at checkout</dd>
+                </div>
+              </dl>
+
+              <Link href="/checkout" onClick={onClose} className="cs-btn cs-btn-primary">
+                Check out
+              </Link>
+              <div className="cs-footer-links">
+                <Link href="/cart" onClick={onClose} className="cs-link">
+                  View full cart
+                </Link>
+                <button type="button" onClick={onClose} className="cs-link">
+                  Keep browsing
+                </button>
+              </div>
+            </footer>
+          )}
+        </aside>
       )}
     </>
   );
 }
+
+const CART_CSS = `
+  .cs-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: rgba(29, 28, 26, 0.45);
+  }
+
+  .cs-panel {
+    --cs-paper: #ffffff;
+    --cs-tray: #f5f3ee;
+    --cs-ink: #1d1c1a;
+    --cs-ink-soft: #57534c;
+    --cs-muted: #7d776c;
+    --cs-line: #e7e2d8;
+    --cs-gold: #86662c;
+    --cs-gold-line: #c9b48a;
+    --cs-oxblood: #9c3b45;
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 999;
+    height: 100%;
+    height: 100dvh;
+    width: min(440px, 100vw);
+    display: flex;
+    flex-direction: column;
+    background: var(--cs-paper);
+    color: var(--cs-ink);
+    font-family: "Elms Sans", system-ui, sans-serif;
+    box-shadow: -24px 0 60px -30px rgba(29, 28, 26, 0.4);
+    will-change: transform;
+  }
+
+  .cs-panel :focus-visible {
+    outline: 2px solid var(--cs-gold);
+    outline-offset: 2px;
+  }
+
+  /* Header */
+  .cs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 0 18px;
+    margin: 0 24px;
+    border-bottom: 1px solid var(--cs-ink);
+    flex-shrink: 0;
+  }
+  .cs-title {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .cs-count {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--cs-muted);
+  }
+  .cs-close {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--cs-line);
+    background: var(--cs-paper);
+    color: var(--cs-ink-soft);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .cs-close:hover { color: var(--cs-ink); border-color: var(--cs-gold-line); }
+
+  /* Body */
+  .cs-body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 24px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cs-list { list-style: none; margin: 0; padding: 0; }
+
+  @keyframes cs-line-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .cs-line {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--cs-line);
+    animation: cs-line-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transition: opacity 0.2s;
+  }
+  .cs-line:last-child { border-bottom: 0; }
+  .cs-line.is-updating { opacity: 0.6; }
+
+  .cs-thumb {
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--cs-tray);
+  }
+  .cs-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+  }
+
+  .cs-line-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .cs-line-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .cs-name {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .cs-linetotal {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .cs-unit {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    color: var(--cs-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cs-line-bottom {
+    margin-top: auto;
+    padding-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .cs-stepper {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    border: 1px solid var(--cs-line);
+    border-radius: 4px;
+  }
+  .cs-stepper button {
+    width: 34px;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: none;
+    border: 0;
+    color: var(--cs-ink);
+    cursor: pointer;
+  }
+  .cs-stepper button:hover:not(:disabled) { color: var(--cs-gold); }
+  .cs-stepper button:disabled { color: #c9c4ba; cursor: not-allowed; }
+  .cs-stepper > span {
+    min-width: 26px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @keyframes cs-rot { to { transform: rotate(360deg); } }
+  .cs-spin {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--cs-line);
+    border-top-color: var(--cs-ink);
+    animation: cs-rot 0.7s linear infinite;
+  }
+
+  .cs-remove {
+    background: none;
+    border: 0;
+    padding: 4px 0;
+    font: inherit;
+    font-size: 13px;
+    color: var(--cs-muted);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color 0.15s, text-decoration-color 0.15s;
+  }
+  .cs-remove:hover:not(:disabled) {
+    color: var(--cs-oxblood);
+    text-decoration-color: currentColor;
+  }
+  .cs-remove:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Skeleton */
+  @keyframes cs-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .cs-shimmer {
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f3f0ea 25%, #e9e5dc 50%, #f3f0ea 75%);
+    background-size: 200% 100%;
+    animation: cs-shimmer 1.4s ease infinite;
+  }
+
+  /* Empty state */
+  .cs-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 72px 16px;
+  }
+  .cs-empty-title {
+    margin: 20px 0 6px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .cs-empty-text {
+    margin: 0;
+    max-width: 30ch;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--cs-ink-soft);
+  }
+  .cs-empty-cta { margin-top: 24px; width: auto; padding: 0 28px; }
+
+  /* Footer */
+  .cs-footer {
+    flex-shrink: 0;
+    padding: 18px 24px calc(22px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--cs-line);
+    background: var(--cs-paper);
+  }
+  .cs-sums { margin: 0 0 16px; }
+  .cs-sums > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 3px 0;
+    font-size: 14px;
+  }
+  .cs-sums dt { color: var(--cs-ink-soft); }
+  .cs-sums dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .cs-subtotal { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .cs-muted { color: var(--cs-muted); font-size: 13px; }
+
+  .cs-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 50px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.18s;
+  }
+  .cs-btn-primary { background: var(--cs-ink); color: #fff; }
+  .cs-btn-primary:hover { background: #3a3833; }
+
+  .cs-footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 14px;
+  }
+  .cs-link {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cs-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--cs-gold-line);
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+  .cs-link:hover { text-decoration-color: var(--cs-gold); }
+
+  @media (max-width: 480px) {
+    .cs-header { margin: 0 18px; }
+    .cs-body { padding: 0 18px; }
+    .cs-footer { padding-left: 18px; padding-right: 18px; }
+    .cs-thumb { width: 72px; height: 72px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cs-panel, .cs-backdrop { transition: none !important; }
+    .cs-line { animation: none; }
+    .cs-shimmer { animation: none; }
+  }
+`;

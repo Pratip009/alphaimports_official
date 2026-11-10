@@ -1,16 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { optimizedImageUrl } from "@/lib/image-url";
 import { WishlistIconButton } from "@/components/wishlist/WishlistButton";
-import AddToCartButton from "@/components/cart/AddToCartButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useApi } from "@/hooks/useApi";
 import { cartEvents } from "@/hooks/useCart";
 import { buildProductSpecs, type ProductKind } from "@/lib/productSpecs";
-import { isDiamondAlternative } from "@/lib/diamondAlternatives"
+import { isDiamondAlternative } from "@/lib/diamondAlternatives";
 
 export interface ProductCardProps {
   productType?: "watch" | "diamond" | "gemstone";
@@ -104,9 +103,7 @@ export function isWatch(p: ProductCardProps["product"]): boolean {
 // Maps this card's narrower productType/watch-detection onto the
 // ProductKind the shared spec-sheet builder (src/lib/productSpecs.ts)
 // expects — the same union the full detail page resolves via
-// getProductKind(). ProductCard never deals with plain "jewelry" items
-// today, so anything non-watch falls back to gemstone-or-diamond exactly
-// like the rest of this file already does (buildKicker, etc).
+// getProductKind().
 export function deriveKind(
   product: ProductCardProps["product"],
   watch: boolean,
@@ -340,8 +337,8 @@ function CloseIcon() {
 // Small circular "add to cart" action that lives on the card itself —
 // mirrors WishlistIconButton's interaction pattern (stop the card <Link>
 // from navigating, redirect to login if signed out, otherwise fire the
-// same /api/cart POST the product-detail AddToCartButton uses) so a
-// shopper never has to open the product page just to add one unit.
+// same /api/cart POST) so a shopper never has to open the product page
+// just to add one unit.
 function QuickAddButton({
   productId,
   inStock,
@@ -414,16 +411,139 @@ function ProductImage({
 }
 
 // ── Quick View ──────────────────────────────────────────────────────────────
-// A minified read of the product-detail page (image, kicker/name, specs,
-// description, price, stock, Add to Cart) rendered as a modal on top of
-// whatever page the shopper is browsing — so they can check the details
-// without leaving the grid, and still add to cart right from it. Portaled
-// to <body> so it isn't clipped/relatively-positioned by the card's own
-// `overflow: hidden`, and so it never ends up nested inside the card's
-// <Link>.
+// A condensed lot sheet for one product (gallery, name, price, availability,
+// grading-report style specs, description, Add to Cart) rendered as a modal
+// over whatever page the shopper is browsing. Portaled to <body> so it isn't
+// clipped by the card's `overflow: hidden` and never nests inside the card's
+// <Link>. All styling lives under the self-contained `.qv-*` namespace with
+// its own colour tokens, so it renders the same on every page that mounts
+// <ProductCardStyles />.
+
+function QuickViewCart({
+  productId,
+  stock,
+  minOrder,
+  onViewCart,
+}: {
+  productId: string;
+  stock: number;
+  minOrder?: number;
+  onViewCart: () => void;
+}) {
+  const { user, loading: authLoading } = useAuth();
+  const { apiFetch } = useApi();
+  const router = useRouter();
+  const min = Math.max(1, minOrder ?? 1);
+  const max = Math.max(min, stock);
+  const [qty, setQty] = useState(min);
+  const [busy, setBusy] = useState(false);
+  const [added, setAdded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAdd = async () => {
+    if (authLoading || busy) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await apiFetch("/api/cart", {
+        method: "POST",
+        body: JSON.stringify({ productId, quantity: qty }),
+      });
+      cartEvents.refresh();
+      setAdded(true);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "This item couldn’t be added. Check your connection and try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="qv-buy">
+      <div className="qv-buy-row">
+        <div className="qv-stepper" role="group" aria-label="Quantity">
+          <button
+            type="button"
+            onClick={() => {
+              setQty((q) => Math.max(min, q - 1));
+              setAdded(false);
+            }}
+            disabled={qty <= min || busy}
+            aria-label="Decrease quantity"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+          <output aria-live="polite">{qty}</output>
+          <button
+            type="button"
+            onClick={() => {
+              setQty((q) => Math.min(max, q + 1));
+              setAdded(false);
+            }}
+            disabled={qty >= max || busy}
+            aria-label="Increase quantity"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2 6h8M6 2v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className={`qv-add ${added ? "is-added" : ""}`}
+          onClick={handleAdd}
+          disabled={busy || authLoading}
+        >
+          {busy ? (
+            <>
+              <span className="qv-spin" aria-hidden="true" /> Adding
+            </>
+          ) : added ? (
+            <>
+              <CheckIcon /> Added to cart
+            </>
+          ) : (
+            "Add to cart"
+          )}
+        </button>
+      </div>
+
+      {qty >= max && max > 1 && !added && (
+        <p className="qv-note">That’s all {max} we have in stock.</p>
+      )}
+
+      {added && (
+        <p className="qv-note qv-note-ok" role="status">
+          {qty} {qty === 1 ? "piece is" : "pieces are"} in your cart.{" "}
+          <button type="button" className="qv-textbtn" onClick={onViewCart}>
+            View cart
+          </button>
+        </p>
+      )}
+
+      {error && (
+        <p className="qv-note qv-note-err" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function QuickViewModal({
   product,
-  watch,
+  watch: _watch,
   kind,
   kicker,
   subtitle,
@@ -445,33 +565,69 @@ export function QuickViewModal({
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [active, setActive] = useState(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
-  // Full spec sheet — same rows/labels as the product detail page (see
-  // src/lib/productSpecs.ts). "Availability" is dropped from this list
-  // since it's already surfaced as its own highlighted line below.
+  // Full spec sheet — same rows/labels as the product detail page.
+  // "Availability" is dropped since it's shown beside the price.
   const specs = buildProductSpecs(product, kind).filter(
     (row) => row.label !== "Availability",
   );
 
+  const images = (product.images || []).filter(Boolean).slice(0, 6);
+  const lowStock = isAvailable && product.stock <= 3;
+  const href = `/products/${product.slug ?? product._id}`;
+
   useEffect(() => {
     setMounted(true);
+    const prevFocus = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Keep keyboard focus inside the dialog.
+      if (e.key === "Tab" && panelRef.current) {
+        const focusables = panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (!focusables.length) return;
+        const firstEl = focusables[0];
+        const lastEl = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        } else if (!e.shiftKey && document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
+      prevFocus?.focus?.();
     };
   }, [onClose]);
 
+  useEffect(() => {
+    if (mounted) closeRef.current?.focus();
+  }, [mounted]);
+
   if (!mounted) return null;
+
+  const mainSrc = images[active]
+    ? optimizedImageUrl(images[active], { width: 900 })
+    : placeholder;
 
   return createPortal(
     <div
-      className="apc-qv-overlay"
+      className="qv-overlay"
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -479,14 +635,17 @@ export function QuickViewModal({
       }}
     >
       <div
-        className="apc-qv-panel"
+        ref={panelRef}
+        className="qv-panel"
         role="dialog"
         aria-modal="true"
-        aria-label={`Quick view — ${product.name}`}
+        aria-labelledby="qv-title"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          className="apc-qv-close"
+          ref={closeRef}
+          type="button"
+          className="qv-close"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -497,75 +656,120 @@ export function QuickViewModal({
           <CloseIcon />
         </button>
 
-        <div className="apc-qv-media">
-          {product.images[0] ? (
-            <ProductImage
-              src={optimizedImageUrl(product.images[0], { width: 600 })}
+        {/* Gallery */}
+        <div className="qv-gallery">
+          <div className="qv-tray">
+            <img
+              key={mainSrc}
+              src={mainSrc}
               alt={product.name}
-              fallback={placeholder}
+              className="qv-main-img"
+              draggable={false}
+              onError={(e) => {
+                if (e.currentTarget.src !== placeholder)
+                  e.currentTarget.src = placeholder;
+              }}
             />
-          ) : (
-            <img src={placeholder} alt={product.name} className="apc-photo" />
-          )}
-        </div>
+            {!isAvailable && <span className="qv-soldtag">Sold out</span>}
+          </div>
 
-        <div className="apc-qv-info">
-          <div className="apc-kicker">{kicker}</div>
-          <h3 className="apc-qv-name">{product.name}</h3>
-          {subtitle && <div className="apc-subtitle">{subtitle}</div>}
-
-          {specs.length > 0 && (
-            <div className="apc-specs apc-qv-specs">
-              {specs.map((row, i) => (
-                <div key={i}>
-                  <div className="apc-spec-label">{row.label}</div>
-                  <div
-                    className="apc-spec-value"
-                    style={row.highlight ? { color: "var(--avail)" } : undefined}
-                  >
-                    {row.value}
-                  </div>
-                </div>
+          {images.length > 1 && (
+            <div className="qv-thumbs" role="tablist" aria-label="Product photos">
+              {images.map((src, i) => (
+                <button
+                  key={src + i}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === active}
+                  aria-label={`Photo ${i + 1} of ${images.length}`}
+                  className={`qv-thumb ${i === active ? "is-active" : ""}`}
+                  onClick={() => setActive(i)}
+                >
+                  <img
+                    src={optimizedImageUrl(src, { width: 160 })}
+                    alt=""
+                    draggable={false}
+                  />
+                </button>
               ))}
             </div>
           )}
+        </div>
 
-          {product.description && (
-            <p className="apc-qv-desc">{product.description}</p>
-          )}
+        {/* Details */}
+        <div className="qv-info">
+          <div className="qv-head">
+            {kicker && <p className="qv-kicker">{kicker}</p>}
+            <h3 id="qv-title" className="qv-name">
+              {product.name}
+            </h3>
+            {subtitle && <p className="qv-subtitle">{subtitle}</p>}
+          </div>
 
-          <div className="apc-qv-price-row">
-            <div className="apc-price-block">
-              <span className="apc-price-label">Price</span>
-              <div className="apc-price">
+          <div className="qv-pricebar">
+            <div>
+              <div className="qv-price">
                 ${product.price.toLocaleString()}
-                <span>USD</span>
+                <span className="qv-cur">USD</span>
               </div>
               {hasMsrpSavings && (
-                <div className="apc-qv-was">
-                  <span className="apc-qv-was-price">
-                    ${(product.msrp as number).toLocaleString()}
-                  </span>
-                  <span className="apc-qv-save-badge">-{savingsPct}%</span>
+                <div className="qv-was">
+                  <s>${(product.msrp as number).toLocaleString()}</s>
+                  <span>Save {savingsPct}%</span>
                 </div>
               )}
             </div>
-            <div className={`apc-stock ${isAvailable ? "" : "out"}`}>
-              {isAvailable ? `${product.stock} available` : "Sold out"}
-            </div>
+            <p
+              className={`qv-stock ${
+                !isAvailable ? "is-out" : lowStock ? "is-low" : ""
+              }`}
+            >
+              {!isAvailable
+                ? "Sold out"
+                : lowStock
+                  ? `Only ${product.stock} left`
+                  : `${product.stock} in stock`}
+            </p>
           </div>
 
-          <div className="apc-qv-cart">
-            <AddToCartButton productId={product._id} inStock={isAvailable} />
-          </div>
+          {specs.length > 0 && (
+            <dl className="qv-specs">
+              {specs.map((row, i) => (
+                <div className="qv-spec" key={i}>
+                  <dt>{row.label}</dt>
+                  <dd className={row.highlight ? "is-hl" : undefined}>
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
-          <Link
-            href={`/products/${product.slug ?? product._id}`}
-            className="apc-qv-full-link"
-            onClick={onClose}
-          >
-            View full details <ArrowIcon />
-          </Link>
+          {product.description && (
+            <p className="qv-desc">{product.description}</p>
+          )}
+
+          <div className="qv-actions">
+            {isAvailable ? (
+              <QuickViewCart
+                productId={product._id}
+                stock={product.stock}
+                minOrder={product.minOrder}
+                onViewCart={() => {
+                  onClose();
+                  cartEvents.open();
+                }}
+              />
+            ) : (
+              <p className="qv-note">
+                This piece has sold and can’t be added to your cart.
+              </p>
+            )}
+
+            <Link href={href} className="qv-full" onClick={onClose}>
+              View full details
+            </Link>
+          </div>
         </div>
       </div>
     </div>,
@@ -780,9 +984,7 @@ const PRODUCT_CARD_CSS = `
         }
 
         /* Vertical stack of circular actions — wishlist, quick view, quick
-           add-to-cart — pinned to the top-right corner of the image. Always
-           visible (not hover-gated) so the same actions work on touch
-           devices, which have no hover state to reveal anything. */
+           add-to-cart — pinned to the top-right corner of the image. */
         .apc-icon-stack {
           position: absolute;
           top: 10px;
@@ -829,10 +1031,7 @@ const PRODUCT_CARD_CSS = `
           border-color: var(--avail);
         }
 
-        /* Hover-revealed "Quick view" pill, centered under the stone —
-           the fast path to a minified detail view without leaving the
-           grid. Desktop-only flourish (see the touch-device override
-           below); the icon-stack button above covers touch. */
+        /* Hover-revealed "Quick view" pill, centered under the stone. */
         .apc-cta {
           position: absolute;
           left: 50%;
@@ -1095,177 +1294,434 @@ const PRODUCT_CARD_CSS = `
         }
 
         /* ── Quick View modal ────────────────────────────────────────────
-           Portaled to <body>, so these rules are written unscoped (no .apc
-           ancestor) — they only ever match the modal's own markup. */
-        .apc-qv-overlay {
+           Portaled to <body>, so every rule is namespaced .qv-* and the
+           overlay carries its own tokens (no dependency on .apc). */
+        .qv-overlay {
+          --qv-paper: #ffffff;
+          --qv-tray: #f5f3ee;
+          --qv-ink: #1d1c1a;
+          --qv-ink-soft: #57534c;
+          --qv-muted: #7d776c;
+          --qv-line: #e7e2d8;
+          --qv-gold: #86662c;
+          --qv-gold-line: #c9b48a;
+          --qv-avail: #2d7a52;
+          --qv-oxblood: #9c3b45;
+
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background: rgba(20, 18, 14, 0.55);
-          backdrop-filter: blur(2px);
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 20px;
-          animation: apc-qv-fade 0.2s ease;
-        }
-
-        @keyframes apc-qv-fade {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .apc-qv-panel {
-          position: relative;
-          background: #fff;
-          width: 100%;
-          max-width: 760px;
-          max-height: 88vh;
-          overflow-y: auto;
-          border-radius: 18px;
-          display: grid;
-          grid-template-columns: 280px 1fr;
-          gap: 0;
-          box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35);
+          padding: 24px;
+          background: rgba(29, 28, 26, 0.5);
+          backdrop-filter: blur(3px);
+          -webkit-backdrop-filter: blur(3px);
+          animation: qv-fade 0.22s ease;
           font-family: 'Elms Sans', system-ui, sans-serif;
-          animation: apc-qv-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+          color: var(--qv-ink);
         }
 
-        @keyframes apc-qv-pop {
-          from { opacity: 0; transform: translateY(10px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes qv-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes qv-rise {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: none; }
+        }
+        @keyframes qv-img-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes qv-rot { to { transform: rotate(360deg); } }
+
+        .qv-panel {
+          position: relative;
+          width: 100%;
+          max-width: 920px;
+          max-height: min(88vh, 720px);
+          display: grid;
+          grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+          background: var(--qv-paper);
+          border-radius: 6px;
+          overflow: hidden;
+          box-shadow: 0 40px 90px -30px rgba(29, 28, 26, 0.45);
+          animation: qv-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .apc-qv-close {
+        .qv-close {
           position: absolute;
-          top: 12px;
-          right: 12px;
-          z-index: 2;
-          width: 30px;
-          height: 30px;
+          top: 14px;
+          right: 14px;
+          z-index: 3;
+          width: 36px;
+          height: 36px;
+          display: grid;
+          place-items: center;
           border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #fff;
-          border: 1px solid #ebebea;
-          color: #57575d;
+          border: 1px solid var(--qv-line);
+          background: var(--qv-paper);
+          color: var(--qv-ink-soft);
           cursor: pointer;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .qv-close:hover { color: var(--qv-ink); border-color: var(--qv-gold-line); }
+
+        .qv-overlay :focus-visible {
+          outline: 2px solid var(--qv-gold);
+          outline-offset: 2px;
         }
 
-        .apc-qv-close:hover {
-          color: #1a1a1c;
-          border-color: #d4d4d2;
-        }
-
-        .apc-qv-media {
-          background: #fafaf9;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 32px 24px;
-        }
-
-        .apc-qv-media .apc-photo {
-          max-width: 90%;
-          max-height: 320px;
-        }
-
-        .apc-qv-info {
-          padding: 28px 28px 24px;
+        /* Gallery: the stone sits in a tray framed by loupe corner marks */
+        .qv-gallery {
           display: flex;
           flex-direction: column;
+          gap: 12px;
+          padding: 20px;
+          background: var(--qv-tray);
+          min-height: 0;
         }
 
-        .apc-qv-name {
-          font-family: 'Elms Sans';
+        .qv-tray {
+          position: relative;
+          flex: 1;
+          min-height: 280px;
+          display: grid;
+          place-items: center;
+          padding: 28px;
+        }
+        .qv-tray::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          border: 1px solid var(--qv-gold-line);
+          -webkit-mask:
+            linear-gradient(#000 0 0) top left / 22px 22px,
+            linear-gradient(#000 0 0) top right / 22px 22px,
+            linear-gradient(#000 0 0) bottom left / 22px 22px,
+            linear-gradient(#000 0 0) bottom right / 22px 22px;
+          -webkit-mask-repeat: no-repeat;
+          mask:
+            linear-gradient(#000 0 0) top left / 22px 22px,
+            linear-gradient(#000 0 0) top right / 22px 22px,
+            linear-gradient(#000 0 0) bottom left / 22px 22px,
+            linear-gradient(#000 0 0) bottom right / 22px 22px;
+          mask-repeat: no-repeat;
+        }
+
+        .qv-main-img {
+          max-width: 100%;
+          max-height: 400px;
+          object-fit: contain;
+          mix-blend-mode: multiply;
+          animation: qv-img-in 0.25s ease;
+          user-select: none;
+        }
+
+        .qv-soldtag {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          font-size: 12px;
           font-weight: 600;
-          font-size: 22px;
-          line-height: 1.25;
-          letter-spacing: -0.015em;
-          color: #1a1a1c;
-          margin-top: 2px;
+          color: var(--qv-paper);
+          background: var(--qv-ink);
+          padding: 4px 10px;
+          border-radius: 3px;
         }
 
-        .apc-qv-specs {
-          margin-top: 16px;
+        .qv-thumbs {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          scrollbar-width: none;
+          padding: 2px;
+        }
+        .qv-thumbs::-webkit-scrollbar { display: none; }
+
+        .qv-thumb {
+          flex: 0 0 56px;
+          height: 56px;
+          padding: 4px;
+          border-radius: 4px;
+          border: 1px solid transparent;
+          background: var(--qv-paper);
+          cursor: pointer;
+          opacity: 0.7;
+          transition: opacity 0.15s, border-color 0.15s;
+        }
+        .qv-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          mix-blend-mode: multiply;
+        }
+        .qv-thumb:hover { opacity: 1; }
+        .qv-thumb.is-active { opacity: 1; border-color: var(--qv-gold); }
+
+        /* Details column */
+        .qv-info {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          overflow-y: auto;
+          padding: 32px 32px 0;
+          overscroll-behavior: contain;
         }
 
-        .apc-qv-desc {
-          margin-top: 16px;
+        .qv-head { padding-right: 36px; }
+
+        .qv-kicker {
           font-size: 13px;
-          line-height: 1.55;
-          color: #4a4a50;
+          font-weight: 500;
+          color: var(--qv-gold);
+          margin: 0 0 6px;
+        }
+
+        .qv-name {
+          margin: 0;
+          font-size: 26px;
+          font-weight: 600;
+          line-height: 1.2;
+          letter-spacing: -0.02em;
+          color: var(--qv-ink);
+          text-wrap: balance;
+        }
+
+        .qv-subtitle {
+          margin: 6px 0 0;
+          font-size: 14px;
+          color: var(--qv-ink-soft);
+        }
+
+        .qv-pricebar {
+          margin-top: 20px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .qv-price {
+          font-size: 30px;
+          font-weight: 700;
+          letter-spacing: -0.025em;
+          line-height: 1;
+          font-variant-numeric: tabular-nums;
+        }
+        .qv-cur {
+          margin-left: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          letter-spacing: 0;
+          color: var(--qv-muted);
+        }
+
+        .qv-was {
+          margin-top: 6px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+        }
+        .qv-was s {
+          color: var(--qv-muted);
+          text-decoration-thickness: 1px;
+        }
+        .qv-was span {
+          font-weight: 600;
+          color: var(--qv-oxblood);
+        }
+
+        .qv-stock {
+          margin: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--qv-avail);
+        }
+        .qv-stock::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: currentColor;
+        }
+        .qv-stock.is-low { color: var(--qv-oxblood); }
+        .qv-stock.is-out { color: var(--qv-muted); }
+
+        /* Grading-report spec list: label …… value */
+        .qv-specs {
+          margin: 24px 0 0;
+          padding: 16px 0 0;
+          border-top: 1px solid var(--qv-ink);
+        }
+        .qv-spec {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+          padding: 5px 0;
+          font-size: 13.5px;
+        }
+        .qv-spec dt {
+          flex-shrink: 0;
+          color: var(--qv-ink-soft);
+        }
+        .qv-spec::after {
+          content: "";
+          order: 1;
+          flex: 1;
+          min-width: 16px;
+          border-bottom: 1px dotted var(--qv-gold-line);
+          transform: translateY(-4px);
+        }
+        .qv-spec dd {
+          order: 2;
+          margin: 0;
+          max-width: 60%;
+          font-weight: 600;
+          text-align: right;
+          color: var(--qv-ink);
+          font-variant-numeric: tabular-nums;
+        }
+        .qv-spec dd.is-hl { color: var(--qv-avail); }
+
+        .qv-desc {
+          margin: 20px 0 0;
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--qv-ink-soft);
+          max-width: 60ch;
           display: -webkit-box;
           -webkit-line-clamp: 4;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
 
-        .apc-qv-price-row {
-          margin-top: 18px;
-          padding-top: 16px;
-          border-top: 1px solid #ebebea;
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
+        /* Actions stick to the bottom of the details column */
+        .qv-actions {
+          position: sticky;
+          bottom: 0;
+          margin-top: auto;
+          padding: 20px 0 24px;
+          background: linear-gradient(to bottom, rgba(255,255,255,0), var(--qv-paper) 16px);
         }
 
-        .apc-qv-was {
+        .qv-buy-row {
+          display: flex;
+          gap: 10px;
+        }
+
+        .qv-stepper {
           display: flex;
           align-items: center;
-          gap: 6px;
-          margin-top: 4px;
+          border: 1px solid var(--qv-line);
+          border-radius: 4px;
+          height: 48px;
         }
-
-        .apc-qv-was-price {
-          font-size: 12.5px;
+        .qv-stepper button {
+          width: 40px;
+          height: 100%;
+          display: grid;
+          place-items: center;
+          background: none;
+          border: 0;
+          color: var(--qv-ink);
+          cursor: pointer;
+        }
+        .qv-stepper button:disabled { color: #c9c4ba; cursor: not-allowed; }
+        .qv-stepper output {
+          min-width: 28px;
+          text-align: center;
+          font-size: 15px;
           font-weight: 600;
-          color: #9c3b45;
-          text-decoration: line-through;
-          text-decoration-color: #9c3b45;
-          text-decoration-thickness: 1.5px;
+          font-variant-numeric: tabular-nums;
         }
 
-        .apc-qv-save-badge {
-          font-size: 10px;
-          font-weight: 700;
-          color: #9c3b45;
-          background: #fbeceb;
-          padding: 2px 7px;
-          border-radius: 999px;
-        }
-
-        .apc-qv-cart {
-          margin-top: 18px;
-        }
-
-        .apc-qv-full-link {
-          margin-top: 6px;
+        .qv-add {
+          flex: 1;
+          height: 48px;
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          font-size: 12px;
+          justify-content: center;
+          gap: 8px;
+          border: 0;
+          border-radius: 4px;
+          background: var(--qv-ink);
+          color: #fff;
+          font: inherit;
+          font-size: 15px;
           font-weight: 600;
-          letter-spacing: 0.02em;
-          color: #7a5f2a;
-          text-decoration: none;
+          cursor: pointer;
+          transition: background 0.18s;
+        }
+        .qv-add:hover:not(:disabled) { background: #3a3833; }
+        .qv-add:disabled { cursor: progress; opacity: 0.85; }
+        .qv-add.is-added { background: var(--qv-avail); }
+
+        .qv-spin {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.35);
+          border-top-color: #fff;
+          animation: qv-rot 0.7s linear infinite;
         }
 
-        .apc-qv-full-link:hover {
+        .qv-note {
+          margin: 10px 0 0;
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--qv-ink-soft);
+        }
+        .qv-note-ok { color: var(--qv-ink); }
+        .qv-note-err { color: var(--qv-oxblood); }
+
+        .qv-textbtn {
+          background: none;
+          border: 0;
+          padding: 0;
+          font: inherit;
+          font-weight: 600;
+          color: var(--qv-gold);
           text-decoration: underline;
+          text-underline-offset: 3px;
+          cursor: pointer;
         }
 
-        @media (max-width: 640px) {
-          .apc-qv-panel {
+        .qv-full {
+          display: inline-block;
+          margin-top: 14px;
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--qv-ink);
+          text-decoration: underline;
+          text-decoration-color: var(--qv-gold-line);
+          text-underline-offset: 4px;
+          transition: text-decoration-color 0.15s;
+        }
+        .qv-full:hover { text-decoration-color: var(--qv-gold); }
+
+        @media (max-width: 760px) {
+          .qv-overlay { padding: 0; align-items: flex-end; }
+          .qv-panel {
             grid-template-columns: 1fr;
-            max-height: 92vh;
+            grid-template-rows: auto minmax(0, 1fr);
+            max-height: 94vh;
+            border-radius: 12px 12px 0 0;
           }
-          .apc-qv-media { padding: 20px; }
-          .apc-qv-media .apc-photo { max-height: 220px; }
-          .apc-qv-info { padding: 20px 18px; }
+          .qv-gallery { padding: 14px; gap: 10px; }
+          .qv-tray { min-height: 200px; padding: 16px; }
+          .qv-main-img { max-height: 230px; }
+          .qv-info { padding: 22px 20px 0; }
+          .qv-name { font-size: 22px; }
+          .qv-price { font-size: 26px; }
+          .qv-actions { padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .qv-overlay, .qv-panel, .qv-main-img { animation: none; }
+          .qv-spin { animation-duration: 1.6s; }
         }
       `;
 

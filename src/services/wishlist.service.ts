@@ -3,7 +3,7 @@ import Product from '@/models/Product';
 
 export async function getWishlist(userId: string) {
   const wishlist = await Wishlist.findOne({ user: userId })
-    .populate('items.product', 'name images price stock isActive productKind gemstoneName shape size color clarity certification watchBrand watchModel watchMovement watchGender')
+    .populate('items.product', 'name slug images price stock isActive productKind gemstoneName shape size color clarity certification watchBrand watchModel watchMovement watchGender')
     .lean();
   return wishlist;
 }
@@ -37,7 +37,7 @@ export async function removeFromWishlist(userId: string, productId: string) {
     { user: userId },
     { $pull: { items: { product: productId } } },
     { new: true }
-  ).populate('items.product', 'name images price stock isActive productKind gemstoneName shape size color clarity certification watchBrand watchModel watchMovement watchGender');
+  ).populate('items.product', 'name slug images price stock isActive productKind gemstoneName shape size color clarity certification watchBrand watchModel watchMovement watchGender')
   return wishlist;
 }
 

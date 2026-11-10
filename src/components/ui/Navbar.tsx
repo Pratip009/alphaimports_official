@@ -238,7 +238,16 @@ export default function Navbar({
     await logout();
     router.push("/");
   };
-
+  // Other components (e.g. the Quick View modal) can open the cart sidebar
+  // via cartEvents.open() without owning its state.
+  useEffect(() => {
+    const handler = () => {
+      setMenuOpen(false);
+      setCartOpen(true);
+    };
+    window.addEventListener("cart:open", handler);
+    return () => window.removeEventListener("cart:open", handler);
+  }, []);
   const openCart = (where: string) => {
     setMenuOpen(false);
     setCartOpen(true);
