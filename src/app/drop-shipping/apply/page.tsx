@@ -4,13 +4,13 @@ import Footer from "@/components/ui/Footer";
 import DropshipApplyForm from "@/components/dropship/DropshipApplyForm";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
-const TITLE = "Apply — Free Dropship Program | Alpha Gemstone";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
+const TITLE = "Apply — Free Dropship Program | Alphaimports.com";
 const DESCRIPTION =
-  "Apply to join the Alpha Gemstone Dropship Program. No membership fee, no login required.";
+  "Apply to join the Alphaimports.com Dropship Program. No membership fee, no login required.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/drop-shipping/apply` },
   robots: { index: false, follow: true },

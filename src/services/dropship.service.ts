@@ -30,8 +30,8 @@ import {
   adminNewDropshipOrderEmailHtml,
 } from '@/lib/email-templates';
 
-const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@alphagemstone.com';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphagemstone.com';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@alphaimports.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphaimports.com';
 const ADMIN_NOTIFICATION_EMAILS = (process.env.ADMIN_NOTIFICATION_EMAILS || '')
   .split(',')
   .map((e) => e.trim())
@@ -79,7 +79,7 @@ async function requireActiveSeller(token: string) {
   }
   if (application.active === false) {
     throw new DropshipError(
-      'This dropship account has been deactivated. Contact Alpha Gemstone for help.',
+      'This dropship account has been deactivated. Contact Alphaimports.com for help.',
       403
     );
   }
@@ -398,7 +398,7 @@ export async function submitDropshipOrder(
   }
   if (!(typeof product.price === 'number' && product.price > 0)) {
     await releaseStock(product._id, quantity).catch(() => {});
-    throw new DropshipError('This product has no price set. Please contact Alpha Gemstone.', 409);
+    throw new DropshipError('This product has no price set. Please contact Alphaimports.com.', 409);
   }
 
   const productAmount = round2(product.price * quantity);
@@ -511,7 +511,7 @@ export async function sellerCancelOrder(token: string, orderId: string): Promise
     const current = await DropshipOrder.findOne({ _id: orderId, application: application._id });
     if (!current) throw new DropshipError('Order not found', 404);
     if (current.paymentStatus === 'completed') {
-      throw new DropshipError('This order is already paid, so it can’t be cancelled here. Please contact Alpha Gemstone.', 409);
+      throw new DropshipError('This order is already paid, so it can’t be cancelled here. Please contact Alphaimports.com.', 409);
     }
     if (current.status === 'cancelled') return current;
     throw new DropshipError('This order is being paid right now. Please wait a moment and refresh.', 409);
@@ -1028,7 +1028,7 @@ async function sendApplicationReceivedEmail(
     const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: application.email,
-      subject: 'We received your Alpha Gemstone Dropship application',
+      subject: 'We received your Alphaimports.com Dropship application',
       html: dropshipApplicationReceivedEmailHtml({ fullName: application.fullName }),
     });
     if (error) console.error('[dropshipApplicationReceivedEmail] Resend error:', error);
@@ -1069,7 +1069,7 @@ async function sendApplicationApprovedEmail(
     const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: application.email,
-      subject: "You're approved — Alpha Gemstone Dropship Program",
+      subject: "You're approved — Alphaimports.com Dropship Program",
       html: dropshipApplicationApprovedEmailHtml({
         fullName: application.fullName,
         portalUrl: portalUrlFor(application),
@@ -1088,7 +1088,7 @@ async function sendApplicationRejectedEmail(
     const { error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: application.email,
-      subject: 'An update on your Alpha Gemstone Dropship application',
+      subject: 'An update on your Alphaimports.com Dropship application',
       html: dropshipApplicationRejectedEmailHtml({
         fullName: application.fullName,
         reason: application.rejectionReason,

@@ -1,12 +1,33 @@
 "use client";
-
-import { useState, useEffect, useCallback } from "react";
+/**
+ * Welcome offer — 10% off the first order — in the classic Alphaimports.com
+ * style: a boxed panel with the navy small-caps header bar, a red offer and
+ * the site's red sign-up button (as in the footer's Alpha Club box).
+ *
+ * Behaviour (unchanged): shown once per visitor (localStorage[storageKey]),
+ * posts the email to /api/coupons/subscribe, which emails a one-use code;
+ * Escape / overlay click / × close it.
+ * New: waits until the visitor has answered the cookie bar, keeps keyboard
+ * focus inside while open and returns it afterwards.
+ */
+import Link from "next/link";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { COOKIE_CONSENT_EVENT, COOKIE_CONSENT_KEY } from "@/lib/cookieConsent";
 
 interface JewelryModalProps {
   delay?: number;
   onSubmit?: (email: string) => void;
   onDismiss?: () => void;
   storageKey?: string;
+}
+
+// Must match src/services/coupon.service.ts
+const DISCOUNT_PERCENT = 10;
+const MIN_PURCHASE = 200;
+const VALID_DAYS = 30;
+
+function stored(key: string) {
+  try { return localStorage.getItem(key); } catch { return null; }
 }
 
 export default function JewelryModal({
@@ -21,47 +42,75 @@ export default function JewelryModal({
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const id = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const doneRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
+  // Show after `delay` — but only once the visitor has dealt with the cookie bar.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(storageKey)) return;
-    const timer = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(timer);
+    if (stored(storageKey)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const start = () => { timer = setTimeout(() => setVisible(true), delay); };
+    if (stored(COOKIE_CONSENT_KEY)) {
+      start();
+      return () => clearTimeout(timer);
+    }
+    const onConsent = () => start();
+    window.addEventListener(COOKIE_CONSENT_EVENT, onConsent, { once: true });
+    return () => { window.removeEventListener(COOKIE_CONSENT_EVENT, onConsent); clearTimeout(timer); };
   }, [delay, storageKey]);
 
+  // Scroll lock + focus in, focus back out.
   useEffect(() => {
-    document.body.style.overflow = visible ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!visible) return;
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    document.body.style.overflow = "hidden";
+    const t = setTimeout(() => inputRef.current?.focus(), 30);
+    return () => {
+      clearTimeout(t);
+      document.body.style.overflow = "";
+      returnFocusRef.current?.focus?.();
+    };
   }, [visible]);
+
+  useEffect(() => { if (submitted) doneRef.current?.focus(); }, [submitted]);
 
   const closeModal = useCallback(() => {
     setClosing(true);
-    localStorage.setItem(storageKey, "true");
+    try { localStorage.setItem(storageKey, "true"); } catch { /* ignore */ }
     setTimeout(() => {
       setVisible(false);
       setClosing(false);
       onDismiss?.();
-    }, 300);
+    }, 200);
   }, [storageKey, onDismiss]);
 
+  // Escape closes; Tab stays inside the dialog.
   useEffect(() => {
     if (!visible) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeModal();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { closeModal(); return; }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+      const f = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled])',
+      );
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [visible, closeModal]);
-
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) closeModal();
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError("Please enter a valid email address.");
+      inputRef.current?.focus();
       return;
     }
     setError(null);
@@ -72,16 +121,16 @@ export default function JewelryModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmed }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(json?.message ?? "Something went wrong. Please try again.");
         return;
       }
       setSubmitted(true);
-      localStorage.setItem(storageKey, "true");
+      try { localStorage.setItem(storageKey, "true"); } catch { /* ignore */ }
       onSubmit?.(trimmed);
     } catch {
-      setError("Network error. Please try again.");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -91,197 +140,156 @@ export default function JewelryModal({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Exclusive offer"
-      onClick={handleOverlayClick}
-      className={[
-        // px-4 keeps a safe gutter on narrow phones; py-6 stops the modal
-        // from touching the top/bottom edge on short viewports (landscape
-        // phones, small tablets in split-screen, etc).
-        "fixed inset-0 z-50 flex items-center justify-center px-4 py-6",
-        "bg-[#0a1a2e]/80 backdrop-blur-sm",
-        "transition-opacity duration-300",
-        closing ? "opacity-0" : "opacity-100",
-      ].join(" ")}
+      className={`wo-overlay${closing ? " is-closing" : ""}`}
+      onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
     >
+      <style>{CSS}</style>
       <div
-        className={[
-          // Fluid width: fills nearly the full gutter on phones, settles to
-          // a fixed max on tablet/desktop. max-h + overflow-y-auto lets the
-          // card scroll internally instead of overflowing the viewport on
-          // very short screens, without needing separate mobile markup.
-          "relative w-full max-w-[420px] max-h-[90vh] overflow-y-auto overflow-x-hidden rounded-sm",
-          "bg-[#faf8f5] shadow-2xl",
-          "transition-all duration-300",
-          closing
-            ? "opacity-0 scale-95 translate-y-2"
-            : "opacity-100 scale-100 translate-y-0",
-        ].join(" ")}
+        ref={dialogRef}
+        className="wo"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${id}-title`}
+        aria-describedby={`${id}-desc`}
       >
-        {/* gold accent bar */}
-        <div
-          className="h-[5px] w-full"
-          style={{
-            background:
-              "linear-gradient(90deg,#c9a96e 0%,#e8d5a3 50%,#c9a96e 100%)",
-          }}
-        />
+        <div className="wo-head">
+          <span>{submitted ? "Code on its way" : "Welcome Offer"}</span>
+          <button type="button" className="wo-x" aria-label="Close" onClick={closeModal}>×</button>
+        </div>
 
-        {/* close button — enlarged tap target on touch devices while
-            keeping the same visual icon size */}
-        <button
-          onClick={closeModal}
-          aria-label="Close offer"
-          className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center text-[#8099b5] hover:text-[#0f3460] active:text-[#0f3460] transition-colors sm:right-3 sm:top-3"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+        {!submitted ? (
+          <div className="wo-body">
+            <p className="wo-kicker">Welcome to Alphaimports.com</p>
+            <h2 id={`${id}-title`} className="wo-offer">
+              <span className="wo-pct">{DISCOUNT_PERCENT}% OFF</span>
+              <span className="wo-sub">your first order</span>
+            </h2>
+            <p id={`${id}-desc`} className="wo-copy">
+              Join Alpha Club for exclusive deals and early access to new gems. We’ll email your
+              one-time code right away.
+            </p>
+            <p className="wo-terms">
+              Min. ${MIN_PURCHASE} purchase · Valid {VALID_DAYS} days · One use only
+            </p>
 
-        <div className="px-5 pb-5 pt-6 text-center font-[family-name:var(--font-jost,sans-serif)] sm:px-8 sm:pb-6 sm:pt-7">
-          {!submitted ? (
-            <>
-              <p className="mb-2.5 text-[9px] font-normal uppercase tracking-[0.18em] text-[#0f3460] sm:mb-3 sm:text-[10px] sm:tracking-[0.2em]">
-                Welcome
-              </p>
-
-              <h2
-                className="mb-2 text-[28px] font-light leading-tight text-[#0f3460] sm:text-[34px] md:text-[38px]"
-                style={{ fontFamily: '"Elms Sans", sans-serif' }}
-              >
-                Enjoy{" "}
-                <em className="italic text-[#c9a96e]">10% off</em>
-                <br />
-                your first piece
-              </h2>
-
-              <p className="mb-1 text-[12.5px] font-light leading-relaxed text-[#4a6080] sm:text-[13px]">
-                Join our community for exclusive access to fine jewelry crafted
-                in the USA.
-              </p>
-
-              <p className="mb-5 text-[10.5px] font-light text-[#8099b5] sm:text-[11px]">
-                Min. $200 purchase · Valid 30 days · One use only
-              </p>
-
-              <form onSubmit={handleSubmit} noValidate>
-                <div
-                  className={[
-                    // Stacks input/button on very narrow phones (<375px,
-                    // Tailwind's default `xs` isn't in core so we use the
-                    // base + `min-[375px]:` arbitrary breakpoint) so neither
-                    // control gets squeezed; sits side-by-side from ~375px
-                    // up, which covers virtually all phones in portrait.
-                    "mb-3 flex flex-col overflow-hidden border rounded-[1px] min-[375px]:flex-row",
-                    error ? "border-red-400" : "border-[#c4d4e8]",
-                  ].join(" ")}
-                >
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (error) setError(null);
-                    }}
-                    placeholder="Your email address"
-                    aria-label="Email address"
-                    disabled={loading}
-                    className={[
-                      "h-11 w-full flex-1 bg-white px-3.5 text-[16px] font-light",
-                      // 16px prevents iOS Safari's automatic zoom-on-focus;
-                      // visually scaled back down to match the design above
-                      // that breakpoint where zoom-on-focus isn't a concern.
-                      "sm:text-[13px]",
-                      "text-[#0f3460] placeholder:text-[#8099b5]",
-                      "outline-none focus:outline-none disabled:opacity-60",
-                    ].join(" ")}
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={[
-                      "h-11 w-full shrink-0 bg-[#0f3460] px-4 text-[11px] font-medium min-[375px]:w-auto",
-                      "uppercase tracking-[0.12em] text-white",
-                      "transition-colors hover:bg-[#0c2a4f] active:bg-[#091f3a]",
-                      "disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5",
-                    ].join(" ")}
-                  >
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Sending…
-                      </>
-                    ) : (
-                      "Unlock 10% Off"
-                    )}
-                  </button>
-                </div>
-
-                {error && (
-                  <p className="mb-2 text-[11px] text-red-500">{error}</p>
-                )}
-
-                <p className="mb-4 text-[10.5px] font-light leading-relaxed text-[#8099b5] sm:text-[11px]">
-                  By signing up you agree to our{" "}
-                  <a href="/terms" className="underline hover:text-[#0f3460]">
-                    terms
-                  </a>{" "}
-                  &amp;{" "}
-                  <a href="/privacy" className="underline hover:text-[#0f3460]">
-                    privacy policy
-                  </a>
-                  .
-                </p>
-              </form>
-
-              <div className="border-t border-[#dce8f0] pt-3.5">
-                <button
-                  onClick={closeModal}
-                  className={[
-                    "text-[10.5px] font-normal tracking-[0.06em] text-[#8099b5] sm:text-[11px]",
-                    "hover:text-[#0f3460] hover:underline transition-colors",
-                  ].join(" ")}
-                >
-                  No thanks, I'll pass on the offer
+            <form onSubmit={handleSubmit} noValidate className="wo-form">
+              <label htmlFor={`${id}-email`} className="wo-label">Email address</label>
+              <div className="wo-row">
+                <input
+                  ref={inputRef}
+                  id={`${id}-email`}
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
+                  disabled={loading}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? `${id}-err` : undefined}
+                />
+                <button type="submit" className="wo-cta" disabled={loading}>
+                  {loading ? "Sending…" : `Get My ${DISCOUNT_PERCENT}% Code`}
                 </button>
               </div>
-            </>
-          ) : (
-            <div className="py-4">
-              <div className="mb-4 flex justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0f3460" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="sm:h-[42px] sm:w-[42px]">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="8 12 11 15 16 9" />
-                </svg>
-              </div>
-              <h3
-                className="mb-2 text-[24px] font-light text-[#0f3460] sm:text-[28px]"
-                style={{ fontFamily: '"Elms Sans", sans-serif' }}
-              >
-                You're in
-              </h3>
-              <p className="text-[12.5px] font-light leading-relaxed text-[#4a6080] sm:text-[13px]">
-                Check your inbox — your 10% off code is on its way.
+              {error && <p id={`${id}-err`} className="wo-err" role="alert">{error}</p>}
+              <p className="wo-fine">
+                By signing up you agree to our <Link href="/terms-and-conditions">Terms</Link> and{" "}
+                <Link href="/privacy-policy">Privacy Policy</Link>. Unsubscribe any time.
               </p>
-              <p className="mt-2 text-[10.5px] text-[#8099b5] sm:text-[11px]">
-                Valid for 30 days · Min. $200 purchase
-              </p>
-              <button
-                onClick={closeModal}
-                className="mt-6 text-[10.5px] tracking-[0.08em] uppercase text-[#8099b5] hover:text-[#0f3460] transition-colors sm:text-[11px]"
-              >
-                Continue browsing
-              </button>
-            </div>
-          )}
-        </div>
+            </form>
+
+            <button type="button" className="wo-skip" onClick={closeModal}>No thanks</button>
+          </div>
+        ) : (
+          <div className="wo-body wo-done">
+            <h2 id={`${id}-title`} className="wo-thanks">Thank you!</h2>
+            <p id={`${id}-desc`} className="wo-copy">
+              Check your inbox — your {DISCOUNT_PERCENT}% off code is on its way to <b>{email.trim()}</b>.
+              Enter it at checkout on any order of ${MIN_PURCHASE} or more within {VALID_DAYS} days.
+            </p>
+            <button ref={doneRef} type="button" className="wo-btn" onClick={closeModal}>Continue Shopping</button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
+const CSS = `
+  .wo-overlay {
+    position: fixed; inset: 0; z-index: 10001; display: flex; /* above chat bubble + cookie bar */ align-items: center; justify-content: center;
+    padding: 24px 16px; background: rgba(0, 0, 40, .55);
+    animation: wo-fade .2s ease;
+  }
+  .wo-overlay.is-closing { opacity: 0; transition: opacity .2s ease; }
+  @keyframes wo-fade { from { opacity: 0 } to { opacity: 1 } }
+  .wo {
+    width: 100%; max-width: 440px; max-height: 92vh; overflow-y: auto;
+    background: #fff; border: 1px solid #a6aec5; box-shadow: 2px 4px 18px rgba(0,0,0,.35);
+    font-family: Verdana, Geneva, Tahoma, sans-serif; font-size: 12px; color: #444;
+  }
+  .wo-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 6px 5px 14px; color: #fff; font-weight: bold; font-size: 12px;
+    font-variant: small-caps; letter-spacing: .3px;
+    background: linear-gradient(to bottom, #154273, #2f5681);
+  }
+  .wo-x {
+    width: 26px; height: 24px; line-height: 20px; font-size: 20px; cursor: pointer;
+    background: none; border: 1px solid transparent; color: #fff;
+  }
+  .wo-x:hover { border-color: rgba(255,255,255,.6); }
+  .wo-body { padding: 16px 20px 14px; text-align: center; }
+  .wo-kicker { margin: 0; color: #1c4874; font-weight: bold; font-size: 12px; }
+  .wo-offer { margin: 6px 0 8px !important; font-family: inherit !important; letter-spacing: 0 !important; line-height: 1.1; }
+  .wo-pct { display: block; color: #c8102e; font-size: 40px; font-weight: bold; }
+  .wo-sub { display: block; color: #333; font-size: 15px; font-weight: bold; margin-top: 2px; }
+  .wo-copy { margin: 0 0 8px; line-height: 1.6; }
+  .wo-terms {
+    display: inline-block; margin: 0 0 12px; padding: 3px 10px;
+    background: #e8ebf3; border: 1px solid #c9cfdf; color: #1c4874; font-size: 11px; font-weight: bold;
+  }
+  .wo-form { text-align: left; }
+  .wo-label { display: block; font-size: 11px; font-weight: bold; color: #333; margin-bottom: 3px; }
+  .wo-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .wo-row input {
+    flex: 1 1 200px; min-width: 0; height: 28px; padding: 0 7px; font: 13px Verdana, Geneva, sans-serif;
+    border: 1px solid #333; color: #222; background: #fff;
+  }
+  .wo-row input[aria-invalid="true"] { border-color: #c8102e; }
+  .wo-cta {
+    flex: 0 0 auto; height: 28px; padding: 0 14px; cursor: pointer; white-space: nowrap;
+    font: bold 12px Verdana, Geneva, sans-serif; background: #c8102e; border: 1px solid #8f0a20; color: #fff;
+  }
+  .wo-cta:hover:not(:disabled) { background: #a50d26; }
+  .wo-cta:disabled, .wo-row input:disabled { opacity: .7; cursor: default; }
+  .wo-err { margin: 6px 0 0; color: #c8102e; font-weight: bold; font-size: 11px; }
+  .wo-fine { margin: 8px 0 0; color: #7f7f7f; font-size: 10px; line-height: 1.5; }
+  .wo-fine a { color: #1c4874; text-decoration: underline; }
+  .wo-skip {
+    margin-top: 10px; background: none; border: 0; cursor: pointer;
+    color: #7f7f7f; font: 11px Verdana, Geneva, sans-serif; text-decoration: underline;
+  }
+  .wo-skip:hover { color: #333; }
+  .wo-done { padding-top: 20px; }
+  .wo-thanks { margin: 0 0 8px !important; color: #1c4874 !important; font: bold 18px Verdana, Geneva, sans-serif !important; letter-spacing: 0 !important; }
+  .wo-btn {
+    margin-top: 6px; height: 28px; padding: 0 18px; cursor: pointer;
+    font: bold 12px Verdana, Geneva, sans-serif; background: #1c4874; border: 1px solid #154273; color: #fff;
+  }
+  .wo-btn:hover { background: #154273; }
+  .wo button:focus-visible, .wo a:focus-visible, .wo input:focus-visible { outline: 2px solid #1c4874; outline-offset: 1px; }
+  .wo-head .wo-x:focus-visible { outline-color: #fff; }
+
+  @media (max-width: 480px) {
+    .wo-body { padding: 14px 14px 12px; }
+    .wo-pct { font-size: 34px; }
+    .wo-row input, .wo-cta { height: 40px; font-size: 14px; }
+    .wo-cta { flex: 1 1 100%; }
+    .wo-skip { padding: 8px; font-size: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wo-overlay { animation: none; }
+  }
+`;

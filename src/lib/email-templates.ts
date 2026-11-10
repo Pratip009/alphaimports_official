@@ -1,18 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Email Templates — Alpha Gemstone
+// Email Templates — Alphaimports.com
 // Design: full-bleed editorial jeweler's catalogue, email-client safe
 // Signature: a repeating "facet rule" — a jagged, gem-cut divider that cycles
 // through the four house stones (gold / sapphire / emerald / ruby). It appears
 // under every hero and is the one thing that should make these instantly
-// recognisable as Alpha Gemstone mail, nothing else.
+// recognisable as Alphaimports.com mail, nothing else.
 // No web fonts, no CSS classes required for rendering, no JS — inline styles.
 // Max-width: 680px, full-bleed header/hero, generous whitespace.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BRAND_NAME = 'Alpha Gemstone';
+const BRAND_NAME = 'Alphaimports.com';
 const BRAND_TAGLINE = 'Fine Gemstones & Diamonds';
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@alphagemstone.com';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphagemstone.com';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@alphaimports.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphaimports.com';
 const YEAR = new Date().getFullYear();
 const CONTENT_WIDTH = 680;
 
@@ -228,7 +228,7 @@ function emailWrapper(content: string, preheader = ''): string {
                           <strong style="color:${T.textMuted};font-weight:600;letter-spacing:0.05em;">${BRAND_NAME}</strong> &nbsp;·&nbsp; ${BRAND_TAGLINE}<br />
                           Questions? <a href="mailto:${SUPPORT_EMAIL}" style="color:${T.accentGold};text-decoration:none;">${SUPPORT_EMAIL}</a>
                           &nbsp;·&nbsp;
-                          <a href="${SITE_URL}" style="color:${T.textLight};text-decoration:none;">alphagemstone.com</a><br />
+                          <a href="${SITE_URL}" style="color:${T.textLight};text-decoration:none;">alphaimports.com</a><br />
                           <span style="display:inline-block;margin-top:10px;">© ${YEAR} ${BRAND_NAME}. All rights reserved.</span>
                         </td>
                       </tr>
@@ -273,7 +273,7 @@ export function otpEmailHtml(otp: string, purpose: 'signup' | 'reset_password'):
   const isSignup = purpose === 'signup';
   const heading = isSignup ? 'Verify your email' : 'Reset your password';
   const intro = isSignup
-    ? 'Enter the code below to complete your registration and activate your Alpha Gemstone account.'
+    ? 'Enter the code below to complete your registration and activate your Alphaimports.com account.'
     : 'Use this code to reset your password. If you did not request this, you can safely ignore this email.';
   const preheader = isSignup
     ? `Your verification code is ${otp} — expires in 10 minutes`
@@ -309,7 +309,7 @@ export function otpEmailHtml(otp: string, purpose: 'signup' | 'reset_password'):
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
         <tr>
           <td style="background-color:${T.warnBg};border-left:3px solid ${T.warnBdr};padding:15px 18px;">
-            <p style="margin:0;font-family:${T.sansStack};font-size:12px;color:#78350F;line-height:1.6;">Never share this code. Alpha Gemstone will never ask for it by phone or email.</p>
+            <p style="margin:0;font-family:${T.sansStack};font-size:12px;color:#78350F;line-height:1.6;">Never share this code. Alphaimports.com will never ask for it by phone or email.</p>
           </td>
         </tr>
       </table>
@@ -353,7 +353,7 @@ export function welcomeEmailHtml(name: string): string {
   <tr>
     <td style="background-color:${T.headerBg};padding:56px 52px 48px;">
       <p style="margin:0 0 20px;font-family:${T.sansStack};font-size:10px;font-weight:700;color:${T.accentGold};letter-spacing:0.22em;text-transform:uppercase;">Welcome</p>
-      <h1 style="margin:0 0 12px;font-family:${T.fontStack};font-size:38px;font-weight:400;color:#FFFFFF;letter-spacing:-0.01em;line-height:1.15;">Welcome to<br /><em style="color:${T.accentGold};font-style:italic;">Alpha Gemstone</em></h1>
+      <h1 style="margin:0 0 12px;font-family:${T.fontStack};font-size:38px;font-weight:400;color:#FFFFFF;letter-spacing:-0.01em;line-height:1.15;">Welcome to<br /><em style="color:${T.accentGold};font-style:italic;">Alphaimports.com</em></h1>
       <p style="margin:0;font-family:${T.sansStack};font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6;">Fine gemstones, delivered worldwide.</p>
     </td>
   </tr>
@@ -364,7 +364,7 @@ export function welcomeEmailHtml(name: string): string {
     <td class="email-pad" style="padding:46px 52px 0;">
       <p style="margin:0 0 16px;font-family:${T.fontStack};font-size:20px;color:${T.textPrimary};line-height:1.5;">Dear ${firstName},</p>
       <p style="margin:0 0 36px;font-family:${T.sansStack};font-size:15px;color:${T.textMuted};line-height:1.7;">
-        Your account is now active. You have full access to the Alpha Gemstone platform — explore our curated collection of fine gemstones and diamonds sourced from around the world.
+        Your account is now active. You have full access to the Alphaimports.com platform — explore our curated collection of fine gemstones and diamonds sourced from around the world.
       </p>
     </td>
   </tr>
@@ -386,7 +386,7 @@ export function welcomeEmailHtml(name: string): string {
     </td>
   </tr>`;
 
-  return emailWrapper(body, `Your Alpha Gemstone account is ready — start exploring our collection`);
+  return emailWrapper(body, `Your Alphaimports.com account is ready — start exploring our collection`);
 }
 
 
@@ -408,7 +408,7 @@ export function passwordResetConfirmationEmailHtml(name: string): string {
     <td class="email-pad" style="padding:46px 52px 42px;">
       <p style="margin:0 0 20px;font-family:${T.fontStack};font-size:19px;color:${T.textPrimary};">Dear ${firstName},</p>
       <p style="margin:0 0 32px;font-family:${T.sansStack};font-size:15px;color:${T.textMuted};line-height:1.7;">
-        Your Alpha Gemstone account password has been successfully updated. You can now sign in with your new credentials.
+        Your Alphaimports.com account password has been successfully updated. You can now sign in with your new credentials.
       </p>
 
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-bottom:36px;">
@@ -754,7 +754,7 @@ export function couponEmailHtml(data: CouponEmailData): string {
   <tr>
     <td class="email-pad" style="padding:46px 52px 42px;">
       <p style="margin:0 0 30px;font-family:${T.sansStack};font-size:15px;color:${T.textMuted};line-height:1.7;">
-        Thank you for joining the Alpha Gemstone community. Here's your exclusive discount code — use it on your next order.
+        Thank you for joining the Alphaimports.com community. Here's your exclusive discount code — use it on your next order.
       </p>
 
       <!-- Coupon code -->
@@ -822,7 +822,7 @@ export function dropshipApplicationReceivedEmailHtml(
     <td class="email-pad" style="padding:46px 52px 42px;">
       <p style="margin:0 0 20px;font-family:${T.fontStack};font-size:18px;color:${T.textPrimary};">Dear ${firstName},</p>
       <p style="margin:0 0 30px;font-family:${T.sansStack};font-size:15px;color:${T.textMuted};line-height:1.7;">
-        Thank you for applying to the Alpha Gemstone Dropship Program. Our team is reviewing your application now and typically responds within 1–2 business days.
+        Thank you for applying to the Alphaimports.com Dropship Program. Our team is reviewing your application now and typically responds within 1–2 business days.
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:34px;">
         <tr>
@@ -839,7 +839,7 @@ export function dropshipApplicationReceivedEmailHtml(
     </td>
   </tr>`;
 
-  return emailWrapper(body, 'We received your Alpha Gemstone Dropship Program application');
+  return emailWrapper(body, 'We received your Alphaimports.com Dropship Program application');
 }
 
 export interface AdminNewDropshipApplicationData {
@@ -912,7 +912,7 @@ export function dropshipApplicationApprovedEmailHtml(
   <tr>
     <td class="email-pad" style="padding:46px 52px 24px;">
       <p style="margin:0 0 30px;font-family:${T.sansStack};font-size:15px;color:${T.textMuted};line-height:1.7;">
-        Your Alpha Gemstone Dropship Program application has been approved. Bookmark your private Seller Portal link below — it's your no-password access to submit orders and track every shipment.
+        Your Alphaimports.com Dropship Program application has been approved. Bookmark your private Seller Portal link below — it's your no-password access to submit orders and track every shipment.
       </p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">
         <tr>
@@ -937,7 +937,7 @@ export function dropshipApplicationApprovedEmailHtml(
     </td>
   </tr>`;
 
-  return emailWrapper(body, `You're approved for the Alpha Gemstone Dropship Program`);
+  return emailWrapper(body, `You're approved for the Alphaimports.com Dropship Program`);
 }
 
 export interface DropshipApplicationRejectedData {
@@ -963,7 +963,7 @@ export function dropshipApplicationRejectedEmailHtml(
     <td class="email-pad" style="padding:46px 52px 42px;">
       <p style="margin:0 0 20px;font-family:${T.fontStack};font-size:18px;color:${T.textPrimary};">Dear ${firstName},</p>
       <p style="margin:0 0 24px;font-family:${T.sansStack};font-size:15px;color:${T.textMuted};line-height:1.7;">
-        Thank you for your interest in the Alpha Gemstone Dropship Program. After review, we're not able to approve your application at this time.
+        Thank you for your interest in the Alphaimports.com Dropship Program. After review, we're not able to approve your application at this time.
       </p>
       ${data.reason ? `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
@@ -979,7 +979,7 @@ export function dropshipApplicationRejectedEmailHtml(
     </td>
   </tr>`;
 
-  return emailWrapper(body, `An update on your Alpha Gemstone Dropship Program application`);
+  return emailWrapper(body, `An update on your Alphaimports.com Dropship Program application`);
 }
 
 export interface DropshipOrderConfirmationData {

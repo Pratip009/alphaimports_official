@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { connectDB } from "@/lib/db";
 import Blog from "@/models/Blog";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
-const TITLE = "Jewelry & Gemstone Blog | Alpha Gemstone";
+const TITLE = "Jewelry & Gemstone Blog | Alphaimports.com";
 const DESCRIPTION =
-  "Expert guides on diamonds, gemstones, and fine jewelry — buying advice, care tips, and industry insight from Alpha Gemstone.";
+  "Expert guides on diamonds, gemstones, and fine jewelry — buying advice, care tips, and industry insight from Alphaimports.com.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/blogs` },
   openGraph: {
@@ -18,9 +19,9 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/blogs`,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 export default async function BlogsLayout({

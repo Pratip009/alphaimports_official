@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 // ─── Admin reply sub-document ──────────────────────────────────────────────
 // A review can carry at most one admin reply (matches how the storefront
-// renders it — a single "Reply from Alpha Gemstone" block under the
+// renders it — a single "Reply from Alphaimports.com" block under the
 // review). Re-posting a reply just overwrites text/repliedAt/repliedBy
 // rather than stacking multiple replies.
 export interface IReviewReply {

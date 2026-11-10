@@ -59,7 +59,7 @@ export default function AlphaImportsSection() {
       `}</style>
 
       <section className="cl-panel">
-        <h2 className="cl-panel-head">Alpha Gemstone</h2>
+        <h2 className="cl-panel-head">Alphaimports.com</h2>
         <div className="cl-panel-body">
           <div className="ais-intro">
             <div className="ais-img">
@@ -86,7 +86,7 @@ export default function AlphaImportsSection() {
               </p>
               <p>
                 Available in more than <strong>15 luminous shades</strong> — a stunning
-                diamond ring, necklace, bracelet, or pair of earrings from Alpha Gemstone
+                diamond ring, necklace, bracelet, or pair of earrings from Alphaimports.com
                 is certain to leave any special person in your life speechless.
               </p>
               <div className="ais-btns">

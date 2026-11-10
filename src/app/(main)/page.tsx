@@ -1,4 +1,5 @@
 import ShopByCategory from "@/components/ui/Shopbycategory";
+import JewelryModal from "@/components/ui/Jewelrymodal";
 
 // Only "Shop by category" is live on the home page right now; the other
 // sections are commented out below. The hero-slide database query that fed
@@ -32,7 +33,8 @@ export default function HomePage() {
       {/* <OurCollectionSection videoSrc="/video/shop.mp4" /> */}
       {/* <Testimonials /> */}
       {/* <FeaturedInNews /> */}
-      {/* <JewelryModal /> */}
+      {/* Welcome offer (10% off): once per visitor, after the cookie choice. */}
+      <JewelryModal />
       {/* <MetalPriceTicker/> */}
     </main>
   );

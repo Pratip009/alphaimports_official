@@ -77,7 +77,7 @@ export default function CompareLaunchButton({ product, className = 'btn-secondar
               ×
             </button>
             <p className="section-subtitle" style={{ marginBottom: 6 }}>
-              Alpha Gemstone
+              Alphaimports.com
             </p>
             <h2 className="font-display" style={{ fontSize: '1.5rem', marginBottom: 20 }}>
               Compare Stones

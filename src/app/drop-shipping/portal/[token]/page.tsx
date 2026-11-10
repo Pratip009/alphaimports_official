@@ -4,7 +4,7 @@ import Footer from "@/components/ui/Footer";
 import DropshipPortal from "@/components/dropship/DropshipPortal";
 
 export const metadata: Metadata = {
-  title: "Seller Portal | Alpha Gemstone Dropship Program",
+  title: { absolute: "Seller Portal | Alphaimports.com Dropship Program" },
   robots: { index: false, follow: false },
 };
 

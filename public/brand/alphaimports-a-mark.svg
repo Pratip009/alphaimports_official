@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Alphaimports.com</title>
+  <defs>
+    <radialGradient id="bg" cx="38%" cy="30%" r="85%">
+      <stop offset="0" stop-color="#3a679b"/>
+      <stop offset=".55" stop-color="#1c4874"/>
+      <stop offset="1" stop-color="#0b2240"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#9fb3cc" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".35"/>
+    </linearGradient>
+    <linearGradient id="metal" gradientUnits="userSpaceOnUse" x1="120" y1="80" x2="400" y2="430">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".28" stop-color="#e3e9f2"/>
+      <stop offset=".46" stop-color="#9eb0c8"/>
+      <stop offset=".58" stop-color="#f7f9fc"/>
+      <stop offset=".78" stop-color="#c3cfdf"/>
+      <stop offset="1" stop-color="#eef2f8"/>
+    </linearGradient>
+    <linearGradient id="sheen" gradientUnits="userSpaceOnUse" x1="150" y1="120" x2="330" y2="300">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".47" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset=".54" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+      <stop offset=".25" stop-color="#dbe8ff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#dbe8ff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="aclip">
+      <path clip-rule="evenodd" d="M230.0,84.0 L262.0,84.0 L381.2,398.0 L418.0,398.0 L418.0,416.0 L284.0,416.0 L284.0,398.0 L295.2,398.0 L267.1,324.0 L167.6,324.0 L142.2,398.0 L154.0,398.0 L154.0,416.0 L86.0,416.0 L86.0,398.0 L122.2,398.0 Z M214.9,186.2 L258.0,300.0 L175.8,300.0 Z"/>
+    </clipPath>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#04101f" flood-opacity=".55"/>
+    </filter>
+  </defs>
+  <g transform="translate(0.0,0.0) scale(1.0)">
+    <g filter="url(#drop)">
+      <rect x="0" y="0" width="512" height="512" fill="url(#metal)" clip-path="url(#aclip)"/>
+    </g>
+    <rect x="0" y="0" width="512" height="512" fill="url(#sheen)" clip-path="url(#aclip)"/>
+    <circle cx="282.0" cy="90.0" r="70" fill="url(#glow)"/>
+    <path d="M282.0,32 C284.5,80 292.0,87.5 340.0,90 C292.0,92.5 284.5,100 282.0,148 C279.5,100 272.0,92.5 224.0,90 C272.0,87.5 279.5,80 282.0,32 Z" fill="#ffffff"/>
+    <path d="M150,130 C151.5,144 156,148.5 170,150 C156,151.5 151.5,156 150,170 C148.5,156 144,151.5 130,150 C144,148.5 148.5,144 150,130 Z" fill="#ffffff" opacity=".75"/>
+  </g>
+</svg>

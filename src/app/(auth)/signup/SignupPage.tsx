@@ -323,7 +323,7 @@ export default function SignupPage({ googleEnabled = false }: { googleEnabled?: 
               </svg>
             </div>
             <div>
-              <span className="auth-left-logo-text">Alpha Gemstone</span>
+              <span className="auth-left-logo-text">Alphaimports.com</span>
               <span className="auth-left-logo-sub">Fine Gemstones</span>
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function SignupPage({ googleEnabled = false }: { googleEnabled?: 
                   />
                 </svg>
               </div>
-              <span className="auth-mobile-brand-text">Alpha Gemstone</span>
+              <span className="auth-mobile-brand-text">Alphaimports.com</span>
             </div>
 
             {step === "form" ? (

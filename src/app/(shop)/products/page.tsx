@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { listProducts, listProductsWithCategoryFilters, getProductFacets } from "@/services/product.service";
 import { ProductFilterParams } from "@/services/productFilter.service";
 import { parseCategoryFilterSelectionFromObject } from "@/services/categoryFilter.service";
@@ -52,10 +53,14 @@ function resolveProductType(
   return "diamond";
 }
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
 // Core taxonomy params get indexed; everything else is noindex,follow.
 const CORE_PARAMS = ["category", "subcategory", "subSubcategory"] as const;
+
+function prettyLabel(slug: string): string {
+  return slug.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export async function generateMetadata({
   searchParams,
@@ -68,6 +73,7 @@ export async function generateMetadata({
   const isAlternative = /alternative|moissanite|simulat|\bcz\b/i.test(sp.category || "");
   const isJewelry = /jewel/i.test(sp.category || "");
   const isGemstone = /gem|precious|special/i.test(sp.category || "");
+  const isDiamond = /diamond/i.test(sp.category || "") || !!sp.shape;
 
   const label = isWatch
     ? "Timepieces"
@@ -77,22 +83,32 @@ export async function generateMetadata({
         ? "Jewelry"
         : isGemstone
           ? "Gemstones"
-          : "Diamonds";
+          : isDiamond
+            ? "Diamonds"
+            : sp.category
+              ? prettyLabel(sp.category)
+              : "All Products";
 
-  const filterBits = [sp.shape, sp.subcategory, sp.subSubcategory, sp.q ?? sp.search].filter(Boolean);
-  const title = filterBits.length
-    ? `${filterBits.join(" ")} ${label} | Alpha Gemstone`
-    : `${label} | Alpha Gemstone`;
+  // The root layout's title template appends " | Alphaimports.com".
+  const searchTerm = (sp.q ?? sp.search ?? "").trim();
+  const filterBits = [sp.shape, sp.subcategory, sp.subSubcategory].filter(Boolean).map((b) => prettyLabel(b as string));
+  const title = searchTerm
+    ? `Search results for “${searchTerm.slice(0, 60)}”`
+    : filterBits.length
+      ? `${filterBits.join(" ")} ${label}`
+      : label;
 
   const description = isWatch
-    ? "Shop luxury timepieces at Alpha Gemstone — exceptional horological craftsmanship."
+    ? "Shop luxury timepieces at Alphaimports.com — exceptional horological craftsmanship."
     : isAlternative
-      ? "Shop moissanite, cubic zirconia, simulated and lab-created stones at Alpha Gemstone."
+      ? "Shop moissanite, cubic zirconia, simulated and lab-created stones at Alphaimports.com."
       : isJewelry
-        ? "Shop fine jewelry at Alpha Gemstone."
+        ? "Shop fine jewelry at Alphaimports.com."
         : isGemstone
-          ? "Shop natural gemstones at Alpha Gemstone."
-          : "Shop diamonds at Alpha Gemstone, with lab reports on applicable stones.";
+          ? "Shop natural gemstones at Alphaimports.com."
+          : isDiamond
+            ? "Shop diamonds at Alphaimports.com, with lab reports on applicable stones."
+            : "Shop diamonds, gemstones, jewelry and watches at Alphaimports.com — the lowest prices on the planet, serving customers since 1988.";
 
   const coreQuery = new URLSearchParams();
   for (const key of CORE_PARAMS) {
@@ -115,13 +131,14 @@ export async function generateMetadata({
       ? { index: false, follow: true }
       : { index: true, follow: true },
     openGraph: {
+      images: [DEFAULT_OG_IMAGE],
       type: "website",
       url: canonical,
       title,
       description,
-      siteName: "Alpha Gemstone",
+      siteName: "Alphaimports.com",
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title, description },
   };
 }
 

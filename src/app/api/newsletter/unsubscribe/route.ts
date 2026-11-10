@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import NewsletterSubscriber from '@/models/NewsletterSubscriber';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphagemstone.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphaimports.com';
 
 export async function GET(req: NextRequest) {
   try {

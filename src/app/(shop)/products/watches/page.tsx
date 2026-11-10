@@ -13,17 +13,17 @@ interface PageProps {
 }
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CORE_PARAMS = ["subcategory"] as const;
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const sp = await searchParams;
   const filterBits = [sp.watchBrand ?? sp.brand, sp.subcategory, sp.q].filter(Boolean);
   const title = filterBits.length
-    ? `${filterBits.join(" ")} Watches | Alpha Gemstone`
-    : "Luxury Watches | Alpha Gemstone";
+    ? `${filterBits.join(" ")} Watches | Alphaimports.com`
+    : "Luxury Watches | Alphaimports.com";
   const description =
-    "Shop luxury timepieces at Alpha Gemstone — exceptional horological craftsmanship from renowned watchmakers.";
+    "Shop luxury timepieces at Alphaimports.com — exceptional horological craftsmanship from renowned watchmakers.";
 
   const coreQuery = new URLSearchParams();
   for (const key of CORE_PARAMS) if (sp[key]) coreQuery.set(key, sp[key]);
@@ -37,13 +37,13 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   );
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     robots: hasNonCoreParams
       ? { index: false, follow: true }
       : { index: true, follow: true },
-    openGraph: { type: "website", url: canonical, title, description, siteName: "Alpha Gemstone" },
+    openGraph: { type: "website", url: canonical, title, description, siteName: "Alphaimports.com" },
     twitter: { card: "summary_large_image", title, description },
   };
 }

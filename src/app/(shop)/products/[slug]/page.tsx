@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { connectDB } from "@/lib/db";
 import mongoose from "mongoose";
 import { getProductById, getProductBySlug } from "@/services/product.service";
@@ -126,7 +127,7 @@ const getCachedProduct = cache(async (param: string) => {
 });
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
 export async function generateMetadata({
   params,
@@ -139,7 +140,7 @@ export async function generateMetadata({
 
   if (!resolved) {
     return {
-      title: "Product Not Found | Alpha Gemstone",
+      title: { absolute: "Product Not Found | Alphaimports.com" },
       robots: { index: false, follow: true },
     };
   }
@@ -158,10 +159,10 @@ export async function generateMetadata({
   const plainDesc = p.description ? htmlToText(p.description) : "";
   const description = plainDesc
     ? plainDesc.slice(0, 160)
-    : `Shop ${p.name} — ${kindLabel} at Alpha Gemstone. Expertly curated, ` +
+    : `Shop ${p.name} — ${kindLabel} at Alphaimports.com. Expertly curated, ` +
       `secure checkout, and expert support on every fine jewelry order.`;
 
-  const title = `${p.name} | ${kindLabel} | Alpha Gemstone`;
+  const title = `${p.name} | ${kindLabel} | Alphaimports.com`;
 
   const image = (p.images ?? []).filter(Boolean)[0];
   const keywords = Array.from(
@@ -172,7 +173,7 @@ export async function generateMetadata({
         p.category?.name,
         p.subcategory?.name,
         p.gemstoneName,
-        "Alpha Gemstone",
+        "Alphaimports.com",
       ].filter((v): v is string => !!v),
     ),
   );
@@ -199,16 +200,16 @@ export async function generateMetadata({
       url: canonical,
       title,
       description,
-      siteName: "Alpha Gemstone",
+      siteName: "Alphaimports.com",
       images: image
         ? [{ url: image, width: 1200, height: 1200, alt: p.name }]
-        : undefined,
+        : [DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : undefined,
+      images: [image ?? DEFAULT_OG_IMAGE.url],
     },
     other: {
       "product:price:amount": String(p.price),
@@ -383,11 +384,11 @@ export default async function ProductDetailPage({
     name: p.name,
     description:
       (p.description ? htmlToText(p.description) : "") ||
-      `${p.name} — ${kindLabelForLd} at Alpha Gemstone.`,
+      `${p.name} — ${kindLabelForLd} at Alphaimports.com.`,
     image: ldImages.length ? ldImages : undefined,
     sku: p.legacySku || String(p._id),
     category: kindLabelForLd,
-    brand: { "@type": "Brand", name: "Alpha Gemstone" },
+    brand: { "@type": "Brand", name: "Alphaimports.com" },
     offers: {
       "@type": "Offer",
       url: canonicalUrl,
@@ -398,7 +399,7 @@ export default async function ProductDetailPage({
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: "Alpha Gemstone" },
+      seller: { "@type": "Organization", name: "Alphaimports.com" },
     },
     ...(ratingStats && ratingStats.total > 0
       ? {

@@ -336,7 +336,7 @@ export default function Footer() {
       <div className="ft-bar">
         <div className="ft-bar-inner">
           <p className="ft-copy">
-            © {new Date().getFullYear()} Alpha Gemstone NY Inc. All Rights
+            © {new Date().getFullYear()} Alphaimports.com · Alpha Gemstone NY Inc. All Rights
             Reserved.
           </p>
 

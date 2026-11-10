@@ -43,7 +43,7 @@ async function sendCouponEmail(
   const { error } = await resend.emails.send({
     from:    EMAIL_FROM,
     to:      email,
-    subject: `Your ${discountPercent}% Off Coupon — Alpha Gemstone`,
+    subject: `Your ${discountPercent}% Off Coupon — Alphaimports.com`,
     html:    couponEmailHtml({ email, code, expiresAt, discountPercent, minPurchase: MIN_PURCHASE }),
   });
 

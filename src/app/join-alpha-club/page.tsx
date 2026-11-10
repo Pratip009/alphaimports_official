@@ -1,26 +1,28 @@
 import FooterPageLayout from '@/components/footer-pages/footer-page-layout';
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import ClassicSubscribeBox from '@/components/footer-pages/ClassicSubscribeBox';
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CANONICAL = `${SITE_URL}/join-alpha-club`;
-const TITLE = "Join Alpha Club | Alpha Gemstone";
+const TITLE = "Join Alpha Club | Alphaimports.com";
 const DESCRIPTION =
-  "Sign up for exclusive offers, new arrivals, and the latest updates from Alpha Gemstone.";
+  "Sign up for exclusive offers, new arrivals, and the latest updates from Alphaimports.com.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: CANONICAL },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: CANONICAL,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 const page = () => {
@@ -29,7 +31,7 @@ const page = () => {
 
       <p>
         Join our mailing list to receive exclusive offers, new arrivals,
-        and the latest updates from Alpha Gemstone NY Inc.
+        and the latest updates from Alphaimports.com
       </p>
 
       {/* Subscriber Benefits */}

@@ -96,8 +96,8 @@ async function sendOtpEmail(
 ): Promise<void> {
   const subject =
     purpose === 'signup'
-      ? 'Your Alpha Gemstone verification code'
-      : 'Reset your Alpha Gemstone password';
+      ? 'Your Alphaimports.com verification code'
+      : 'Reset your Alphaimports.com password';
 
   if (!process.env.RESEND_API_KEY) {
     // Fail loudly instead of letting `resend.emails.send` throw an opaque
@@ -150,12 +150,12 @@ function otpEmailText(otp: string, purpose: 'signup' | 'reset_password'): string
       ? [
           'Verify your email',
           '',
-          'Enter this code to complete your registration and activate your Alpha Gemstone account:',
+          'Enter this code to complete your registration and activate your Alphaimports.com account:',
         ]
       : [
           'Reset your password',
           '',
-          'Use this code to reset your Alpha Gemstone password. If you did not request this, you can safely ignore this email.',
+          'Use this code to reset your Alphaimports.com password. If you did not request this, you can safely ignore this email.',
         ];
   return [
     ...lines,
@@ -164,9 +164,9 @@ function otpEmailText(otp: string, purpose: 'signup' | 'reset_password'): string
     '',
     `This code expires in ${OTP_EXPIRY_MINUTES} minutes.`,
     '',
-    'Never share this code. Alpha Gemstone will never ask for it by phone or email.',
+    'Never share this code. Alphaimports.com will never ask for it by phone or email.',
     '',
-    'Alpha Gemstone',
+    'Alphaimports.com',
   ].join('\n');
 }
 
@@ -307,7 +307,7 @@ export async function verifySignupOtp(
   void resend.emails.send({
     from: FROM,
     to: normalizedEmail,
-    subject: `Welcome to Alpha Gemstone`,
+    subject: `Welcome to Alphaimports.com`,
     html: welcomeEmailHtml(record.pendingName),
   });
 

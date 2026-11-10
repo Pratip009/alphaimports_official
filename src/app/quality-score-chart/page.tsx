@@ -1,25 +1,27 @@
 import FooterPageLayout from '@/components/footer-pages/footer-page-layout';
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CANONICAL = `${SITE_URL}/quality-score-chart`;
-const TITLE = "Quality Score Chart | Alpha Gemstone";
+const TITLE = "Quality Score Chart | Alphaimports.com";
 const DESCRIPTION =
-  "Gemstone and diamond grading standards and educational quality references from Alpha Gemstone.";
+  "Gemstone and diamond grading standards and educational quality references from Alphaimports.com.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: CANONICAL },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: CANONICAL,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 const page = () => {

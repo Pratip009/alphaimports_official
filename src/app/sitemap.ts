@@ -11,7 +11,7 @@ import {
 } from "@/lib/sitemapConfig";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
 /**
  * Next.js's sitemap XML serializer does NOT escape special characters in
@@ -66,7 +66,6 @@ function staticRoutes(now: Date): MetadataRoute.Sitemap {
     page("/about", 0.6),
     page("/contact", 0.5),
     page("/faq", 0.6),
-    page("/info", 0.5),
     page("/learning-center", 0.55),
     page("/help-center", 0.5),
     page("/customer-service", 0.5),

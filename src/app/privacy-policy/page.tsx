@@ -1,25 +1,27 @@
 import FooterPageLayout from '@/components/footer-pages/footer-page-layout';
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CANONICAL = `${SITE_URL}/privacy-policy`;
-const TITLE = "Privacy Policy | Alpha Gemstone";
+const TITLE = "Privacy Policy | Alphaimports.com";
 const DESCRIPTION =
-  "How Alpha Gemstone NY Inc. collects, uses, and protects your personal information when you shop or browse our site.";
+  "How Alphaimports.com collects, uses, and protects your personal information when you shop or browse our site.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: CANONICAL },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: CANONICAL,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 export default function PrivacyPolicyPage() {
@@ -27,7 +29,7 @@ export default function PrivacyPolicyPage() {
     <FooterPageLayout title="Privacy Policy">
 
       <p>
-        At Alpha Gemstone NY Inc., we respect your privacy and are committed
+        At Alphaimports.com, operated by Alpha Gemstone NY Inc., we respect your privacy and are committed
         to protecting your personal information.
       </p>
 

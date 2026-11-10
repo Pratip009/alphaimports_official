@@ -568,7 +568,7 @@ export default function InfoPage() {
         <div className="relative flex items-center justify-center gap-2.5 mb-4">
           <Gem size={16} strokeWidth={1.5} className="text-gold" />
           <span className="font-serif text-xl tracking-wide text-cream-warm font-semibold">
-            Alpha Gemstone
+            Alphaimports.com
           </span>
         </div>
         <h1 className="relative font-serif text-[clamp(1.8rem,4vw,2.6rem)] font-bold text-cream-warm tracking-tight mb-2">
@@ -614,7 +614,7 @@ export default function InfoPage() {
       {/* ── Footer Strip ── */}
       <footer className="bg-ink-dark py-5 text-center">
         <p className="text-[0.62rem] text-ink-soft">
-          © {new Date().getFullYear()} Alpha Gemstone NY Inc. All Rights Reserved. ·{' '}
+          © {new Date().getFullYear()} Alphaimports.com · Alpha Gemstone NY Inc. All Rights Reserved. ·{' '}
           <a href="https://www.alphaimports.com" className="hover:text-gold transition-colors">
             alphaimports.com
           </a>

@@ -295,7 +295,7 @@ function Invoice({ order, onClose }: { order: Order; onClose: () => void }) {
             </div>
           </div>
           <div style={{ marginTop: 52, textAlign: 'center', borderTop: '1px solid #e3e6ee', paddingTop: 22 }}>
-            <div style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: 15, color: '#1c4874', fontStyle: 'italic', marginBottom: 6 }}>Alpha Gemstone — Fine Gemstones & Jewellery</div>
+            <div style={{ fontFamily: 'Verdana, Geneva, Tahoma, sans-serif', fontSize: 15, color: '#1c4874', fontStyle: 'italic', marginBottom: 6 }}>Alphaimports.com — Fine Gemstones & Jewellery</div>
             <div style={{ fontSize: 10, color: '#999999', letterSpacing: '0.12em' }}>www.alphaimports.com · support@alphaimports.com</div>
           </div>
         </div>

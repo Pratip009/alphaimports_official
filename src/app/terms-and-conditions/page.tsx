@@ -1,25 +1,27 @@
 import FooterPageLayout from '@/components/footer-pages/footer-page-layout';
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CANONICAL = `${SITE_URL}/terms-and-conditions`;
-const TITLE = "Terms & Conditions | Alpha Gemstone";
+const TITLE = "Terms & Conditions | Alphaimports.com";
 const DESCRIPTION =
-  "The terms and conditions governing purchases and use of AlphaImports.com / Alpha Gemstone.";
+  "The terms and conditions governing purchases and use of AlphaImports.com / Alphaimports.com.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: CANONICAL },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: CANONICAL,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 const page = () => {
@@ -27,7 +29,7 @@ const page = () => {
     <FooterPageLayout title="Terms & Conditions">
 
       <p>
-        By using alphagemstone.com, customers agree to the following terms
+        By using alphaimports.com, customers agree to the following terms
         and conditions.
       </p>
 
@@ -78,7 +80,7 @@ const page = () => {
         </h3>
 
         <p>
-          Alpha Gemstone NY Inc. reserves the right to update or modify
+          Alpha Gemstone NY Inc., the operator of Alphaimports.com, reserves the right to update or modify
           these terms at any time without prior notice. Continued use
           of the website constitutes acceptance of any revised terms.
         </p>

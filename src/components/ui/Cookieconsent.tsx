@@ -1,486 +1,219 @@
 "use client";
+/**
+ * Cookie preferences bar in the classic Alphaimports.com style: a bottom bar
+ * with the site's navy rule, Verdana copy and classic buttons, plus an
+ * expandable "Preferences" panel.
+ *
+ * Behaviour is unchanged from the previous version:
+ *   - shown 1.2s after the first visit, until a choice is saved;
+ *   - stored in localStorage["alpha_cookie_consent"] as
+ *     { necessary, analytics, marketing, ts };
+ *   - "Accept All" saves everything on; "Reject Optional" and the close
+ *     button save necessary-only; "Save Preferences" saves the toggles.
+ * It also dispatches a window "alpha:cookie-consent" event when saved, so
+ * other UI (the welcome-offer modal) can wait for the visitor's choice.
+ *
+ * NOTE: nothing else in the app reads this choice yet — analytics currently
+ * runs regardless of it.
+ */
+import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
+import { COOKIE_CONSENT_EVENT, COOKIE_CONSENT_KEY } from "@/lib/cookieConsent";
 
-import { useState, useEffect } from "react";
-import { X, Cookie, ChevronDown, ChevronUp, Shield, BarChart2, Megaphone } from "lucide-react";
-
-type ConsentState = {
+interface ConsentState {
   necessary: boolean;
   analytics: boolean;
   marketing: boolean;
-};
+}
 
-const STORAGE_KEY = "alpha_cookie_consent";
 
 export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [animatingOut, setAnimatingOut] = useState(false);
-  const [consent, setConsent] = useState<ConsentState>({
-    necessary: true,
-    analytics: false,
-    marketing: false,
-  });
+  const [leaving, setLeaving] = useState(false);
+  const [consent, setConsent] = useState<ConsentState>({ necessary: true, analytics: false, marketing: false });
+  const id = useId();
+  const firstToggleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    let stored: string | null = null;
+    try { stored = localStorage.getItem(COOKIE_CONSENT_KEY); } catch { /* storage blocked */ }
     if (!stored) {
       const t = setTimeout(() => setVisible(true), 1200);
       return () => clearTimeout(t);
     }
   }, []);
 
-  const dismiss = (acceptAll?: boolean) => {
-    const finalConsent: ConsentState = acceptAll
-      ? { necessary: true, analytics: true, marketing: true }
-      : consent;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...finalConsent, ts: Date.now() }));
-    setAnimatingOut(true);
-    setTimeout(() => setVisible(false), 600);
+  useEffect(() => {
+    if (expanded) firstToggleRef.current?.focus();
+  }, [expanded]);
+
+  const save = (choice: ConsentState) => {
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify({ ...choice, ts: Date.now() }));
+    } catch { /* storage blocked — still close the bar */ }
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_EVENT, { detail: choice }));
+    setLeaving(true);
+    setTimeout(() => setVisible(false), 250);
   };
+  const acceptAll = () => save({ necessary: true, analytics: true, marketing: true });
+  const rejectOptional = () => save({ necessary: true, analytics: false, marketing: false });
+  const savePrefs = () => save(consent);
 
   if (!visible) return null;
 
   return (
-    <>
-      <style>{`
-        @keyframes ccSlideUp {
-          from { opacity: 0; transform: translateY(32px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
-        }
-        @keyframes ccSlideDown {
-          from { opacity: 1; transform: translateY(0)    scale(1);    }
-          to   { opacity: 0; transform: translateY(32px) scale(0.96); }
-        }
-        @keyframes ccGlow {
-          0%, 100% { opacity: 0.5; }
-          50%       { opacity: 1;   }
-        }
-        @keyframes ccShimmer {
-          0%   { background-position: -200% center; }
-          100% { background-position:  200% center; }
-        }
-        .cc-wrap {
-          animation: ${animatingOut ? "ccSlideDown" : "ccSlideUp"} 0.55s cubic-bezier(0.34,1.2,0.64,1) both;
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-        .cc-gem-glow {
-          animation: ccGlow 3s ease-in-out infinite;
-        }
-        .cc-shimmer-btn {
-          background-size: 200% auto;
-          animation: ccShimmer 3s linear infinite;
-        }
-        .cc-toggle {
-          transition: background 0.3s, box-shadow 0.3s;
-        }
-        .cc-toggle.on  { background: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.25); }
-        .cc-toggle.off { background: var(--border-dark); }
-        .cc-details-panel {
-          overflow: hidden;
-          transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
-        }
-        .cc-details-panel.open  { max-height: 400px; opacity: 1; }
-        .cc-details-panel.shut  { max-height: 0;     opacity: 0; }
+    <section
+      className={`ck${leaving ? " is-leaving" : ""}`}
+      role="region"
+      aria-labelledby={`${id}-title`}
+      onKeyDown={(e) => { if (e.key === "Escape" && expanded) setExpanded(false); }}
+    >
+      <style>{CSS}</style>
+      <div className="ck-inner">
+        <div className="ck-text">
+          <h2 id={`${id}-title`} className="ck-title">Cookies on Alphaimports.com</h2>
+          <p>
+            We use cookies to run the store, keep your cart and account working, and — with your
+            permission — to understand how visitors use the site and to show relevant offers.
+            Read our <Link href="/privacy-policy">Privacy Policy</Link>.
+          </p>
+        </div>
 
-        /* Small-phone tightening (inline styles below already use clamp(),
-           this just trims a bit more layout slack on very narrow viewports) */
-        @media (max-width: 380px) {
-          .cc-actions { gap: 8px !important; }
-          .cc-header  { gap: 10px !important; }
-        }
-      `}</style>
+        <div className="ck-actions">
+          <button type="button" className="ck-btn ck-primary" onClick={acceptAll}>Accept All</button>
+          <button type="button" className="ck-btn" onClick={rejectOptional}>Reject Optional</button>
+          <button
+            type="button"
+            className="ck-link"
+            aria-expanded={expanded}
+            aria-controls={`${id}-prefs`}
+            onClick={() => setExpanded((v) => !v)}
+          >
+            {expanded ? "Hide preferences" : "Preferences"}
+          </button>
+        </div>
 
-      {/* Backdrop blur */}
-      <div
-        className="fixed inset-0 z-[9998] pointer-events-none"
-        style={{
-          background: "linear-gradient(to top, rgba(26,24,20,0.35) 0%, transparent 60%)",
-          opacity: animatingOut ? 0 : 1,
-          transition: "opacity 0.5s ease",
-        }}
-      />
+        <button type="button" className="ck-close" aria-label="Close and keep only necessary cookies" onClick={rejectOptional}>
+          ×
+        </button>
+      </div>
 
-      {/* Card */}
-      <div
-        className="cc-wrap fixed z-[9999] bottom-3 sm:bottom-5 inset-x-0 mx-auto w-[calc(100%-1.25rem)] sm:w-[calc(100%-2rem)] max-w-[640px]"
-        role="dialog"
-        aria-label="Cookie preferences"
-        aria-modal="true"
-      >
-        <div
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderTop: "2px solid var(--gold)",
-            boxShadow: "0 24px 80px rgba(26,24,20,0.22), 0 4px 16px rgba(26,24,20,0.1)",
-            borderRadius: "2px",
-          }}
-        >
-          {/* Gold top accent bar */}
-          <div
-            style={{
-              height: "2px",
-              background: "linear-gradient(90deg, transparent 0%, var(--gold) 40%, var(--accent) 70%, transparent 100%)",
-              backgroundSize: "200% auto",
-            }}
-            className="cc-shimmer-btn"
-          />
-
-          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-5 sm:pb-6">
-            {/* Header row */}
-            <div
-              className="cc-header flex items-start justify-between gap-3 sm:gap-4 mb-4"
-              style={{ flexWrap: "nowrap" }}
-            >
-              <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
-                {/* Diamond gem icon */}
-                <div
-                  className="relative flex-shrink-0 flex items-center justify-center"
-                  style={{
-                    width: "clamp(34px, 8vw, 40px)",
-                    height: "clamp(34px, 8vw, 40px)",
-                    background: "linear-gradient(135deg, var(--gold-light), var(--accent-light))",
-                    border: "1px solid var(--gold)",
-                    borderRadius: "2px",
-                    transform: "rotate(45deg)",
-                  }}
-                >
-                  <div style={{ transform: "rotate(-45deg)" }}>
-                    <Cookie size={16} strokeWidth={1.5} style={{ color: "var(--accent-dark)" }} />
-                  </div>
-                  {/* Glow */}
-                  <div
-                    className="cc-gem-glow absolute inset-0"
-                    style={{
-                      background: "radial-gradient(circle, rgba(201,168,76,0.4) 0%, transparent 70%)",
-                      borderRadius: "2px",
-                    }}
-                  />
-                </div>
-
-                <div style={{ minWidth: 0 }}>
-                  <h2
-                    style={{
-                      fontFamily: '"Elms Sans", sans-serif',
-                      fontSize: "clamp(1.05rem, 4.2vw, 1.25rem)",
-                      fontWeight: 600,
-                      color: "var(--text)",
-                      letterSpacing: "0.02em",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Your Privacy Matters
-                  </h2>
-                  <p
-                    style={{
-                      fontFamily: '"Elms Sans", sans-serif',
-                      fontSize: "clamp(0.58rem, 2vw, 0.65rem)",
-                      letterSpacing: "0.12em",
-                      color: "var(--gold)",
-                      textTransform: "uppercase",
-                      marginTop: "2px",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Alpha Gemstone · Cookie Preferences
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => dismiss()}
-                aria-label="Close without saving"
-                style={{
-                  color: "var(--muted)",
-                  transition: "color 0.2s",
-                  flexShrink: 0,
-                  marginTop: "2px",
-                  padding: "4px",
-                  margin: "-4px -4px 0 0",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = "var(--text)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "var(--muted)")}
-              >
-                <X size={18} strokeWidth={1.5} />
-              </button>
-            </div>
-
-            {/* Body text */}
-            <p
-              style={{
-                fontFamily: '"Elms Sans", sans-serif',
-                fontSize: "clamp(0.76rem, 2.4vw, 0.8rem)",
-                lineHeight: 1.7,
-                color: "var(--text-secondary)",
-                letterSpacing: "0.02em",
-                marginBottom: "18px",
-              }}
-            >
-              We use cookies to enhance your experience discovering our curated gemstone collections.
-              You may choose which categories to enable — necessary cookies are always active.{" "}
-              <a
-                href="/privacy-policy"
-                style={{ color: "var(--accent)", textDecoration: "underline", textUnderlineOffset: "3px" }}
-              >
-                Privacy Policy
-              </a>
-            </p>
-
-            {/* Expandable preferences */}
-            <div
-              className="cc-details-panel"
-              style={expanded ? { maxHeight: "400px", opacity: 1 } : { maxHeight: 0, opacity: 0 }}
-            >
-              <div
-                style={{
-                  borderTop: "1px solid var(--border)",
-                  borderBottom: "1px solid var(--border)",
-                  padding: "16px 0",
-                  marginBottom: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
-                }}
-              >
-                {/* Necessary */}
-                <PreferenceRow
-                  icon={<Shield size={14} strokeWidth={1.5} />}
-                  label="Strictly Necessary"
-                  description="Essential for the website to function. Cannot be disabled."
-                  checked={true}
-                  locked={true}
-                  onChange={() => {}}
-                />
-                {/* Analytics */}
-                <PreferenceRow
-                  icon={<BarChart2 size={14} strokeWidth={1.5} />}
-                  label="Analytics"
-                  description="Help us understand how visitors interact with our collections."
-                  checked={consent.analytics}
-                  locked={false}
-                  onChange={v => setConsent(c => ({ ...c, analytics: v }))}
-                />
-                {/* Marketing */}
-                <PreferenceRow
-                  icon={<Megaphone size={14} strokeWidth={1.5} />}
-                  label="Marketing"
-                  description="Personalised offers and gemstone recommendations tailored to you."
-                  checked={consent.marketing}
-                  locked={false}
-                  onChange={v => setConsent(c => ({ ...c, marketing: v }))}
-                />
-              </div>
-            </div>
-
-            {/* Action row */}
-            <div className="cc-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
-              {/* Accept All — gold shimmer CTA */}
-              <button
-                onClick={() => dismiss(true)}
-                className="cc-shimmer-btn"
-                style={{
-                  flex: 1,
-                  width: "100%",
-                  padding: "clamp(10px, 2.5vw, 11px) 20px",
-                  fontFamily: '"Elms Sans", sans-serif',
-                  fontSize: "clamp(0.62rem, 2vw, 0.65rem)",
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                  color: "#fff",
-                  background: "linear-gradient(90deg, var(--gold) 0%, var(--accent) 50%, var(--gold) 100%)",
-                  border: "none",
-                  borderRadius: "1px",
-                  cursor: "pointer",
-                  transition: "filter 0.2s, transform 0.15s",
-                  boxShadow: "0 4px 20px rgba(201,168,76,0.3)",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.filter = "brightness(1.08)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.filter = "brightness(1)"; e.currentTarget.style.transform = "translateY(0)"; }}
-              >
-                Accept All
-              </button>
-
-              {/* Save / Reject */}
-              <button
-                onClick={() => dismiss(false)}
-                style={{
-                  flex: 1,
-                  width: "100%",
-                  padding: "clamp(9px, 2.5vw, 10px) 20px",
-                  fontFamily: '"Elms Sans", sans-serif',
-                  fontSize: "clamp(0.62rem, 2vw, 0.65rem)",
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  fontWeight: 500,
-                  color: "var(--text)",
-                  background: "transparent",
-                  border: "1px solid var(--border-dark)",
-                  borderRadius: "1px",
-                  cursor: "pointer",
-                  transition: "border-color 0.2s, background 0.2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--text)"; e.currentTarget.style.background = "var(--surface-2)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-dark)"; e.currentTarget.style.background = "transparent"; }}
-              >
-                {expanded ? "Save Preferences" : "Reject Optional"}
-              </button>
-
-              {/* Manage / collapse toggle */}
-              <button
-                onClick={() => setExpanded(v => !v)}
-                style={{
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "5px",
-                  padding: "clamp(9px, 2.5vw, 10px) 14px",
-                  fontFamily: '"Elms Sans", sans-serif',
-                  fontSize: "clamp(0.6rem, 1.9vw, 0.62rem)",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  fontWeight: 500,
-                  color: "var(--muted)",
-                  background: "transparent",
-                  border: "1px solid var(--border)",
-                  borderRadius: "1px",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "color 0.2s, border-color 0.2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.color = "var(--accent)"; e.currentTarget.style.borderColor = "var(--accent-light)"; }}
-                onMouseLeave={e => { e.currentTarget.style.color = "var(--muted)"; e.currentTarget.style.borderColor = "var(--border)"; }}
-                aria-expanded={expanded}
-              >
-                {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                {expanded ? "Less" : "Manage"}
-              </button>
-            </div>
+      {expanded && (
+        <div id={`${id}-prefs`} className="ck-prefs">
+          <fieldset>
+            <legend>Cookie preferences</legend>
+            <Pref
+              label="Strictly necessary"
+              desc="Needed for the site to work — cart, checkout and sign-in. Always on."
+              checked
+              disabled
+            />
+            <Pref
+              inputRef={firstToggleRef}
+              label="Analytics"
+              desc="Helps us see which pages and products visitors use, so we can improve the store."
+              checked={consent.analytics}
+              onChange={(v) => setConsent((c) => ({ ...c, analytics: v }))}
+            />
+            <Pref
+              label="Marketing"
+              desc="Lets us show offers and product suggestions that match your interests."
+              checked={consent.marketing}
+              onChange={(v) => setConsent((c) => ({ ...c, marketing: v }))}
+            />
+          </fieldset>
+          <div className="ck-prefs-actions">
+            <button type="button" className="ck-btn ck-primary" onClick={savePrefs}>Save Preferences</button>
           </div>
         </div>
-      </div>
-    </>
+      )}
+    </section>
   );
 }
 
-/* ── Sub-component: preference row ─────────────── */
-function PreferenceRow({
-  icon,
-  label,
-  description,
-  checked,
-  locked,
-  onChange,
+function Pref({
+  label, desc, checked, disabled, onChange, inputRef,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  description: string;
-  checked: boolean;
-  locked: boolean;
-  onChange: (v: boolean) => void;
+  label: string; desc: string; checked: boolean; disabled?: boolean;
+  onChange?: (v: boolean) => void; inputRef?: React.Ref<HTMLInputElement>;
 }) {
+  const id = useId();
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-      {/* Icon */}
-      <div
-        style={{
-          flexShrink: 0,
-          width: "28px",
-          height: "28px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--surface-2)",
-          border: "1px solid var(--border)",
-          borderRadius: "2px",
-          color: "var(--accent)",
-          marginTop: "1px",
-        }}
-      >
-        {icon}
-      </div>
-
-      {/* Text */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            fontFamily: '"Elms Sans", sans-serif',
-            fontSize: "clamp(0.66rem, 2vw, 0.7rem)",
-            fontWeight: 600,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--text)",
-            marginBottom: "2px",
-          }}
-        >
-          {label}
-        </p>
-        <p
-          style={{
-            fontFamily: '"Elms Sans", sans-serif',
-            fontSize: "clamp(0.68rem, 2.1vw, 0.72rem)",
-            color: "var(--text-secondary)",
-            lineHeight: 1.5,
-          }}
-        >
-          {description}
-        </p>
-      </div>
-
-      {/* Toggle */}
-      <div style={{ flexShrink: 0, paddingTop: "2px" }}>
-        {locked ? (
-          <div
-            style={{
-              fontFamily: '"Elms Sans", sans-serif',
-              fontSize: "0.58rem",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--gold)",
-              background: "var(--gold-light)",
-              border: "1px solid var(--gold)",
-              padding: "3px 8px",
-              borderRadius: "1px",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Always On
-          </div>
-        ) : (
-          <button
-            role="switch"
-            aria-checked={checked}
-            onClick={() => onChange(!checked)}
-            className={`cc-toggle ${checked ? "on" : "off"}`}
-            style={{
-              width: "42px",
-              height: "24px",
-              borderRadius: "12px",
-              border: "none",
-              cursor: "pointer",
-              position: "relative",
-              outline: "none",
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                top: "3px",
-                left: checked ? "21px" : "3px",
-                width: "18px",
-                height: "18px",
-                background: "#fff",
-                borderRadius: "50%",
-                transition: "left 0.25s cubic-bezier(0.34,1.56,0.64,1)",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-              }}
-            />
-          </button>
-        )}
-      </div>
+    <div className="ck-pref">
+      <input
+        ref={inputRef}
+        id={id}
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        aria-describedby={`${id}-d`}
+        onChange={(e) => onChange?.(e.target.checked)}
+      />
+      <label htmlFor={id}>
+        <b>{label}</b>{disabled && <span className="ck-always"> (always on)</span>}
+        <span id={`${id}-d`} className="ck-desc">{desc}</span>
+      </label>
     </div>
   );
 }
+
+const CSS = `
+  .ck {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10000; /* above the chat bubble (9998) */
+    background: #fff; border-top: 3px solid #1c4874; box-shadow: 0 -2px 10px rgba(0,0,0,.18);
+    font-family: Verdana, Geneva, Tahoma, sans-serif; font-size: 11px; color: #444;
+    transition: transform .25s ease, opacity .25s ease;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .ck.is-leaving { transform: translateY(100%); opacity: 0; }
+  .ck-inner {
+    position: relative; max-width: 1260px; margin: 0 auto; padding: 10px 44px 10px 24px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .ck-text { flex: 1 1 auto; min-width: 0; }
+  .ck-title { margin: 0 0 2px; font: bold 12px Verdana, Geneva, sans-serif !important; color: #1c4874 !important; letter-spacing: 0 !important; }
+  .ck-text p { margin: 0; line-height: 1.6; }
+  .ck-text a { color: #1c4874; font-weight: bold; text-decoration: underline; }
+  .ck-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
+  .ck-btn {
+    height: 24px; padding: 0 12px; cursor: pointer; white-space: nowrap;
+    font: bold 11px Verdana, Geneva, sans-serif;
+    background: #ccd6e3; border: 1px solid #7f8aa8; color: #333;
+  }
+  .ck-btn:hover { background: #b8c5d8; color: #000; }
+  .ck-btn.ck-primary { background: #1c4874; border-color: #154273; color: #fff; }
+  .ck-btn.ck-primary:hover { background: #154273; }
+  .ck-link { background: none; border: 0; padding: 0 4px; cursor: pointer; color: #1c4874; font: bold 11px Verdana, Geneva, sans-serif; text-decoration: underline; }
+  .ck-close {
+    position: absolute; top: 6px; right: 12px; width: 24px; height: 24px; line-height: 20px;
+    background: none; border: 1px solid transparent; cursor: pointer; color: #777; font-size: 18px;
+  }
+  .ck-close:hover { color: #000; border-color: #c9cfdf; }
+  .ck button:focus-visible, .ck a:focus-visible, .ck input:focus-visible { outline: 2px solid #1c4874; outline-offset: 1px; }
+
+  .ck-prefs { max-width: 1260px; margin: 0 auto; padding: 0 24px 12px; }
+  .ck-prefs fieldset { margin: 0; padding: 0; border: 1px solid #a9b3cf; border-top-right-radius: 8px; background: #e8ebf3; }
+  .ck-prefs legend {
+    margin-left: -1px; padding: 3px 10px; background: #a9b3cf; color: #fff; font-weight: bold; border-top-right-radius: 7px;
+  }
+  .ck-pref { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; }
+  .ck-pref + .ck-pref { border-top: 1px solid #d3d8e5; }
+  .ck-pref input { margin: 2px 0 0; width: 14px; height: 14px; accent-color: #1c4874; flex: 0 0 auto; }
+  .ck-pref label { cursor: pointer; color: #333; }
+  .ck-pref input:disabled + label { cursor: default; }
+  .ck-always { color: #7f7f7f; font-weight: normal; }
+  .ck-desc { display: block; color: #555; margin-top: 1px; }
+  .ck-prefs-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
+
+  @media (max-width: 760px) {
+    .ck { font-size: 12px; }
+    .ck-inner { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 40px 12px 14px; }
+    .ck-actions { flex-wrap: wrap; }
+    .ck-btn { height: 36px; flex: 1 1 140px; font-size: 12px; }
+    .ck-link { flex: 1 1 100%; padding: 6px 0; text-align: center; font-size: 12px; }
+    .ck-prefs { padding: 0 14px 12px; max-height: 50vh; overflow-y: auto; }
+    .ck-prefs .ck-btn { width: 100%; }
+    .ck-pref input { width: 18px; height: 18px; }
+  }
+`;

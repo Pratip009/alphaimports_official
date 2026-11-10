@@ -21,7 +21,7 @@ function sendWelcomeEmail(email: string, name: string) {
   if (!process.env.RESEND_API_KEY) return;
   const resend = new Resend(process.env.RESEND_API_KEY);
   void resend.emails
-    .send({ from: FROM, to: email, subject: 'Welcome to Alpha Gemstone', html: welcomeEmailHtml(name) })
+    .send({ from: FROM, to: email, subject: 'Welcome to Alphaimports.com', html: welcomeEmailHtml(name) })
     .catch((err) => console.error('[google-auth] welcome email failed', err));
 }
 

@@ -1,25 +1,27 @@
 import type { Metadata } from "next";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { faqs } from "./faq-data";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
-const TITLE = "Frequently Asked Questions | Alpha Gemstone";
+const TITLE = "Frequently Asked Questions | Alphaimports.com";
 const DESCRIPTION =
-  "Answers to common questions about pricing, shipping, certification, custom orders, and more at Alpha Gemstone.";
+  "Answers to common questions about pricing, shipping, certification, custom orders, and more at Alphaimports.com.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: `${SITE_URL}/faq` },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: `${SITE_URL}/faq`,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 export default function FAQLayout({ children }: { children: React.ReactNode }) {

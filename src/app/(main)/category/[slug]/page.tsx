@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { listSubcategoriesWithChildFlag } from "@/services/category.service";
 import Category from "@/models/Category";
 import { notFound } from "next/navigation";
@@ -8,7 +9,7 @@ import { getNavCategories } from "@/lib/getNavCategories";
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -24,23 +25,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const name = (category as any).name as string;
   const description =
-    (category as any).description ??
-    + `Browse our ${name} collection at Alpha Gemstone — diamonds, gemstones, and fine jewelry.`;
+    // `||` (not `??`) so an empty description also falls back; the stray unary
+    // `+` that used to precede this string turned it into NaN.
+    (category as any).description ||
+    `Browse our ${name} collection at Alphaimports.com — diamonds, gemstones, and fine jewelry.`;
   const canonical = `${SITE_URL}/category/${slug}`;
-  const title = `${name} Collection | Alpha Gemstone`;
+  const title = `${name} Collection | Alphaimports.com`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     openGraph: {
+      images: [DEFAULT_OG_IMAGE],
       type: "website",
       url: canonical,
       title,
       description,
-      siteName: "Alpha Gemstone",
+      siteName: "Alphaimports.com",
     },
     twitter: {
+      images: [DEFAULT_OG_IMAGE.url],
       card: "summary_large_image",
       title,
       description,
@@ -128,7 +133,7 @@ export default async function CategoryPage({ params }: PageProps) {
     name: `${serializedCategory.name} Collection`,
     description:
       serializedCategory.description ??
-      `Browse the ${serializedCategory.name} collection at Alpha Gemstone.`,
+      `Browse the ${serializedCategory.name} collection at Alphaimports.com.`,
     url: canonical,
     ...(subcategories.length > 0 && {
       hasPart: subcategories.map((s) => ({

@@ -132,7 +132,7 @@ export default function AdminUsersPage() {
       <div className="mb-8">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#1c4874] font-semibold mb-2">◆ Alpha Gemstone</p>
+            <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#1c4874] font-semibold mb-2">◆ Alphaimports.com</p>
             <h1 className=" text-[2.6rem] font-medium text-[#222222] tracking-tight leading-none">
               Users
             </h1>

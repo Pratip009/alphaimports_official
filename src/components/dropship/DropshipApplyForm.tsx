@@ -122,7 +122,7 @@ export default function DropshipApplyForm() {
           Application received
         </h2>
         <p className="leading-7 mb-8" style={{ color: MUTED }}>
-          Thanks for applying to the Alpha Gemstone Dropship Program. We've
+          Thanks for applying to the Alphaimports.com Dropship Program. We've
           sent a confirmation to <strong>{form.email}</strong>. Our team
           typically reviews applications within 1–2 business days — once
           approved, we'll email you a private link to your Seller Portal.

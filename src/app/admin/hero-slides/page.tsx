@@ -736,7 +736,7 @@ export default function HeroSlidesAdminPage() {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[0.68rem] tracking-[0.22em] uppercase text-[#1c4874] font-semibold mb-2">
-              ◆ Alpha Gemstone
+              ◆ Alphaimports.com
             </p>
             <h1 className=" text-[2.4rem] font-medium text-[#222222] tracking-tight leading-none">
               Hero Carousel

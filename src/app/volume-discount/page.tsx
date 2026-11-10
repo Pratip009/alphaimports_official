@@ -1,25 +1,27 @@
 import FooterPageLayout from '@/components/footer-pages/footer-page-layout';
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CANONICAL = `${SITE_URL}/volume-discount`;
-const TITLE = "Volume Discount Program | Alpha Gemstone";
+const TITLE = "Volume Discount Program | Alphaimports.com";
 const DESCRIPTION =
-  "Special wholesale pricing programs for large-quantity purchases at Alpha Gemstone.";
+  "Special wholesale pricing programs for large-quantity purchases at Alphaimports.com.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: CANONICAL },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: CANONICAL,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 const page = () => {
@@ -27,7 +29,7 @@ const page = () => {
     <FooterPageLayout title="Volume Discount Program">
 
       <p>
-        Alpha Gemstone NY Inc. offers special pricing programs for
+        Alphaimports.com offers special pricing programs for
         wholesale customers and large quantity purchases.
       </p>
 

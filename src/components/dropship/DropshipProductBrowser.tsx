@@ -341,7 +341,7 @@ export default function DropshipProductBrowser({
           if (product.available <= 0) {
             setNotice(`“${product.name}” is out of stock right now.`);
           } else if (!hasPrice(product)) {
-            setNotice(`“${product.name}” has no price set yet, so it can’t be ordered. Please contact Alpha Gemstone.`);
+            setNotice(`“${product.name}” has no price set yet, so it can’t be ordered. Please contact Alphaimports.com.`);
           } else {
             onSelect(product);
           }

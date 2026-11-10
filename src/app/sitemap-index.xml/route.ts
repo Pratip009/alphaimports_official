@@ -11,7 +11,7 @@ import { getSitemapChunkCount } from "@/lib/sitemapConfig";
 // named path avoids the collision entirely; the Sitemap: directive in
 // robots.txt works with any URL, it doesn't have to be named sitemap.xml.
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
 export const revalidate = 3600; // 1 hour — matches how often chunk counts realistically change
 

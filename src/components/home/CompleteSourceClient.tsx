@@ -422,7 +422,7 @@ export default function CompleteSourceClient({ initial, shopGemstonesHref = "/pr
           <GemRuler onPick={pickFromRuler} />
 
           <h1 id="cs-title" className="cs-title">
-            <span className="cs-brand">Alpha Gemstone</span>
+            <span className="cs-brand">Alphaimports.com</span>
             <span className="cs-headline">Your complete gemstone source</span>
           </h1>
 

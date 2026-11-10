@@ -5,7 +5,7 @@
  * Visual layout follows the original alphaimports.com header (logo, tagline +
  * phone, SKU/Text search, utility links, grey info links, blue category bar,
  * grey breadcrumb / account bar). All behaviour is carried over from the
- * Alpha Gemstone navbar: DB-driven categories + subcategories, auth/profile,
+ * Alphaimports.com navbar: DB-driven categories + subcategories, auth/profile,
  * cart sidebar + count, wishlist, admin link, dropship link, analytics
  * tracking, --navbar-height for sticky filter bars, and the mobile menu.
  */

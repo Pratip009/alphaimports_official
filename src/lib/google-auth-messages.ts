@@ -17,7 +17,7 @@ const MESSAGES: Record<string, string> = {
   google_conflict:
     'This email is already connected to a different Google account. Sign in with that Google account, or with your password.',
   google_in_use:
-    'That Google account is already connected to another Alpha Gemstone account. Sign out and sign in with Google to use it.',
+    'That Google account is already connected to another Alphaimports.com account. Sign out and sign in with Google to use it.',
   google_rate_limited:
     'Too many sign-in attempts. Wait a few minutes and try again.',
   google_link_requires_login:

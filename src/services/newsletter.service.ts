@@ -5,7 +5,7 @@ import NewsletterCampaign, { INewsletterCampaign } from '@/models/NewsletterCamp
 import { newsletterEmailHtml } from '@/lib/email-templates';
 
 const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphagemstone.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://alphaimports.com';
 const BATCH_SIZE = 50;
 
 // ─── Subscribe ──────────────────────────────────────────────────────────────

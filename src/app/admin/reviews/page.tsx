@@ -219,7 +219,7 @@ export default function AdminReviewsPage() {
                 <div className="mt-3 flex gap-2">
                   <input
                     type="text"
-                    placeholder="Reply as Alpha Gemstone…"
+                    placeholder="Reply as Alphaimports.com…"
                     value={replyDrafts[r._id] || ""}
                     onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [r._id]: e.target.value }))}
                     className="flex-1 text-xs border border-gray-200 rounded-md px-3 py-2"

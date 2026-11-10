@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/db";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { listSubSubcategories } from "@/services/category.service";
 import Category from "@/models/Category";
 import Subcategory from "@/models/Subcategory";
@@ -7,7 +8,7 @@ import CategoryClientPage from "../CategoryClientPage";
 import type { Metadata } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 
 interface PageProps {
   params: Promise<{ slug: string; subSlug: string }>;
@@ -27,24 +28,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const catName = (category as any).name as string;
   const subName = (subcategory as any).name as string;
-  const title = `${subName} — ${catName} | Alpha Gemstone`;
+  const title = `${subName} — ${catName} | Alphaimports.com`;
   const description =
-    (subcategory as any).description ??
-    `Browse ${subName} ${catName} at Alpha Gemstone — quality stones, expertly curated.`;
+    (subcategory as any).description ||
+    `Browse ${subName} ${catName} at Alphaimports.com — quality stones, expertly curated.`;
   const canonical = `${SITE_URL}/category/${slug}/${subSlug}`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical },
     openGraph: {
+      images: [DEFAULT_OG_IMAGE],
       type: "website",
       url: canonical,
       title,
       description,
-      siteName: "Alpha Gemstone",
+      siteName: "Alphaimports.com",
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title, description },
   };
 }
 

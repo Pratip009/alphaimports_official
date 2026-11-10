@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cache } from "react";
 import Providers from "./providers";
 import "./global.css";
@@ -6,20 +6,22 @@ import CookieConsentLazy from "./CookieConsentLazy";
 import HomeOnlyWidgets from "./HomeOnlyWidgets";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next"
+import {
+  SITE_URL, SITE_NAME, SITE_SHORT_NAME, LEGAL_NAME, TAGLINE, FOUNDING_YEAR,
+  PHONE_E164, ORDERS_EMAIL, BRAND_NAVY, DEFAULT_DESCRIPTION,
+} from "@/lib/site";
 // Every other data-facing module in this codebase (newsletter service, email
 // templates, blog metadata) resolves the canonical origin from
-// NEXT_PUBLIC_SITE_URL and falls back to https://www.alphagemstone.com/. The old
+// NEXT_PUBLIC_SITE_URL and falls back to https://www.alphaimports.com (src/lib/site.ts). The old
 // hardcoded gmstone-new-2026.vercel.app preview URL here meant canonical
 // links, Open Graph tags, and JSON-LD were all pointing search engines at a
 // staging deployment instead of the real production domain — fixed below.
-export const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+export const BASE_URL = SITE_URL;
 
-const SITE_NAME = "Alpha Imports";
-const OG_IMAGE = `${BASE_URL}/og-image.png`;
+const OG_IMAGE = `${BASE_URL}/og-image.jpg`;
+const LOGO_URL = `${BASE_URL}/brand/alphaimports-a-1024.png`;
 
-const FALLBACK_DESCRIPTION =
-  "Discover premium natural diamonds, fine gemstones, sapphires, rubies, emeralds, and luxury fine jewelry collections crafted for elegance and trust.";
+const FALLBACK_DESCRIPTION = DEFAULT_DESCRIPTION;
 
 const BASE_KEYWORDS = [
   "diamonds",
@@ -30,7 +32,12 @@ const BASE_KEYWORDS = [
   "sapphires",
   "rubies",
   "emeralds",
-  "Alpha Gemstone",
+  "Alphaimports.com",
+  "Alpha Imports",
+  "alphaimports",
+  "wholesale gemstones",
+  "loose gemstones",
+  "watches",
 ];
 
 /**
@@ -69,6 +76,10 @@ const getCatalogSnapshot = cache(async () => {
 // copy below is recomputed on a schedule instead of only at the next deploy.
 export const revalidate = 3600; // 1 hour
 
+export const viewport: Viewport = {
+  themeColor: BRAND_NAVY,
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const { categoryNames, activeCount } = await getCatalogSnapshot();
 
@@ -87,8 +98,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const title =
     topCategories.length > 0
-      ? `${SITE_NAME} | ${topCategories.slice(0, 3).join(", ")} & Fine Jewelry`
-      : `${SITE_NAME} | Fine Diamonds, Gemstones & Jewelry`;
+      ? `${SITE_NAME} – ${TAGLINE} | ${topCategories.slice(0, 3).join(", ")} & Jewelry`
+      : `${SITE_NAME} – ${TAGLINE} | Diamonds, Gemstones & Jewelry`;
 
   const keywords = Array.from(new Set([...BASE_KEYWORDS, ...categoryNames]));
 
@@ -141,7 +152,8 @@ export async function generateMetadata(): Promise<Metadata> {
           url: OG_IMAGE,
           width: 1200,
           height: 630,
-          alt: `${SITE_NAME} - Fine Diamonds & Gemstones`,
+          alt: `${SITE_NAME} — ${TAGLINE}: diamonds, gemstones, jewelry and watches`,
+          type: "image/jpeg",
         },
       ],
     },
@@ -154,9 +166,17 @@ export async function generateMetadata(): Promise<Metadata> {
     },
 
     icons: {
-       icon: "/favicon.ico",
-      apple: "/apple-touch-icon.png",
+      icon: [
+        { url: "/favicon.ico", sizes: "48x48" },
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+        { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     },
+
+    appleWebApp: { capable: true, title: SITE_SHORT_NAME, statusBarStyle: "default" },
 
     manifest: "/site.webmanifest",
 
@@ -178,21 +198,34 @@ export default async function RootLayout({
 }) {
   const { categoryNames, activeCount } = await getCatalogSnapshot();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "JewelryStore",
+  const organization = {
+    "@type": ["JewelryStore", "OnlineStore"],
     "@id": `${BASE_URL}/#organization`,
     name: SITE_NAME,
+    alternateName: ["Alpha Imports", "Alphaimports"],
+    legalName: LEGAL_NAME,
+    slogan: TAGLINE,
     url: BASE_URL,
+    logo: { "@type": "ImageObject", url: LOGO_URL, width: 1024, height: 1024 },
     image: OG_IMAGE,
+    foundingDate: String(FOUNDING_YEAR),
+    telephone: PHONE_E164,
+    email: ORDERS_EMAIL,
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: PHONE_E164,
+      email: ORDERS_EMAIL,
+      contactType: "customer service",
+      availableLanguage: ["English"],
+    },
     description:
       activeCount > 0
-        ? `${SITE_NAME} offers ${activeCount.toLocaleString()}+ diamonds, gemstones, and fine jewelry pieces, with certification available on applicable products.`
-        : "Premium diamonds, gemstones and fine jewelry collections.",
+        ? `${SITE_NAME} offers ${activeCount.toLocaleString()}+ diamonds, gemstones, jewelry pieces and watches — serving customers since ${FOUNDING_YEAR}.`
+        : DEFAULT_DESCRIPTION,
     ...(categoryNames.length > 0 && {
       hasOfferCatalog: {
         "@type": "OfferCatalog",
-        name: "Diamond, Gemstone & Jewelry Categories",
+        name: "Diamond, Gemstone, Jewelry & Watch Categories",
         itemListElement: categoryNames.map((name, i) => ({
           "@type": "OfferCatalog",
           position: i + 1,
@@ -201,6 +234,24 @@ export default async function RootLayout({
       },
     }),
   };
+
+  // WebSite + SearchAction lets Google show a sitelinks search box that
+  // searches this store directly.
+  const website = {
+    "@type": "WebSite",
+    "@id": `${BASE_URL}/#website`,
+    name: SITE_NAME,
+    alternateName: "Alpha Imports",
+    url: BASE_URL,
+    publisher: { "@id": `${BASE_URL}/#organization` },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/products?search={search_term_string}` },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const jsonLd = { "@context": "https://schema.org", "@graph": [organization, website] };
 
   return (
     <html lang="en">

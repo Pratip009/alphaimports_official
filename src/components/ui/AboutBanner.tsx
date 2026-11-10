@@ -30,7 +30,7 @@ export default function AboutBanner() {
           priority
         />
         <div className="ab-banner-cap">
-          Alpha Gemstone NY Inc.<span>Serving customers since 1988</span>
+          Alphaimports.com<span>Serving customers since 1988</span>
         </div>
       </div>
     </>

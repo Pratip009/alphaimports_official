@@ -27,7 +27,7 @@ export default function FoundersMessage() {
           <div className="fm-grid">
             <div>
               <div className="fm-quote">
-                <strong>Welcome to Alpha Gemstone NY Inc.</strong>
+                <strong>Welcome to Alphaimports.com</strong>
                 <br />
                 Since 1988, our mission has been to offer beautiful diamonds, gemstones, and
                 fine jewelry with exceptional value, honesty, and personal service. What began
@@ -35,7 +35,7 @@ export default function FoundersMessage() {
                 jewelers, designers, collectors, wholesalers, and jewelry lovers around the world.
               </div>
               <p>
-                At Alpha Gemstone, we believe luxury should be exciting, affordable, and
+                At Alphaimports.com, we believe luxury should be exciting, affordable, and
                 accessible. Our new website combines modern technology, faster browsing,
                 advanced search tools, and secure ordering while maintaining the personal
                 attention and trust our customers have valued for decades.
@@ -47,12 +47,12 @@ export default function FoundersMessage() {
                 competitive prices.
               </p>
               <p>
-                Thank you for visiting Alpha Gemstone. We truly appreciate your trust and look
+                Thank you for visiting Alphaimports.com. We truly appreciate your trust and look
                 forward to serving you for many years to come.
               </p>
               <div className="fm-sig">
                 <p className="fm-sig-name">Mr. Balu Khatod</p>
-                <p>Founder &amp; CEO, Alpha Gemstone</p>
+                <p>Founder &amp; CEO, Alphaimports.com</p>
               </div>
             </div>
 
@@ -60,7 +60,7 @@ export default function FoundersMessage() {
               <div className="fm-photo">
                 <Image
                   src="/images/founder.JPG"
-                  alt="Balu Khatod, Founder of Alpha Gemstone"
+                  alt="Balu Khatod, Founder of Alphaimports.com"
                   fill
                   className="object-cover object-top"
                 />

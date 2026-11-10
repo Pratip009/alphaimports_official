@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DEFAULT_OG_IMAGE } from "@/lib/site";
 import { Fragment } from "react";
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
@@ -7,31 +8,32 @@ import ClassicSidebar from "@/components/ui/ClassicSidebar";
 import { getNavCategories } from "@/lib/getNavCategories";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphagemstone.com";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.alphaimports.com";
 const CANONICAL = `${SITE_URL}/drop-shipping`;
-const TITLE = "Free Dropship Program | Alpha Gemstone";
+const TITLE = "Free Dropship Program | Alphaimports.com";
 const DESCRIPTION =
   "Sell diamonds, gemstones & jewelry without holding inventory. No membership fee, no dropship program fee — Alpha ships directly to your customer.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: CANONICAL },
   openGraph: {
+      images: [DEFAULT_OG_IMAGE],
     type: "website",
     url: CANONICAL,
     title: TITLE,
     description: DESCRIPTION,
-    siteName: "Alpha Gemstone",
+    siteName: "Alphaimports.com",
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
+  twitter: { images: [DEFAULT_OG_IMAGE.url],  card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 const STEPS = [
   {
     n: "1",
     title: "Choose It",
-    body: "Browse AlphaGemstone.com and choose the diamonds, gemstones or jewelry you want to offer.",
+    body: "Browse Alphaimports.com and choose the diamonds, gemstones or jewelry you want to offer.",
   },
   {
     n: "2",
@@ -252,7 +254,7 @@ export default async function DropshipLandingPage() {
           <div className="ds-main">
             {/* ── Banner ── */}
             <div className="ds-banner">
-              <div className="ds-banner-kicker">Alpha Gemstone Dropship Program</div>
+              <div className="ds-banner-kicker">Alphaimports.com Dropship Program</div>
               <h1>
                 Your Store. Our Inventory.
                 <span>We Ship. You Profit.</span>
@@ -278,7 +280,7 @@ export default async function DropshipLandingPage() {
             <Panel title="What Is Alpha Dropshipping?">
               <p>
                 Dropshipping gives you a simple way to sell Alpha products without keeping them in
-                your own inventory. You choose products from AlphaGemstone.com, market them to your
+                your own inventory. You choose products from Alphaimports.com, market them to your
                 customers, decide your own retail price, and make the sale.
               </p>
               <p>
@@ -415,7 +417,7 @@ export default async function DropshipLandingPage() {
               </Panel>
               <Panel title="Returns & Exchanges">
                 <p>
-                  All dropship purchases are covered according to the current AlphaGemstone.com
+                  All dropship purchases are covered according to the current Alphaimports.com
                   return, refund and exchange policy applicable to the merchandise purchased. Certain
                   special-order or clearance merchandise may have different conditions.
                 </p>

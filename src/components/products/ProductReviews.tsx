@@ -402,7 +402,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
 
               {r.adminReply && (
                 <div className="pdr-reply">
-                  <div className="pdr-reply-head">Reply from Alpha Gemstone</div>
+                  <div className="pdr-reply-head">Reply from Alphaimports.com</div>
                   <p className="pdr-reply-text">{r.adminReply.text}</p>
                   <div className="pdr-reply-date">{fmtDate(r.adminReply.repliedAt)}</div>
                 </div>
@@ -412,7 +412,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                 <div className="pdr-admin-reply-box">
                   <textarea
                     rows={2}
-                    placeholder="Reply to this review as Alpha Gemstone…"
+                    placeholder="Reply to this review as Alphaimports.com…"
                     value={replyDrafts[r._id] || ''}
                     onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [r._id]: e.target.value }))}
                   />
