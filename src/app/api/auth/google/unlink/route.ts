@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { errorResponse } from '@/lib/api-response';
 import { unlinkGoogleFromUser } from '@/services/google-auth.service';
 
 /** POST /api/auth/google/unlink — disconnect Google from the signed-in account. */
-export const POST = withAuth(async (req: AuthenticatedRequest) => {
+export const POST = withMember(async (req: AuthenticatedRequest) => {
   try {
     await connectDB();
     const user = await unlinkGoogleFromUser(req.user.userId);

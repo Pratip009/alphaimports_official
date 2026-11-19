@@ -7,6 +7,9 @@ import Link from "next/link";
 import OrderTracking from "@/components/shipping/OrderTracking";
 import ClassicSidebar from "@/components/ui/ClassicSidebar";
 import type { NavCategory } from "@/lib/getNavCategories";
+import { useAuth } from "@/hooks/useAuth";
+import LegacyOrders from "./LegacyOrders";
+import GuestAccountPrompt from "./GuestAccountPrompt";
 
 interface OrderItem {
   name: string;
@@ -308,6 +311,7 @@ export default function OrdersPage({
   navCategories?: NavCategory[];
 }) {
   const { apiFetch } = useApi();
+  const { user, guest, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -391,13 +395,23 @@ export default function OrdersPage({
             </div>
           )}
 
+          {/* Guest checkout: optional one-click account creation */}
+          {guest && !user && (() => {
+            const email = (orders.find((o) => (o as Order & { guestEmail?: string }).guestEmail) as
+              | (Order & { guestEmail?: string })
+              | undefined)?.guestEmail;
+            return email && orders.some((o) => o.paymentStatus === "completed") ? (
+              <GuestAccountPrompt email={email} />
+            ) : null;
+          })()}
+
           {/* ── Empty state ──────────────────────────────────────────────────── */}
           {orders.length === 0 ? (
             <section className="or-panel">
               <h2 className="or-panel-head">My Orders</h2>
               <div className="or-panel-body">
                 <div className="or-empty">
-                  <p>You have not yet made any purchases.</p>
+                  <p>You haven&apos;t placed any orders on our new website yet.</p>
                   <p style={{ marginBottom: 10 }}>Your purchases will appear here.</p>
                   <Link href="/products" className="or-btn">
                     Explore Collection
@@ -613,6 +627,9 @@ export default function OrdersPage({
               );
             })
           )}
+
+          {/* Orders from the old website (migrated customers only) */}
+          {!authLoading && user && <LegacyOrders />}
         </div>
       </div>
     </div>

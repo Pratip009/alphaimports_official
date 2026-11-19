@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cartEvents } from '@/hooks/useCart';
 import ClassicSidebar from '@/components/ui/ClassicSidebar';
@@ -273,8 +272,8 @@ export default function CartPage({
   navCategories?: NavCategory[];
 }) {
   const { apiFetch } = useApi();
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const { user, guest, loading: authLoading } = useAuth();
+  const hasSession = !!(user || guest);
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [totals, setTotals] = useState<Totals | null>(null);
@@ -282,9 +281,11 @@ export default function CartPage({
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
 
+  // No account needed to shop. Someone with no session simply has an
+  // empty cart (a guest session starts when they add their first item).
   useEffect(() => {
-    if (!authLoading && !user) router.push('/login?redirect=/cart');
-  }, [authLoading, user, router]);
+    if (!authLoading && !hasSession) setLoading(false);
+  }, [authLoading, hasSession]);
 
   const fetchCart = async () => {
     try {
@@ -302,8 +303,8 @@ export default function CartPage({
   };
 
   useEffect(() => {
-    if (!authLoading && user) fetchCart();
-  }, [authLoading, user]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!authLoading && hasSession) fetchCart();
+  }, [authLoading, hasSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateQty = async (productId: string, quantity: number) => {
     setUpdating(productId);

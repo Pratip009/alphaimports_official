@@ -53,7 +53,7 @@ export default function ClassicSearchResults({ products }: { products: SearchRow
 
 function SearchRow({ product }: { product: SearchRowProduct }) {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { ensureCartSession, loading: authLoading } = useAuth();
   const { apiFetch } = useApi();
   const placeholder = product.productKind === "watch" ? WATCH_PLACEHOLDER : DIAMOND_PLACEHOLDER;
   const [imgSrc, setImgSrc] = useState(
@@ -68,12 +68,10 @@ function SearchRow({ product }: { product: SearchRowProduct }) {
 
   const buyNow = async () => {
     if (authLoading || busy || !inStock) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
     setBusy(true);
     try {
+      // No account needed: starts a guest session if not signed in.
+      await ensureCartSession();
       await apiFetch("/api/cart", {
         method: "POST",
         body: JSON.stringify({ productId: product._id, quantity: 1 }),

@@ -11,14 +11,15 @@ export const cartEvents = {
 
 export function useCart() {
   const { apiFetch } = useApi();
-  const { user, loading: authLoading } = useAuth();
+  const { user, guest, loading: authLoading } = useAuth();
+  const hasSession = !!(user || guest);
   const [cartCount, setCartCount] = useState(0);
 
   // ← use a ref so the event listener always sees the latest user/apiFetch
   const fetchRef = useRef<() => Promise<void>>();
 
   fetchRef.current = async () => {
-    if (!user) { setCartCount(0); return; }
+    if (!hasSession) { setCartCount(0); return; }
     try {
       const data = await apiFetch('/api/cart');
       const items = data?.data?.cart?.items ?? [];
@@ -33,7 +34,7 @@ export function useCart() {
   useEffect(() => {
     if (authLoading) return;
     fetchRef.current?.();
-  }, [authLoading, user]);
+  }, [authLoading, hasSession]);
 
   // Listen for cart:refresh events from AddToCartButton
   useEffect(() => {

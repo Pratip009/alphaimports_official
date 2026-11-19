@@ -24,10 +24,24 @@ interface User {
   authProviders?: ('password' | 'google')[];
   hasPassword?: boolean;
   googleLinked?: boolean;
+  isGuest?: boolean;
 }
 
 interface AuthContextType {
+  /** A real signed-in customer. Always null for guest-checkout sessions. */
   user: User | null;
+  /** Shopping without an account (cart + checkout only). */
+  guest: User | null;
+  /** True when cart / checkout / orders calls will work (member or guest). */
+  hasSession: boolean;
+  /**
+   * Makes sure there's a session for the cart. Signed-in customers already
+   * have one; anyone else gets a guest session so they can shop without
+   * creating an account. Call before adding to the cart.
+   */
+  ensureCartSession: () => Promise<void>;
+  /** Signs in with a session the server already set (e.g. set-password link). */
+  setSignedInUser: (user: User) => void;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   verifyOtp: (email: string, otp: string) => Promise<void>;
@@ -44,17 +58,29 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [guest, setGuest] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Puts a /me-style user object in the right slot.
+  const applySession = useCallback((u: User | null) => {
+    if (u?.isGuest) {
+      setGuest(u);
+      setUser(null);
+    } else {
+      setUser(u);
+      setGuest(null);
+    }
+  }, []);
 
   const fetchMe = useCallback(async () => {
     const res = await fetch('/api/auth/me', { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
-      setUser(data.data);
+      applySession(data.data);
       return true;
     }
     return false;
-  }, []);
+  }, [applySession]);
 
   const hasSessionHint = useCallback(() => {
     if (typeof document === 'undefined') return false;
@@ -89,8 +115,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    setUser(data.data.user);
-  }, []);
+    applySession(data.data.user);
+  }, [applySession]);
+
+  const ensureCartSession = useCallback(async () => {
+    if (user || guest) return;
+    const data = await runAuthRequest<{ data: { user: User } }>('/api/auth/guest', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    applySession(data.data.user);
+  }, [user, guest, applySession]);
+
+  const setSignedInUser = useCallback((u: User) => applySession(u), [applySession]);
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     const data = await runAuthRequest<{ data: { user: User } }>('/api/auth/signup', {
@@ -109,14 +146,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp }),
     });
-    setUser(data.data.user);
-  }, []);
+    applySession(data.data.user);
+  }, [applySession]);
 
   const logout = useCallback(async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } finally {
       setUser(null);
+      setGuest(null);
     }
   }, []);
 
@@ -143,6 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user,
+      guest,
+      hasSession: !!(user || guest),
+      ensureCartSession,
+      setSignedInUser,
       login,
       signup,
       verifyOtp,

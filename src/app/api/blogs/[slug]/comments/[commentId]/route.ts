@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { editComment, deleteComment } from '@/services/blog.service';
-import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { z } from 'zod';
 
@@ -11,7 +11,7 @@ const editSchema = z.object({
 
 type Params = { params: Promise<{ slug: string; commentId: string }> };
 
-export const PUT = withAuth(async (req: AuthenticatedRequest, { params }: Params) => {
+export const PUT = withMember(async (req: AuthenticatedRequest, { params }: Params) => {
   try {
     await connectDB();
     const { slug, commentId } = await params;
@@ -29,7 +29,7 @@ export const PUT = withAuth(async (req: AuthenticatedRequest, { params }: Params
   }
 });
 
-export const DELETE = withAuth(async (req: AuthenticatedRequest, { params }: Params) => {
+export const DELETE = withMember(async (req: AuthenticatedRequest, { params }: Params) => {
   try {
     await connectDB();
     const { slug, commentId } = await params;

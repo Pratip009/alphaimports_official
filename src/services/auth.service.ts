@@ -5,10 +5,33 @@ import { signToken } from '@/lib/jwt';
 // Accounts created before Google sign-in existed have no `authProviders`
 // field; every one of them was created with a password, so that's the
 // correct fallback. Works on hydrated docs and `.lean()` objects alike.
-export function resolveAuthProviders(user: { authProviders?: unknown }): AuthProvider[] {
+export function resolveAuthProviders(user: {
+  authProviders?: unknown;
+  needsPasswordSetup?: unknown;
+  isGuest?: unknown;
+}): AuthProvider[] {
   const raw = Array.isArray(user.authProviders) ? user.authProviders : [];
   const valid = raw.filter((p): p is AuthProvider => (AUTH_PROVIDERS as readonly string[]).includes(p as string));
-  return valid.length ? Array.from(new Set(valid)) : ['password'];
+  if (valid.length) return Array.from(new Set(valid));
+  // Migrated accounts that haven't set a password yet, and guest-checkout
+  // sessions, genuinely have no sign-in method — don't assume 'password'.
+  if (user.needsPasswordSetup || user.isGuest) return [];
+  return ['password'];
+}
+
+/**
+ * Thrown by login() for an account moved over from the old website that
+ * hasn't set a new password yet. The login route turns it into a friendly
+ * "Welcome back — please set a new password" message with a one-click
+ * email link, instead of "invalid email or password".
+ */
+export class PasswordSetupRequiredError extends Error {
+  code = 'PASSWORD_SETUP_REQUIRED' as const;
+  constructor(public email: string, public firstName: string) {
+    super(
+      'Welcome back to Alpha Imports! We have upgraded our website. For your security, please set a new password to access your account.'
+    );
+  }
 }
 
 // ─── Shared response shape ─────────────────────────────────────────────────────
@@ -32,6 +55,7 @@ export function toPublicUser(user: IUser | (IUser & { _id: unknown })) {
       country: anyUser.address?.country ?? '',
     },
     role: anyUser.role,
+    isGuest: !!anyUser.isGuest,
     // Lets the UI show "Sign-in methods" and decide whether Google can be
     // disconnected, without ever exposing the Google id or password hash.
     authProviders: resolveAuthProviders(anyUser),
@@ -89,11 +113,20 @@ export async function signup(name: string, email: string, password: string) {
 // ─── Login ────────────────────────────────────────────────────────────────────
 export async function login(email: string, password: string) {
   const normalizedEmail = email.trim().toLowerCase();
-  const user = await User.findOne({ email: normalizedEmail })
+  const user = await User.findOne({ email: normalizedEmail, isGuest: { $ne: true } })
     .collation({ locale: 'en', strength: 2 })
     .select('+password');
   if (!user) {
     throw new Error('Invalid credentials');
+  }
+
+  // Moved over from the old website and no password set yet. Whatever they
+  // typed can't be checked (old passwords weren't carried over), so guide
+  // them to the emailed set-password link rather than saying "wrong password".
+  if (user.needsPasswordSetup && !user.password) {
+    // Same cost as a real check so timing doesn't stand out.
+    await user.comparePassword(password);
+    throw new PasswordSetupRequiredError(user.email, (user.name || '').split(' ')[0]);
   }
 
   const isMatch = await user.comparePassword(password);

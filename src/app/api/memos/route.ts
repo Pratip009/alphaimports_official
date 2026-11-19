@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { withAuth } from '@/middleware/auth.middleware';
+import { withMember } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { createMemoRequest, listMemosForUser, MemoError } from '@/services/memo.service';
@@ -31,7 +31,7 @@ const createMemoSchema = z.object({
   termsAccepted: z.literal(true),
 });
 
-export const POST = withAuth(async (req: NextRequest & { user: { userId: string } }) => {
+export const POST = withMember(async (req: NextRequest & { user: { userId: string } }) => {
   try {
     const rate = await rateLimit(req, {
       id: 'memo-create',
@@ -69,7 +69,7 @@ export const POST = withAuth(async (req: NextRequest & { user: { userId: string 
   }
 });
 
-export const GET = withAuth(async (req: NextRequest & { user: { userId: string } }) => {
+export const GET = withMember(async (req: NextRequest & { user: { userId: string } }) => {
   try {
     const memos = await listMemosForUser(req.user.userId);
     return successResponse(memos, 200);

@@ -62,6 +62,13 @@ export interface IOrder extends Document {
   // ─── Coupon ───────────────────────────────────────────────────────────────
   appliedCouponCode?: string | null;
   couponDiscount?: number;
+  // ─── Guest checkout ─────────────────────────────────────────────────────────
+  /**
+   * Contact email for an order placed without an account. When set, every
+   * customer email for this order goes here instead of to the (placeholder)
+   * address on the guest user.
+   */
+  guestEmail?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -143,6 +150,8 @@ const OrderSchema = new Schema<IOrder>(
     // ─── Coupon ───────────────────────────────────────────────────────────────
     appliedCouponCode: { type: String, default: null },
     couponDiscount:    { type: Number, default: 0 },
+    // ─── Guest checkout ───────────────────────────────────────────────────────
+    guestEmail: { type: String, lowercase: true, trim: true, default: null, index: true },
   },
   { timestamps: true }
 );

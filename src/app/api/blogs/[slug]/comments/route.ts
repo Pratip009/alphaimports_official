@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { addComment } from '@/services/blog.service';
-import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { z } from 'zod';
 
@@ -9,7 +9,7 @@ const commentSchema = z.object({
   message: z.string().min(1, 'Message is required').max(2000),
 });
 
-export const POST = withAuth(async (
+export const POST = withMember(async (
   req: AuthenticatedRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) => {

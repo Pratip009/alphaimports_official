@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import ShippingRateSelector from "@/components/shipping/ShippingRateSelector";
@@ -425,6 +427,8 @@ const CHECKOUT_CSS = `
   .co-label { padding-top: 4px; color: #555; letter-spacing: .2px; }
   .co-req { color: #c8102e; }
   .co-hint { color: #8a8a8a; font-size: 10px; }
+  .co-guest-note { grid-column: 1 / -1; margin: 0 0 10px; padding: 7px 10px; background: #eef6ee; border: 1px solid #b9dbb9; color: #1d5a1d; line-height: 1.6; }
+  .co-guest-note a { color: #1c4874; font-weight: bold; }
   .co-ctl { position: relative; max-width: 360px; }
   .co-input {
     width: 100%; height: 22px; padding: 0 22px 0 5px;
@@ -589,8 +593,17 @@ export default function CheckoutPage({
   navCategories?: NavCategory[];
 }) {
   const { apiFetch } = useApi();
+  const { user, guest } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState<Step>("shipping");
+  // Guest checkout: where we send the order confirmation.
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestEmailTouched, setGuestEmailTouched] = useState(false);
+  const guestEmailError = !guestEmail.trim()
+    ? "Email address is required"
+    : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail.trim())
+      ? "Please enter a valid email address"
+      : "";
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<
@@ -629,8 +642,45 @@ export default function CheckoutPage({
           router.push("/cart");
         }
       })
-      .catch(() => router.push("/login"));
+      // No session at all (nothing was ever added) → back to the cart.
+      .catch(() => router.push("/cart"));
   }, [apiFetch, router]); // both stable — still runs once on mount
+
+  // Signed-in customers (including those moved over from the old website)
+  // get their saved name, phone and shipping address filled in. Only fills
+  // an untouched form, and only uses the address if its country is one we
+  // ship to from this form.
+  useEffect(() => {
+    if (!user) return;
+    setForm((f) => {
+      if (f.fullName || f.addressLine1) return f;
+      const a = user.address;
+      const savedCountry = (a?.country || "").trim().toLowerCase();
+      const country = COUNTRIES.find(
+        (c) =>
+          c.name.toLowerCase() === savedCountry ||
+          c.code.toLowerCase() === savedCountry ||
+          (savedCountry === "korea, republic of" && c.code === "KR"),
+      );
+      const next = {
+        ...f,
+        fullName: (user.name || "").replace(/[^A-Za-z\u00C0-\u024F\s'\-\.]/g, "").trim(),
+        phone: (user.phone || "").replace(/\D/g, "").slice(0, 15),
+      };
+      if (country && a?.line1) {
+        Object.assign(next, {
+          country: country.code,
+          addressLine1: a.line1 || "",
+          addressLine2:
+            a.line2 && a.line2.toLowerCase() !== (a.city || "").toLowerCase() ? a.line2 : "",
+          city: a.city || "",
+          state: a.state || "",
+          postalCode: a.postalCode || "",
+        });
+      }
+      return next;
+    });
+  }, [user]);
 
   // Bring the top of the card into view whenever the step changes, so the
   // person always starts a new step (address / rates / payment) from the top
@@ -787,6 +837,13 @@ export default function CheckoutPage({
       {} as Record<keyof ShippingForm, boolean>,
     );
     setTouched(allTouched);
+    if (guest && !user) {
+      setGuestEmailTouched(true);
+      if (guestEmailError) {
+        document.getElementById("co-guestEmail")?.focus();
+        return;
+      }
+    }
     if (form.country === "IN" && !pinVerified && postOffices.length === 0) {
       setPinError(
         "Please enter a valid 6-digit pincode to auto-fill your location.",
@@ -826,6 +883,7 @@ export default function CheckoutPage({
           shippingEstimatedDays: selectedShipping.estimatedDays ?? null,
           shippingEstimatedDelivery: selectedShipping.estimatedDelivery ?? null,
           ...(couponCode ? { couponCode } : {}),
+          ...(guest && !user ? { guestEmail: guestEmail.trim().toLowerCase() } : {}),
         }),
       });
       // ── Set orderId first, then step — both are batched by React 18
@@ -1002,6 +1060,42 @@ export default function CheckoutPage({
                           noValidate
                         >
                           <div className="co-fields">
+                            {/* Guest checkout: no account needed */}
+                            {guest && !user && (
+                              <>
+                                <p className="co-guest-note">
+                                  Checking out as a guest — no account needed.{" "}
+                                  Already have an account?{" "}
+                                  <Link href="/login?redirect=/checkout">Sign in</Link>.
+                                </p>
+                                <div className="co-row">
+                                  <label className="co-label" htmlFor="co-guestEmail">
+                                    E-Mail Address: <span className="co-req">*</span>
+                                  </label>
+                                  <div>
+                                    <div className="co-ctl">
+                                      <input
+                                        id="co-guestEmail"
+                                        type="email"
+                                        inputMode="email"
+                                        className={inputCls(
+                                          !guestEmailTouched ? "idle" : guestEmailError ? "error" : "valid",
+                                        )}
+                                        placeholder="you@example.com"
+                                        value={guestEmail}
+                                        onChange={(e) => setGuestEmail(e.target.value)}
+                                        onBlur={() => setGuestEmailTouched(true)}
+                                        autoComplete="email"
+                                      />
+                                      {guestEmailTouched && !guestEmailError && <CheckMark />}
+                                    </div>
+                                    <FieldError msg={guestEmailTouched ? guestEmailError : undefined} />
+                                    <span className="co-hint">We&apos;ll send your order confirmation and tracking here.</span>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
                             {/* Full Name */}
                             <div className="co-row">
                               <label className="co-label" htmlFor="co-fullName">

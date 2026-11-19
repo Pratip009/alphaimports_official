@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { addReply } from '@/services/blog.service';
-import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { z } from 'zod';
 import User from '@/models/User';
@@ -12,7 +12,7 @@ const replySchema = z.object({
 
 type Params = { params: Promise<{ slug: string; commentId: string }> };
 
-export const POST = withAuth(async (req: AuthenticatedRequest, { params }: Params) => {
+export const POST = withMember(async (req: AuthenticatedRequest, { params }: Params) => {
   try {
     await connectDB();
     const { slug, commentId } = await params;

@@ -100,11 +100,11 @@ const tracking = trackingNumber ?? order.trackingNumber;
       if (tracking) {
         void resend.emails.send({
           from: EMAIL_FROM,
-          to: order.user.email,
+          to: order.guestEmail || order.user.email,
           subject: `Your Order Has Shipped — #${order._id.toString().slice(-8).toUpperCase()}`,
           html: orderShippedEmailHtml({
             orderId: order._id.toString(),
-            customerName: order.user.name,
+            customerName: order.guestEmail ? order.shippingAddress.fullName : order.user.name,
             trackingNumber: tracking,
             trackingUrl: (trackingUrl ?? order.trackingUrl) || undefined,
             shippingCarrier: (shippingCarrier ?? order.shippingCarrier) || undefined,
@@ -126,8 +126,12 @@ export const GET = withAdmin(async (req: AuthenticatedRequest, context: { params
     await connectDB();
     const { id } = await context.params;
     if (await isDropshipOrder(id)) return successResponse(await getUnifiedDropshipOrder(id));
-    const order = await Order.findById(id).populate('user', 'name email').lean();
+    const order = await Order.findById(id).populate('user', 'name email').lean() as
+      | (Record<string, any> & { guestEmail?: string | null; user?: { email?: string } })
+      | null;
     if (!order) return errorResponse('Order not found', 404);
+    // Guest-checkout orders: show the email the customer typed at checkout.
+    if (order.guestEmail && order.user) order.user = { ...order.user, email: order.guestEmail };
     return successResponse(order);
   } catch (err) {
     console.error('[getOrder]', err);

@@ -43,7 +43,7 @@ export default function ClassicBuyBox({
   offerEmail?: string;
 }) {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, ensureCartSession, loading: authLoading } = useAuth();
   const { apiFetch } = useApi();
   const { isInWishlist, toggle } = useWishlist();
 
@@ -75,9 +75,11 @@ export default function ClassicBuyBox({
   };
 
   const addToCart = async () => {
-    if (!inStock || busy || requireLogin()) return;
+    if (!inStock || busy || authLoading) return;
     setBusy(true);
     try {
+      // No account needed: starts a guest session if not signed in.
+      await ensureCartSession();
       await apiFetch("/api/cart", { method: "POST", body: JSON.stringify({ productId, quantity: clampQty(qty) }) });
       cartEvents.refresh();
       setAdded(true);

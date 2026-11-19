@@ -12,7 +12,7 @@ export default function AddToCartButton({
   productId: string;
   inStock: boolean;
 }) {
-  const { user, loading: authLoading } = useAuth();  // ← get loading state
+  const { ensureCartSession, loading: authLoading } = useAuth();
   const { apiFetch } = useApi();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -23,13 +23,10 @@ export default function AddToCartButton({
     // ✅ Wait for auth to finish loading before checking user
     if (authLoading) return;
 
-    if (!user) {
-      router.push('/login'); // ✅ Fixed: was '/login', match your actual route
-      return;
-    }
-
     setLoading(true);
     try {
+      // No account needed: starts a guest session if not signed in.
+      await ensureCartSession();
       await apiFetch('/api/cart', {
         method: 'POST',
         body: JSON.stringify({ productId, quantity: qty }),

@@ -4,6 +4,7 @@ import { createOrderFromCart, getUserOrders } from '@/services/order.service';
 import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { z } from 'zod';
+import { emailSchema } from '@/lib/validation';
 
 const shippingSchema = z.object({
   fullName: z.string().min(2),
@@ -20,6 +21,8 @@ const createOrderSchema = z.object({
   shippingAddress:  shippingSchema,
   paymentMethod:    z.literal('paypal'),
   couponCode:       z.string().optional(),
+  // Required when checking out as a guest — where we send the confirmation.
+  guestEmail:       emailSchema.optional(),
   // ShipEngine shipping selection saved at checkout
   shippingCarrier:           z.string().optional(),
   shippingService:           z.string().optional(),
@@ -52,7 +55,14 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       shippingRate,
       shippingEstimatedDays,
       shippingEstimatedDelivery,
+      guestEmail,
     } = parsed.data;
+
+    if (req.user.guest && !guestEmail) {
+      return errorResponse('Please enter your email address so we can send your order confirmation.', 400, {
+        guestEmail: ['Email address is required'],
+      });
+    }
 
     const shippingSelection = (shippingCarrier || shippingRateId) ? {
       shippingCarrier,
@@ -69,7 +79,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       shippingAddress,
       paymentMethod,
       couponCode,
-      shippingSelection
+      shippingSelection,
+      req.user.guest ? guestEmail : null
     );
 
     return successResponse(order, 201);

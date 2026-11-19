@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { withAuth } from '@/middleware/auth.middleware';
+import { withMember } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 import { applyForMemoEligibility, MemoError } from '@/services/memo.service';
@@ -11,7 +11,7 @@ const applySchema = z.object({
   references: z.string().optional(),
 });
 
-export const POST = withAuth(async (req: NextRequest & { user: { userId: string } }) => {
+export const POST = withMember(async (req: NextRequest & { user: { userId: string } }) => {
   try {
     const rate = await rateLimit(req, {
       id: 'memo-apply',

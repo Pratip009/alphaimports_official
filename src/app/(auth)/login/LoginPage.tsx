@@ -7,6 +7,7 @@ import GoogleButton from "@/components/auth/GoogleButton";
 import { googleAuthErrorMessage } from "@/lib/google-auth-messages";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import ClassicSidebar from "@/components/ui/ClassicSidebar";
+import LoginHelp from "@/components/auth/LoginHelp";
 import type { NavCategory } from "@/lib/getNavCategories";
 
 export default function LoginPage({
@@ -26,6 +27,35 @@ export default function LoginPage({
   const [showPassword, setShowPassword] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [showGoogleHint, setShowGoogleHint] = useState(false);
+  // Customer from the old website who hasn't set a new password yet.
+  const [setupPrompt, setSetupPrompt] = useState<{ email: string; firstName?: string } | null>(null);
+  const [linkState, setLinkState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [linkMsg, setLinkMsg] = useState("");
+
+  const sendSetupLink = async () => {
+    if (!setupPrompt || linkState === "sending") return;
+    setLinkState("sending");
+    setLinkMsg("");
+    try {
+      const res = await fetch("/api/auth/password-setup", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: setupPrompt.email, from: "login" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "We couldn't send the email. Please try again.");
+      setLinkState("sent");
+      setLinkMsg(
+        data?.data?.status === "throttled"
+          ? data.data.message
+          : `Done! We've emailed a secure link to ${setupPrompt.email}. Open it, choose your new password, and you'll be signed in automatically. It can take a minute or two — please check your spam folder too.`
+      );
+    } catch (err) {
+      setLinkState("error");
+      setLinkMsg(err instanceof Error ? err.message : "We couldn't send the email. Please try again.");
+    }
+  };
 
   // Sanitised once: only same-site relative paths are ever followed.
   const redirectParam = searchParams.get("redirect");
@@ -41,12 +71,21 @@ export default function LoginPage({
     e.preventDefault();
     setError("");
     setShowGoogleHint(false);
+    setSetupPrompt(null);
+    setLinkState("idle");
+    setLinkMsg("");
     setLoading(true);
     try {
       await login(form.email, form.password);
       setRedirecting(true);
       router.push(redirectTarget);
     } catch (err) {
+      const e = err as Error & { code?: string; data?: { email?: string; firstName?: string } };
+      if (e?.code === "PASSWORD_SETUP_REQUIRED") {
+        setSetupPrompt({ email: e.data?.email || form.email.trim(), firstName: e.data?.firstName });
+        setLoading(false);
+        return;
+      }
       setError(err instanceof Error ? err.message : "Could not sign you in. Please try again.");
       // Accounts created with Google have no password. The server keeps its
       // generic "invalid email or password" (so it can't be used to probe
@@ -181,6 +220,23 @@ export default function LoginPage({
           color: #b00000;
         }
         .lg-hint { grid-column: 1 / -1; margin-top: 6px; line-height: 1.5; }
+
+        .lg-welcome {
+          grid-column: 1 / -1;
+          margin-top: 10px;
+          padding: 10px 12px;
+          border: 1px solid #b9cbe4;
+          background: #fff;
+          color: #333;
+          line-height: 1.7;
+        }
+        .lg-welcome p { margin: 0 0 8px; }
+        .lg-welcome-title { font-size: 13px; font-weight: bold; color: #1c4874; }
+        .lg-welcome-ok { padding: 6px 8px; background: #eef6ee; border: 1px solid #b9dbb9; color: #1d5a1d; }
+        .lg-welcome-err { color: #b00000; margin-top: 8px !important; }
+        .lg-welcome-small { font-size: 10px; color: #6b6b6b; margin: 10px 0 0 !important; }
+        .lg-btn-primary { height: 26px; font-weight: bold; padding: 0 16px; margin-bottom: 4px; }
+        .lg-linkbtn { background: none; border: 0; padding: 0; font: inherit; color: #1c4874; text-decoration: underline; cursor: pointer; }
         .lg-hint a { color: #1c4874; }
 
         .lg-text { padding: 0 4px; line-height: 1.75; letter-spacing: .2px; }
@@ -287,7 +343,10 @@ export default function LoginPage({
                         {loading && <span className="lg-spinner" />}
                         {loading ? "Signing in…" : "Sign In"}
                       </button>
-                      <Link href="/forgot-password" className="lg-forgot">
+                      <Link
+                        href={form.email.trim() ? `/set-password?email=${encodeURIComponent(form.email.trim())}` : "/set-password"}
+                        className="lg-forgot"
+                      >
                         Password forgotten? Click here.
                       </Link>
                       {googleEnabled && (
@@ -309,6 +368,47 @@ export default function LoginPage({
                         <span role="alert">{error}</span>
                       </div>
                     )}
+                    {setupPrompt && (
+                      <div className="lg-welcome" role="status" aria-live="polite">
+                        <p className="lg-welcome-title">
+                          {setupPrompt.firstName ? `Hello ${setupPrompt.firstName}, welcome back` : "Welcome back"} to Alpha Imports!
+                        </p>
+                        <p>
+                          We have upgraded our website. For your security, please set a new password to access your account.
+                        </p>
+                        {linkState !== "sent" ? (
+                          <>
+                            <p>
+                              Click the button and we&apos;ll email a secure link to <strong>{setupPrompt.email}</strong>.
+                            </p>
+                            <button
+                              type="button"
+                              className="lg-btn lg-btn-primary"
+                              onClick={sendSetupLink}
+                              disabled={linkState === "sending"}
+                            >
+                              {linkState === "sending" && <span className="lg-spinner" />}
+                              {linkState === "sending" ? "Sending…" : "Email Me My Password Link"}
+                            </button>
+                            {linkState === "error" && <p className="lg-welcome-err" role="alert">{linkMsg}</p>}
+                          </>
+                        ) : (
+                          <>
+                            <p className="lg-welcome-ok">{linkMsg}</p>
+                            <p>
+                              Didn&apos;t get it?{" "}
+                              <button type="button" className="lg-linkbtn" onClick={() => { setLinkState("idle"); }}>
+                                Send it again
+                              </button>
+                            </p>
+                          </>
+                        )}
+                        <p className="lg-welcome-small">
+                          Your name, shipping address and order history are safe and waiting for you.
+                          Want to shop right now? You can check out as a guest — no password needed.
+                        </p>
+                      </div>
+                    )}
                     {showGoogleHint && (
                       <p className="lg-hint">
                         Created your account with Google? Use Continue with Google, or{" "}
@@ -320,6 +420,8 @@ export default function LoginPage({
               </div>
             </section>
 
+            <LoginHelp email={setupPrompt?.email || form.email.trim() || undefined} />
+
             {/* ── New Customer ── */}
             <section className="lg-panel" aria-labelledby="lg-new">
               <div className="lg-panel-head" id="lg-new">New Customer</div>
@@ -327,6 +429,9 @@ export default function LoginPage({
                 <p className="lg-text">
                   By creating an account at Alphaimports.com you will be able to shop faster, be up
                   to date on an order&apos;s status, and keep track of the orders you have previously made.
+                </p>
+                <p className="lg-text">
+                  <strong>No account needed to buy:</strong> just add items to your cart and check out as a guest.
                 </p>
                 <div className="lg-create">
                   <Link href={signupHref} className="lg-btn">Create Account</Link>

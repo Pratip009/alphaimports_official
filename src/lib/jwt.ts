@@ -11,6 +11,8 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: 'admin' | 'user';
+  /** true → anonymous guest-checkout session, not a real account. */
+  guest?: boolean;
   iat?: number;
   exp?: number;
 }

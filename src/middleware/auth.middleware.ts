@@ -38,6 +38,24 @@ export function withAuth(handler: RouteHandler) {
   };
 }
 
+/**
+ * Like withAuth, but refuses guest-checkout sessions. Use for anything that
+ * belongs to a real account (profile, memos, reviews, comments...). Cart,
+ * checkout, payment, orders and wishlist stay on plain withAuth so people
+ * can shop without signing up.
+ */
+export function withMember(handler: RouteHandler) {
+  return withAuth(async (req: AuthenticatedRequest, context: any): Promise<Response> => {
+    if (req.user.guest) {
+      return NextResponse.json(
+        { success: false, message: 'Please sign in to your account to do this.' },
+        { status: 401 }
+      );
+    }
+    return handler(req, context);
+  });
+}
+
 export function withAdmin(handler: RouteHandler) {
   return withAuth(
     async (

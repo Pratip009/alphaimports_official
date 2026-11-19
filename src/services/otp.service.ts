@@ -195,6 +195,11 @@ export async function sendSignupOtp(
     .collation({ locale: 'en', strength: 2 })
     .lean();
   if (existing) {
+    if ((existing as { needsPasswordSetup?: boolean }).needsPasswordSetup) {
+      throw new Error(
+        'Welcome back! You already have an account from our previous website. Go to Sign In and enter your email — we\'ll send you a link to set a new password.'
+      );
+    }
     throw new Error(
       'An account with this email already exists. Sign in instead — with your password or with Google.'
     );

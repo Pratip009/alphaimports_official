@@ -5,7 +5,8 @@ import { connectDB } from '@/lib/db';
 import '@/lib/registerModels';
 import { verifySignupOtp } from '@/services/otp.service';
 import { errorResponse } from '@/lib/api-response';
-import { setSessionCookies } from '@/lib/auth-cookies';
+import { setSessionCookies, currentGuestId } from '@/lib/auth-cookies';
+import { mergeGuestIntoMember } from '@/services/guest.service';
 import { emailSchema, firstZodErrorMessage } from '@/lib/validation';
 
 const schema = z.object({
@@ -30,6 +31,8 @@ export async function POST(req: NextRequest) {
     }
     const { email, otp } = parsed.data;
     const result = await verifySignupOtp(email, otp);
+    const created = result.user as { id?: string; email?: string };
+    if (created.id) await mergeGuestIntoMember(currentGuestId(req), { _id: created.id, email: created.email || email });
 
     const response = NextResponse.json({ success: true, data: { user: result.user } }, { status: 201 });
     setSessionCookies(response, result.token);

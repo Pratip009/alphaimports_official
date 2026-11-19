@@ -43,7 +43,16 @@ export async function runAuthRequest<T>(
   }
 
   if (!res.ok) {
-    throw new Error(data?.message || 'Something went wrong. Please try again.');
+    const err = new Error(data?.message || 'Something went wrong. Please try again.') as Error & {
+      code?: string;
+      data?: unknown;
+      status?: number;
+    };
+    // Lets pages react to specific cases, e.g. PASSWORD_SETUP_REQUIRED.
+    err.code = data?.code;
+    err.data = data?.data;
+    err.status = res.status;
+    throw err;
   }
 
   return data as T;

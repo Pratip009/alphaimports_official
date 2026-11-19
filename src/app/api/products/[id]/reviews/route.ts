@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuth, withOptionalAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, withOptionalAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import {
   listProductReviews,
   createOrUpdateReview,
@@ -41,7 +41,7 @@ export const GET = withOptionalAuth(async (req, context: { params: Promise<{ id:
 // POST /api/products/[id]/reviews — create or update the caller's own
 // review for this product (one review per user per product; resubmitting
 // edits it in place rather than erroring).
-export const POST = withAuth(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
+export const POST = withMember(async (req: AuthenticatedRequest, context: { params: Promise<{ id: string }> }) => {
   try {
     await connectDB();
     const { id } = await context.params;

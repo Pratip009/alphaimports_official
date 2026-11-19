@@ -24,6 +24,35 @@ export type MemoUserStatus = (typeof MEMO_USER_STATUSES)[number];
 export const AUTH_PROVIDERS = ['password', 'google'] as const;
 export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
 
+export interface ILegacyAddress {
+  legacyAddressId: number;
+  isDefault: boolean;
+  name: string;
+  company?: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state?: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface ILegacyCustomerInfo {
+  importedAt: Date;
+  phone?: string;
+  newsletter?: boolean;
+  /** osCommerce "purchased without account" flag. */
+  purchasedWithoutAccount?: boolean;
+  /** osCommerce customers_status (0 = disabled on the old site). */
+  status?: number;
+  shoppingPoints?: number;
+  orderCount?: number;
+  lastOrderAt?: Date | null;
+  addresses: ILegacyAddress[];
+  /** Other old customer ids that shared this email and were merged in. */
+  mergedLegacyCustomerIds?: number[];
+}
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -53,6 +82,27 @@ export interface IUser extends Document {
   memoApprovedAt?: Date | null;
   memoApprovedBy?: mongoose.Types.ObjectId | null;
   memoSuspendedReason?: string | null;
+
+  // ─── Legacy-site migration & guest checkout ──────────────────────────────────
+  /**
+   * true → account came over from the old Alpha Imports (osCommerce) site.
+   * Its old password can't be carried over, so the customer must set a new
+   * one through an emailed link before signing in with a password.
+   * Cleared as soon as a password is set.
+   */
+  needsPasswordSetup?: boolean;
+  /** `customers_id` from the old site. Unique when present. */
+  legacyCustomerId?: number;
+  /** Extra details kept from the old site (all addresses, phone, etc). */
+  legacy?: ILegacyCustomerInfo;
+  /** When the "we've upgraded our website" email was sent. */
+  upgradeAnnouncementSentAt?: Date | null;
+  /**
+   * true → an anonymous session created so someone can shop and check out
+   * without an account. Has a placeholder email and no password; the real
+   * contact email is stored on each order (Order.guestEmail).
+   */
+  isGuest?: boolean;
 
   createdAt: Date;
   updatedAt: Date;
@@ -96,9 +146,11 @@ const UserSchema = new Schema<IUser>(
     password: {
       type: String,
       // Google-only accounts have no password. Every other account must.
+      // Migrated accounts (until they set one) and guest-checkout sessions
+      // have no password either.
       required: [
         function (this: IUser) {
-          return !this.googleId;
+          return !this.googleId && !this.needsPasswordSetup && !this.isGuest;
         },
         'Password is required',
       ],
@@ -184,6 +236,12 @@ const UserSchema = new Schema<IUser>(
       maxlength: [500, 'memoSuspendedReason cannot exceed 500 characters'],
       default: null,
     },
+
+    needsPasswordSetup: { type: Boolean },
+    legacyCustomerId: { type: Number },
+    legacy: { type: Schema.Types.Mixed, select: false },
+    upgradeAnnouncementSentAt: { type: Date, default: undefined },
+    isGuest: { type: Boolean },
   },
   {
     timestamps: true,
@@ -232,6 +290,19 @@ UserSchema.index(
   { email: 1 },
   { unique: true, collation: { locale: 'en', strength: 2 }, name: 'email_unique_ci' }
 );
+
+// One old-site customer maps to exactly one account. Partial so the many
+// accounts without a legacy id are ignored.
+UserSchema.index(
+  { legacyCustomerId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { legacyCustomerId: { $type: 'number' } },
+    name: 'legacyCustomerId_unique',
+  }
+);
+// Lets the guest-session cleanup job find stale guests quickly.
+UserSchema.index({ isGuest: 1, createdAt: 1 }, { partialFilterExpression: { isGuest: true } });
 
 // One Google account can belong to at most one user. Partial (rather than
 // sparse) so documents without the field are ignored entirely.

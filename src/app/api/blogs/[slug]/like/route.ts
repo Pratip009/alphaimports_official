@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { toggleLike } from '@/services/blog.service';
-import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
-export const POST = withAuth(async (
+export const POST = withMember(async (
   req: AuthenticatedRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) => {

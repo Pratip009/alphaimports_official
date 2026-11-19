@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { withAuth } from '@/middleware/auth.middleware';
+import { withMember } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { requestExtension, MemoError } from '@/services/memo.service';
 
@@ -8,7 +8,7 @@ const extendSchema = z.object({
   extraDays: z.number().int().min(1).max(14),
 });
 
-export const POST = withAuth(
+export const POST = withMember(
   async (req: NextRequest & { user: { userId: string } }, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params;

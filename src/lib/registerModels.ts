@@ -12,4 +12,5 @@ import '@/models/Otp';
 import '@/models/NewsletterSubscriber';
 import '@/models/NewsletterCampaign';
 import '@/models/DropshipApplication';
-import '@/models/DropshipOrder';
+import '@/models/DropshipOrder';import '@/models/PasswordSetupToken';
+import '@/models/LegacyOrder';

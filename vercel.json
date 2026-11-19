@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/release-stale-orders",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-guests",
+      "schedule": "30 2 * * *"
     }
   ]
 }

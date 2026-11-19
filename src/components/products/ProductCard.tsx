@@ -346,7 +346,7 @@ function QuickAddButton({
   productId: string;
   inStock: boolean;
 }) {
-  const { user, loading: authLoading } = useAuth();
+  const { ensureCartSession, loading: authLoading } = useAuth();
   const { apiFetch } = useApi();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -356,12 +356,10 @@ function QuickAddButton({
     e.preventDefault();
     e.stopPropagation();
     if (authLoading || busy || !inStock) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
     setBusy(true);
     try {
+      // No account needed: starts a guest session if not signed in.
+      await ensureCartSession();
       await apiFetch("/api/cart", {
         method: "POST",
         body: JSON.stringify({ productId, quantity: 1 }),
@@ -430,7 +428,7 @@ function QuickViewCart({
   minOrder?: number;
   onViewCart: () => void;
 }) {
-  const { user, loading: authLoading } = useAuth();
+  const { ensureCartSession, loading: authLoading } = useAuth();
   const { apiFetch } = useApi();
   const router = useRouter();
   const min = Math.max(1, minOrder ?? 1);
@@ -442,13 +440,11 @@ function QuickViewCart({
 
   const handleAdd = async () => {
     if (authLoading || busy) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
     setBusy(true);
     setError(null);
     try {
+      // No account needed: starts a guest session if not signed in.
+      await ensureCartSession();
       await apiFetch("/api/cart", {
         method: "POST",
         body: JSON.stringify({ productId, quantity: qty }),

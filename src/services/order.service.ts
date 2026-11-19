@@ -118,7 +118,8 @@ export async function createOrderFromCart(
   shippingAddress: IShippingAddress,
   paymentMethod: 'paypal',
   couponCode?: string,
-  shippingSelection?: ShippingSelection
+  shippingSelection?: ShippingSelection,
+  guestEmail?: string | null
 ) {
   // Raw (unpopulated) cart — keeps the actual stored product ids around even
   // for items whose product no longer exists, so we can self-heal the cart
@@ -231,9 +232,18 @@ export async function createOrderFromCart(
       shippingRate:              rawShippingRate,
       shippingEstimatedDays:     shippingSelection?.shippingEstimatedDays     ?? null,
       shippingEstimatedDelivery: shippingSelection?.shippingEstimatedDelivery ?? null,
+      guestEmail:                guestEmail ? guestEmail.trim().toLowerCase() : null,
     });
 
     await order.save();
+
+    if (guestEmail) {
+      // Give the guest record a real name/phone so admins see who ordered.
+      await User.updateOne(
+        { _id: userId, isGuest: true },
+        { $set: { name: shippingAddress.fullName.slice(0, 100), phone: (shippingAddress.phone || '').slice(0, 20) } }
+      ).catch(() => {});
+    }
 
     // NOTE: the coupon is deliberately NOT redeemed here. This order is still
     // 'pending'/unpaid — redeeming now would burn the code for a checkout
@@ -678,11 +688,26 @@ export async function purchaseAndSaveLabel(
 
 // ─── Email helpers ────────────────────────────────────────────────────────────
 
+/**
+ * Who gets the customer emails for an order. Guest-checkout orders go to the
+ * email typed at checkout; everything else goes to the account's email.
+ */
+function recipientOf(
+  order: Pick<IOrder, 'guestEmail' | 'shippingAddress'>,
+  user: { name?: string; email?: string } | null | undefined
+): { name: string; email: string } | null {
+  if (order.guestEmail) {
+    return { name: order.shippingAddress?.fullName || 'Customer', email: order.guestEmail };
+  }
+  if (!user?.email) return null;
+  return { name: user.name || 'Customer', email: user.email };
+}
+
 async function sendOrderConfirmationEmail(order: IOrder): Promise<void> {
   try {
-    const user = await User.findById(order.user)
+    const user = recipientOf(order, await User.findById(order.user)
       .select('name email')
-      .lean() as { name: string; email: string } | null;
+      .lean() as { name: string; email: string } | null);
     if (!user) return;
 
     const { error } = await resend.emails.send({
@@ -718,14 +743,16 @@ async function sendOrderShippedEmail(
 ): Promise<void> {
   try {
     if (!order.trackingNumber) return;
+    const to = recipientOf(order, order.user);
+    if (!to) return;
 
     const { error } = await resend.emails.send({
       from:    EMAIL_FROM,
-      to:      order.user.email,
+      to:      to.email,
       subject: `Your Order Has Shipped — #${order._id.toString().slice(-8).toUpperCase()}`,
       html:    orderShippedEmailHtml({
         orderId:           order._id.toString(),
-        customerName:      order.user.name,
+        customerName:      to.name,
         trackingNumber:    order.trackingNumber,
         trackingUrl:       order.trackingUrl   ?? undefined,
         shippingCarrier:   order.shippingCarrier ?? undefined,
@@ -742,13 +769,15 @@ async function sendOrderDeliveredEmail(
   order: IOrder & { user: { name: string; email: string } }
 ): Promise<void> {
   try {
+    const to = recipientOf(order, order.user);
+    if (!to) return;
     const { error } = await resend.emails.send({
       from:    EMAIL_FROM,
-      to:      order.user.email,
+      to:      to.email,
       subject: `Your Order Has Been Delivered — #${order._id.toString().slice(-8).toUpperCase()}`,
       html:    orderDeliveredEmailHtml({
         orderId:        order._id.toString(),
-        customerName:   order.user.name,
+        customerName:   to.name,
         trackingNumber: order.trackingNumber ?? undefined,
         deliveredAt:    order.deliveredAt
           ? new Date(order.deliveredAt).toLocaleDateString('en-US', {
@@ -774,10 +803,11 @@ async function sendOrderDeliveredEmail(
 async function sendAdminNewOrderEmail(order: IOrder): Promise<void> {
   if (ADMIN_NOTIFICATION_EMAILS.length === 0) return; // not configured — skip silently
   try {
-    const user = await User.findById(order.user)
+    const found = recipientOf(order, await User.findById(order.user)
       .select('name email')
-      .lean() as { name: string; email: string } | null;
-    if (!user) return;
+      .lean() as { name: string; email: string } | null);
+    if (!found) return;
+    const user = { ...found, name: order.guestEmail ? `${found.name} (guest checkout)` : found.name };
 
     const { error } = await resend.emails.send({
       from:    EMAIL_FROM,

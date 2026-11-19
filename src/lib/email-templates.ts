@@ -23,7 +23,7 @@ const T = {
   headerBg:    '#0B0A08',   // near-black, slightly warm
   accentGold:  '#C9A84C',   // house gold — primary brand accent
   accentDark:  '#a9a9a9',
-  textPrimary: '#d2d2d2',
+  textPrimary: '#1F1B16',   // body text on white cards (was #d2d2d2 — near-invisible)
   textMuted:   '#6B6560',
   textLight:   '#9E9994',
   border:      '#E8E3DC',   // warm gray border
@@ -38,9 +38,12 @@ const T = {
   gemSapphire: '#1B3A6B',
   gemEmerald:  '#1B4D3E',
   gemRuby:     '#7A1F2B',
-  fontStack:   'Georgia,"Times New Roman",Times,serif',
-  sansStack:   '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif',
-  monoStack:   '"Courier New",Courier,monospace',
+  // Single quotes only: these go inside style="..." attributes, where a
+  // double quote ends the attribute and silently drops every style after it
+  // (that was blanking colours/sizes in every email).
+  fontStack:   "Georgia,'Times New Roman',Times,serif",
+  sansStack:   "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif",
+  monoStack:   "'Courier New',Courier,monospace",
 };
 
 const GEM_CYCLE = [T.gemGold, T.gemSapphire, T.gemEmerald, T.gemRuby];
@@ -1093,4 +1096,190 @@ export function adminNewDropshipOrderEmailHtml(
   </tr>`;
 
   return emailWrapper(body, `Paid dropship order ready to fulfill — ${data.quantity} × ${data.productName}`);
+}
+
+// ─── Website upgrade: set-password emails ─────────────────────────────────────
+// Used for customers moved over from the old website (their old passwords
+// could not be carried over), for guest-checkout customers who want an
+// account, and as the one-click "forgot password" link.
+
+const HELP_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '1-914-310-1480';
+const INK = '#1F1B16'; // readable body text on the white card
+
+function esc(s: string): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function helpBlock(): string {
+  return `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:36px;">
+        <tr>
+          <td style="background-color:${T.bg};border-left:3px solid ${T.accentGold};padding:16px 20px;">
+            <p style="margin:0;font-family:${T.sansStack};font-size:13px;color:${INK};line-height:1.7;">
+              <strong>Need help?</strong> Just reply to this email, write to
+              <a href="mailto:${SUPPORT_EMAIL}" style="color:${T.gemSapphire};">${SUPPORT_EMAIL}</a>,
+              or call us at <a href="tel:${HELP_PHONE.replace(/[^\d+]/g, '')}" style="color:${T.gemSapphire};">${HELP_PHONE}</a>.
+              We're happy to help you get signed in.
+            </p>
+          </td>
+        </tr>
+      </table>`;
+}
+
+export interface PasswordSetupEmailData {
+  name: string;
+  link: string;
+  /** How long the link works, in words, e.g. "7 days". */
+  validFor: string;
+  /** 'setup' = migrated / new password, 'reset' = has a password already. */
+  kind: 'setup' | 'reset';
+}
+
+export function passwordSetupEmailHtml(d: PasswordSetupEmailData): string {
+  const firstName = esc((d.name || '').split(' ')[0] || 'there');
+  const heading = d.kind === 'reset' ? 'Reset your password' : 'Set your new password';
+  const intro =
+    d.kind === 'reset'
+      ? 'We received a request to reset the password for your Alpha Imports account. Click the button below to choose a new one.'
+      : 'Click the button below to set a new password for your Alpha Imports account. It takes less than a minute, and your saved details and order history will be right there waiting for you.';
+
+  const body = `
+  <tr>
+    <td style="background-color:${T.headerBg};padding:44px 52px 38px;">
+      <p style="margin:0 0 16px;font-family:${T.sansStack};font-size:10px;font-weight:700;color:${T.accentGold};letter-spacing:0.22em;text-transform:uppercase;">Your account</p>
+      <h1 style="margin:0;font-family:${T.fontStack};font-size:32px;font-weight:400;color:#FFFFFF;line-height:1.2;">${heading}</h1>
+    </td>
+  </tr>
+  ${facetRule()}
+  <tr>
+    <td class="email-pad" style="padding:46px 52px 42px;">
+      <p style="margin:0 0 20px;font-family:${T.fontStack};font-size:19px;color:${INK};">Dear ${firstName},</p>
+      <p style="margin:0 0 32px;font-family:${T.sansStack};font-size:15px;color:${INK};line-height:1.7;">${intro}</p>
+      ${ctaButton(d.kind === 'reset' ? 'Reset My Password' : 'Set My Password', esc(d.link))}
+      <p style="margin:28px 0 0;font-family:${T.sansStack};font-size:12px;color:${T.textMuted};line-height:1.7;">
+        This link works once and expires in ${esc(d.validFor)}. If the button doesn't work, copy this address into your browser:<br />
+        <a href="${esc(d.link)}" style="color:${T.gemSapphire};word-break:break-all;">${esc(d.link)}</a>
+      </p>
+      <p style="margin:16px 0 0;font-family:${T.sansStack};font-size:12px;color:${T.textMuted};line-height:1.7;">
+        Didn't ask for this? You can safely ignore this email — nothing changes until the button is used.
+      </p>
+      ${helpBlock()}
+    </td>
+  </tr>`;
+  return emailWrapper(body, `${heading} for your Alpha Imports account`);
+}
+
+export function passwordSetupEmailText(d: PasswordSetupEmailData): string {
+  const firstName = (d.name || '').split(' ')[0] || 'there';
+  return [
+    `Dear ${firstName},`,
+    '',
+    d.kind === 'reset'
+      ? 'We received a request to reset the password for your Alpha Imports account. Open this link to choose a new one:'
+      : 'Open this link to set a new password for your Alpha Imports account. Your saved details and order history will be right there waiting for you:',
+    '',
+    d.link,
+    '',
+    `This link works once and expires in ${d.validFor}.`,
+    "Didn't ask for this? You can safely ignore this email.",
+    '',
+    `Need help? Reply to this email, write to ${SUPPORT_EMAIL}, or call ${HELP_PHONE}.`,
+    '',
+    'Alpha Imports — alphaimports.com',
+  ].join('\n');
+}
+
+export interface UpgradeAnnouncementEmailData {
+  name: string;
+  link: string;
+  validFor: string;
+}
+
+export function upgradeAnnouncementEmailHtml(d: UpgradeAnnouncementEmailData): string {
+  const firstName = esc((d.name || '').split(' ')[0] || 'Valued Customer');
+  const steps = [
+    ['Click the button below', 'It opens a secure page on our new website.'],
+    ['Choose a new password', "That's it — you're signed in."],
+    ['Shop as usual', 'Your name, shipping address and order history are already there.'],
+  ]
+    .map(
+      ([t, s], i) => `
+        <tr>
+          <td style="padding:12px 0;border-bottom:1px solid ${T.divider};">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+              <td style="width:34px;vertical-align:top;font-family:${T.fontStack};font-size:20px;color:${T.accentGold};">${i + 1}</td>
+              <td>
+                <p style="margin:0 0 2px;font-family:${T.sansStack};font-size:14px;font-weight:700;color:${INK};">${t}</p>
+                <p style="margin:0;font-family:${T.sansStack};font-size:13px;color:${T.textMuted};line-height:1.6;">${s}</p>
+              </td>
+            </tr></table>
+          </td>
+        </tr>`
+    )
+    .join('');
+
+  const body = `
+  <tr>
+    <td style="background-color:${T.headerBg};padding:56px 52px 48px;">
+      <p style="margin:0 0 20px;font-family:${T.sansStack};font-size:10px;font-weight:700;color:${T.accentGold};letter-spacing:0.22em;text-transform:uppercase;">Website upgrade</p>
+      <h1 style="margin:0 0 12px;font-family:${T.fontStack};font-size:36px;font-weight:400;color:#FFFFFF;line-height:1.15;">Our new website<br /><em style="color:${T.accentGold};font-style:italic;">is here</em></h1>
+      <p style="margin:0;font-family:${T.sansStack};font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;">Same Alpha Imports. Easier to shop.</p>
+    </td>
+  </tr>
+  ${facetRule()}
+  <tr>
+    <td class="email-pad" style="padding:46px 52px 0;">
+      <p style="margin:0 0 16px;font-family:${T.fontStack};font-size:20px;color:${INK};line-height:1.5;">Dear ${firstName},</p>
+      <p style="margin:0 0 16px;font-family:${T.sansStack};font-size:15px;color:${INK};line-height:1.7;">
+        Thank you for being an Alpha Imports customer. We have upgraded our website to make finding and buying gemstones, diamonds and jewelry faster and easier.
+      </p>
+      <p style="margin:0 0 30px;font-family:${T.sansStack};font-size:15px;color:${INK};line-height:1.7;">
+        Your account has been moved over for you. <strong>For your security, we did not copy old passwords</strong> — so the first time you visit, please set a new one. It takes less than a minute:
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:32px;">${steps}</table>
+      ${ctaButton('Set My Password', esc(d.link))}
+      <p style="margin:24px 0 0;font-family:${T.sansStack};font-size:12px;color:${T.textMuted};line-height:1.7;">
+        This personal link works once and expires in ${esc(d.validFor)}. After that, just click "Sign In" on our website, enter your email, and we'll send you a fresh link.
+      </p>
+      <p style="margin:16px 0 0;font-family:${T.sansStack};font-size:14px;color:${INK};line-height:1.7;">
+        <strong>In a hurry?</strong> You don't need to sign in to shop — you can check out as a guest any time.
+      </p>
+      ${helpBlock()}
+    </td>
+  </tr>
+  <tr>
+    <td class="email-pad" style="padding:36px 52px 46px;">
+      ${ctaButton('Visit the New Website', SITE_URL)}
+    </td>
+  </tr>`;
+  return emailWrapper(body, 'We have upgraded our website — set your new password in one click');
+}
+
+export function upgradeAnnouncementEmailText(d: UpgradeAnnouncementEmailData): string {
+  const firstName = (d.name || '').split(' ')[0] || 'Valued Customer';
+  return [
+    `Dear ${firstName},`,
+    '',
+    'Thank you for being an Alpha Imports customer. We have upgraded our website to make finding and buying gemstones, diamonds and jewelry faster and easier.',
+    '',
+    'Your account has been moved over for you. For your security, we did not copy old passwords, so the first time you visit, please set a new one. It takes less than a minute:',
+    '',
+    '  1. Open your personal link below',
+    "  2. Choose a new password — that's it, you're signed in",
+    '  3. Shop as usual — your name, shipping address and order history are already there',
+    '',
+    d.link,
+    '',
+    `This link works once and expires in ${d.validFor}. After that, click "Sign In" on our website, enter your email, and we'll send you a fresh link.`,
+    '',
+    "In a hurry? You don't need to sign in to shop — you can check out as a guest any time.",
+    '',
+    `Need help? Reply to this email, write to ${SUPPORT_EMAIL}, or call ${HELP_PHONE}.`,
+    '',
+    `Alpha Imports — ${SITE_URL}`,
+  ].join('\n');
 }

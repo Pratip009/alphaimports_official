@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyToken } from './jwt';
 
 /**
  * Single source of truth for the session cookies.
@@ -49,4 +50,19 @@ export function clearSessionCookies(response: NextResponse): NextResponse {
     path: '/',
   });
   return response;
+}
+
+/**
+ * The guest-checkout session id in this request, if there is one. Used to
+ * carry a guest's cart and orders into the account they sign in to.
+ */
+export function currentGuestId(req: { cookies: { get(name: string): { value: string } | undefined } }): string | null {
+  const token = req.cookies.get('auth_token')?.value;
+  if (!token) return null;
+  try {
+    const payload = verifyToken(token);
+    return payload.guest ? payload.userId : null;
+  } catch {
+    return null;
+  }
 }

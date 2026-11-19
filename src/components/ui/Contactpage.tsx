@@ -1,7 +1,7 @@
 // src/app/(shop)/contact/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * ── Palette (flat, no gradients) ──
@@ -91,6 +91,22 @@ export default function ContactPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitted, setSubmitted]     = useState(false);
   const [focused, setFocused]         = useState<string | null>(null);
+
+  // /contact?topic=login (linked from the sign-in help box) pre-selects the
+  // sign-in topic and pre-fills the email, so asking for help is one step.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("topic") !== "login") return;
+    const email = params.get("email") || "";
+    setForm((prev) => ({
+      ...prev,
+      subject: "Account / Sign-in Help",
+      email: prev.email || email.slice(0, 200),
+      message:
+        prev.message ||
+        "Hello, I'm having trouble signing in to my account on the new website. ",
+    }));
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -376,6 +392,7 @@ export default function ContactPage() {
                           className={inputStyle("subject")}
                         >
                           <option value="">Select a topic…</option>
+                          <option>Account / Sign-in Help</option>
                           <option>Product Inquiry</option>
                           <option>Order &amp; Shipping</option>
                           <option>Returns &amp; Refunds</option>

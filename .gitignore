@@ -58,3 +58,6 @@ coverage/
 
 # uploads / static (if generated)
 public/uploads
+# legacy migration — customer data, never commit
+/legacy-export/
+/migration-report/

@@ -11,7 +11,8 @@ import {
   statesMatch,
   verifyGoogleIdToken,
 } from '@/lib/google-oauth';
-import { setSessionCookies } from '@/lib/auth-cookies';
+import { setSessionCookies, currentGuestId } from '@/lib/auth-cookies';
+import { mergeGuestIntoMember } from '@/services/guest.service';
 import { extractTokenFromCookie, verifyToken } from '@/lib/jwt';
 import { rateLimit } from '@/lib/rate-limit';
 import { linkGoogleToUser, signInWithGoogle } from '@/services/google-auth.service';
@@ -89,7 +90,10 @@ export async function GET(req: NextRequest) {
       let userId: string;
       try {
         if (!sessionToken) throw new Error('no session');
-        userId = verifyToken(sessionToken).userId;
+        const payload = verifyToken(sessionToken);
+        // A guest-checkout session isn't an account to link Google to.
+        if (payload.guest) throw new Error('guest session');
+        userId = payload.userId;
       } catch {
         return fail('google_link_requires_login');
       }
@@ -102,6 +106,7 @@ export async function GET(req: NextRequest) {
     }
 
     const result = await signInWithGoogle(profile);
+    await mergeGuestIntoMember(currentGuestId(req), { _id: result.user.id, email: result.user.email });
     const target = new URL(flow.redirect || '/', req.nextUrl.origin);
     // New accounts from the signup page land where the email signup sends
     // people (/products), unless a specific redirect was requested.

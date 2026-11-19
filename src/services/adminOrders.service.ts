@@ -125,7 +125,14 @@ function storeShapeStages(): PipelineStage[] {
         user: {
           $let: {
             vars: { u: { $arrayElemAt: ['$_user', 0] } },
-            in: { _id: '$$u._id', name: '$$u.name', email: '$$u.email' },
+            // Guest-checkout orders: show the email typed at checkout, not
+            // the guest session's placeholder address.
+            in: {
+              _id: '$$u._id',
+              name: '$$u.name',
+              email: { $ifNull: ['$guestEmail', '$$u.email'] },
+              isGuest: { $cond: [{ $ifNull: ['$guestEmail', false] }, true, false] },
+            },
           },
         },
       },
@@ -176,6 +183,7 @@ export async function getUnifiedOrders(params: UnifiedOrderQuery) {
             { _idStr: rx },
             { 'user.name': rx },
             { 'user.email': rx },
+            { guestEmail: rx },
             { 'shippingAddress.fullName': rx },
             { 'items.name': rx },
             { trackingNumber: rx },

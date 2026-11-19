@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node --experimental-specifier-resolution=node scripts/seed.mjs"
+    "seed": "node --experimental-specifier-resolution=node scripts/seed.mjs",
+    "migrate:legacy": "node scripts/migrate-legacy-customers.mjs",
+    "migrate:verify": "node scripts/verify-legacy-migration.mjs",
+    "announce": "node --experimental-strip-types --no-warnings scripts/send-upgrade-announcement.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1101.0",

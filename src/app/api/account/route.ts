@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 import { toPublicUser } from '@/services/auth.service';
-import { withAuth, AuthenticatedRequest } from '@/middleware/auth.middleware';
+import { withMember, AuthenticatedRequest } from '@/middleware/auth.middleware';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { uploadBuffer, destroyImage } from '@/lib/r2';
 import { assertValidImageBuffer } from '@/lib/file-signature';
@@ -18,7 +18,7 @@ function str(v: FormDataEntryValue | null): string {
   return typeof v === 'string' ? v.trim() : '';
 }
 
-export const PATCH = withAuth(async (req: AuthenticatedRequest) => {
+export const PATCH = withMember(async (req: AuthenticatedRequest) => {
   try {
     await connectDB();
 
