@@ -37,6 +37,7 @@ const NAV: NavGroup[] = [
     title: "Sales",
     items: [
       { href: "/admin/orders", label: "Orders" },
+      { href: "/admin/legacy-orders", label: "Old Website Orders" },
       { href: "/admin/coupons", label: "Coupons" },
       { href: "/admin/memos", label: "Memos" },
     ],

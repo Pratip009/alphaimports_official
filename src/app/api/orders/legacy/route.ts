@@ -14,7 +14,8 @@ export const GET = withMember(async (req: AuthenticatedRequest) => {
     await connectDB();
     const orders = await LegacyOrder.find({ user: req.user.userId })
       .sort({ purchasedAt: -1 })
-      .select('-_id -__v -user -legacyCustomerId -importedAt -billing')
+      // Staff-only notes are never sent to customers.
+      .select('-_id -__v -user -legacyCustomerId -importedAt -billing -statusHistory.internalNote')
       .limit(1000)
       .lean();
     return successResponse(orders);

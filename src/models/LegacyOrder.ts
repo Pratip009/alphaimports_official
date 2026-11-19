@@ -43,6 +43,11 @@ export interface ILegacyOrderStatusEntry {
   status: string;
   /** Only comments the customer was notified about on the old site. */
   comment?: string;
+  /**
+   * Staff-only: old-site comments the customer was NOT shown (payment
+   * gateway logs, internal notes). Never returned by customer endpoints.
+   */
+  internalNote?: string;
 }
 
 export interface ILegacyOrder extends Document {
@@ -119,7 +124,7 @@ const LegacyOrderSchema = new Schema<ILegacyOrder>(
     statusId: Number,
     status: String,
     statusHistory: [
-      { _id: false, date: Date, statusId: Number, status: String, comment: String },
+      { _id: false, date: Date, statusId: Number, status: String, comment: String, internalNote: String },
     ],
     tracking: [{ _id: false, carrier: String, number: String }],
     purchasedAt: Date,
@@ -132,6 +137,9 @@ const LegacyOrderSchema = new Schema<ILegacyOrder>(
 LegacyOrderSchema.index({ legacyOrderId: 1 }, { unique: true });
 LegacyOrderSchema.index({ user: 1, purchasedAt: -1 });
 LegacyOrderSchema.index({ email: 1 });
+// Admin "Old Website Orders" page: newest first, and name search.
+LegacyOrderSchema.index({ purchasedAt: -1 });
+LegacyOrderSchema.index({ legacyCustomerId: 1 });
 
 const LegacyOrder = (() => {
   if (mongoose.models && mongoose.models.LegacyOrder) {

@@ -16,7 +16,7 @@ import {
 // hardcoded gmstone-new-2026.vercel.app preview URL here meant canonical
 // links, Open Graph tags, and JSON-LD were all pointing search engines at a
 // staging deployment instead of the real production domain — fixed below.
-export const BASE_URL = SITE_URL;
+const BASE_URL = SITE_URL;
 
 const OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 const LOGO_URL = `${BASE_URL}/brand/alphaimports-a-1024.png`;

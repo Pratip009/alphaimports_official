@@ -113,6 +113,8 @@ async function main() {
   await legacyOrders.createIndex({ legacyOrderId: 1 }, { unique: true });
   await legacyOrders.createIndex({ user: 1, purchasedAt: -1 });
   await legacyOrders.createIndex({ email: 1 });
+  await legacyOrders.createIndex({ purchasedAt: -1 });
+  await legacyOrders.createIndex({ legacyCustomerId: 1 });
 
   const stats = { created: 0, linkedToExisting: 0, alreadyMigrated: 0, conflicts: [] };
   const emailToUserId = new Map();

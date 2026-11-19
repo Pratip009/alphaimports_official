@@ -41,7 +41,13 @@ export const LEGACY_ORDER_STATUS = {
   102: 'Shipped',
   103: 'Closed',
   105: 'Cancelled',
+  // Only ever seen in status *history*, never as an order's final status:
+  100004: 'Payment received', // PayPal payment confirmation (first entry on most orders)
+  100: 'Order received',      // Google Checkout: new order + fraud check
+  101: 'Payment received',    // Google Checkout: card charged
 };
+// Unknown ids in a history line get a neutral label rather than a guess.
+export const legacyHistoryLabel = (id) => LEGACY_ORDER_STATUS[id] ?? 'Status updated';
 export const legacyStatusLabel = (id) => LEGACY_ORDER_STATUS[id] ?? 'Closed';
 
 // ─── US states (for turning "Washington" into "WA" so checkout matches) ──────
@@ -88,16 +94,79 @@ const lc = (v) => clean(v).toLowerCase();
 const stripHtml = (v) => clean(String(v ?? '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&'));
 
 /**
- * Old-site status comments the customer was notified about, minus the ones
- * that are really payment-gateway / Google Checkout machine logs (transaction
- * ids, AVS/CVV results, "New State: DELIVERED"). Those stay admin-only.
+ * Old-site status comments are a mix of messages to the customer and
+ * machine/staff logs. Anything that looks sensitive never reaches customers:
+ * passwords and login credentials (Google Checkout used to put these in
+ * comments), card checks (CVV/AVS/expiry), payment-processor logs, and
+ * anything shaped like a real card number. Staff still see those notes,
+ * with passwords removed and card numbers masked.
  */
-const MACHINE_COMMENT = /(Transaction ID|AVS Code|CVV2|Payment Status:|Unique Transaction ID|^Time: \d{4}-\d{2}-\d{2}T)/i;
+const SENSITIVE = new RegExp(
+  [
+    'pass ?word', 'passwd', '\\bpwd\\b', '\\bpass\\s*:', 'credentials', 'buyer.s user',
+    'transaction id', 'payment status:', 'payment type:', 'google checkout order no',
+    'risk information', 'partial cc', '\\b(avs|cvn|cvv|cvc|csc)', 'security code', 'charge amount', 'new state:',
+    '^time: \\d{4}-\\d{2}-\\d{2}t',
+    '\\bexp[a-z.]*\\b.{0,12}\\d{1,2}\\s*/\\s*\\d{2}', '\\b\\d{3}-\\d{2}-\\d{4}\\b',
+    // Any comment that talks about a payment card is staff-only, even when
+    // the number in it is mistyped and fails the card checksum.
+    'credit card', 'debit card', 'card ?(number|no\\b|#)', '\\bvisa\\b', 'master ?card', '\\bamex\\b',
+    'american express', 'discover card',
+  ].join('|'),
+  'im'
+);
+
+/** Luhn checksum: true for numbers that could be real payment cards. */
+function luhn(digits) {
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    let d = +digits[digits.length - 1 - i];
+    if (i % 2) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+// Digits with any spacing/dashes between groups, e.g. "4269      3200   6042".
+const CARDISH = /\b(?:\d[\s\u00a0-]{0,8}){12,18}\d\b/g;
+const isCardNumber = (m) => {
+  const d = m.replace(/\D/g, '');
+  return d.length >= 13 && d.length <= 19 && luhn(d);
+};
+const hasCardNumber = (text) => (text.match(CARDISH) || []).some(isCardNumber);
+
+const CARD_TALK = /credit card|debit card|card ?(number|no\b|#)|\bvisa\b|master ?card|\bamex\b|american express|discover card|\b(cvv|cvc|csc)/i;
+
+/** For staff notes: hide passwords and SSN-like values, mask card numbers. */
+export function redactSensitive(text) {
+  // When a note is about a card, mask every long number in it and any short
+  // code after "cod/code/CVV", even if the number fails the checksum.
+  const aboutCard = CARD_TALK.test(text);
+  if (aboutCard) {
+    text = text
+      // Whole digit runs of 12+ digits, however long (a ZIP code typed right
+      // before the card number must not push half the card out of the mask).
+      .replace(/\d(?:[\s\u00a0-]{0,8}\d){11,}/g, (m) => `•••• ${m.replace(/\D/g, '').slice(-4)}`)
+      .replace(/\b(cod|code|cvv2?|cvc2?|csc)(\s*[:#.]?\s*)\d{3,4}\b/gi, '$1$2[removed]');
+  }
+  return text
+    .replace(/\b(pass(?:word|wd)?|pwd)\b(\s*[:=]\s*)(\S+)/gi, '$1$2[removed]')
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[removed]')
+    .replace(/\b(cvv2?|cvc2?|csc|security code)(\s*[:#]?\s*)\d{3,4}\b/gi, '$1$2[removed]')
+    .replace(CARDISH, (m) => (isCardNumber(m) ? `•••• ${m.replace(/\D/g, '').slice(-4)}` : m));
+}
+
 export function customerVisibleComment(row) {
   if (clean(row.customer_notified) !== '1') return '';
   const text = String(row.comments || '').replace(/\r\n?/g, '\n').trim();
-  if (!text || MACHINE_COMMENT.test(text)) return '';
+  if (!text || SENSITIVE.test(text) || hasCardNumber(text)) return '';
   return text.slice(0, 2000);
+}
+
+/** Everything the customer doesn't see, for admins only, with secrets redacted. */
+export function internalComment(row) {
+  const text = String(row.comments || '').replace(/\r\n?/g, '\n').trim();
+  if (!text || customerVisibleComment(row)) return '';
+  return redactSensitive(text).slice(0, 4000);
 }
 // The old site often stored the town in both "suburb" and "city". Keep the
 // suburb only when it adds something, so labels don't read "Auburn, Auburn".
@@ -505,9 +574,11 @@ export function buildMigration(data) {
       .map((h) => ({
         date: parseLegacyDate(h.date_added),
         statusId: int(h.orders_status_id),
-        status: legacyStatusLabel(int(h.orders_status_id)),
+        status: legacyHistoryLabel(int(h.orders_status_id)),
         // Only what the customer was actually told on the old site.
         comment: customerVisibleComment(h),
+        // Everything else (payment logs, staff notes) — admin pages only.
+        internalNote: internalComment(h),
       }))
       .sort((a, b) => (a.date?.getTime() || 0) - (b.date?.getTime() || 0));
 
@@ -535,7 +606,7 @@ export function buildMigration(data) {
       delivery: addr(o, 'delivery'),
       billing: addr(o, 'billing'),
       paymentMethod: clean(o.payment_method),
-      customerComment: String(o.comments || '').replace(/\r\n?/g, '\n').trim().slice(0, 4000),
+      customerComment: redactSensitive(String(o.comments || '').replace(/\r\n?/g, '\n').trim()).slice(0, 4000),
       items,
       totals: t,
       subtotal,

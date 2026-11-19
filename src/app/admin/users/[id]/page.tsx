@@ -55,6 +55,8 @@ interface DetailData {
     lastOrderAt: string | null;
   };
   orders: OrderRow[];
+  /** Orders from the old website (read-only). */
+  legacyOrders?: { count: number; total: number; first: string | null; last: string | null };
   analytics: {
     totalScreenTime: number;
     sessionCount: number;
@@ -173,7 +175,7 @@ export default function AdminUserDetailPage() {
     );
   }
 
-  const { user, purchases, orders, analytics } = data;
+  const { user, purchases, orders, analytics, legacyOrders } = data;
 
   return (
     <div className="min-h-screen">
@@ -264,11 +266,33 @@ export default function AdminUserDetailPage() {
               Avg order value {formatCurrency(purchases.avgOrderValue)}
             </p>
           </div>
+          {legacyOrders && legacyOrders.count > 0 && (
+            <Link
+              href={`/admin/legacy-orders?user=${user._id}`}
+              className="mx-5 mt-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[#1c4874]/5 border border-[#1c4874]/20 hover:bg-[#1c4874]/10 transition-colors"
+            >
+              <div>
+                <p className="text-[0.6rem] uppercase tracking-[0.15em] font-semibold text-[#1c4874]">Previous website</p>
+                <p className="text-[0.78rem] text-[#222222] mt-0.5">
+                  <span className="font-semibold">{legacyOrders.count} order{legacyOrders.count === 1 ? '' : 's'}</span>
+                  {' · '}${legacyOrders.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {legacyOrders.first && (
+                    <span className="text-[#7f7f7f]">
+                      {' · '}{new Date(legacyOrders.first).getFullYear()}
+                      {legacyOrders.last && new Date(legacyOrders.last).getFullYear() !== new Date(legacyOrders.first).getFullYear()
+                        ? `–${new Date(legacyOrders.last).getFullYear()}` : ''}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <span className="text-[0.72rem] font-semibold text-[#1c4874] shrink-0">View →</span>
+            </Link>
+          )}
           <div className="flex-1 overflow-auto max-h-[520px]">
             {orders.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <ShoppingBag size={26} strokeWidth={1.2} className="text-[#999999] mb-3" />
-                <p className="text-[0.78rem] text-[#999999]">No orders yet</p>
+                <p className="text-[0.78rem] text-[#999999]">No orders on the new website yet</p>
               </div>
             ) : (
               orders.map((o) => (
