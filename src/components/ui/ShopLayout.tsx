@@ -37,8 +37,8 @@ interface IPickProduct {
 // ─── Config (edit here) ───────────────────────────────────────────────────────
 /** Set to null to hide the yellow banner. */
 const ANNOUNCEMENT: { text: string; href: string } | null = {
-  text: "OUR NEW WEBSITE IS NOW LIVE! — CLICK HERE TO VISIT",
-  href: "https://www.alphaimports.com",
+  text: "EXPLORE OUR OTHER WEBSITE — THE SAME TRUSTED BRAND, QUALITY & SERVICE!",
+  href: "https://www.alphagemstone.com",
 };
 
 const TILES_PER_SECTION = 4;
