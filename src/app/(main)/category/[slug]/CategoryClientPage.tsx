@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { NavCategory } from "@/lib/getNavCategories";
+import DiamondBanner, { type BannerLink } from "@/components/classic/DiamondBanner";
+import ReadMore from "@/components/classic/ReadMore";
 
 interface ISubcategory {
   _id: string;
@@ -42,21 +44,56 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+// ─── Diamonds: group the collections so visitors know where to start ──────
+// Certified and white stones first (what most buyers come for), then the
+// fancy colors, and lab-created / simulant stones in their own clearly
+// labelled group so they are never mistaken for natural diamonds.
+const DIAMOND_FEATURED = ["certified-diamonds", "white-diamonds"];
+const ALTERNATIVE_RE = /moissanite|synthetic|lab[- ]?(created|grown)|simulant|cubic|\bcz\b/i;
+
+interface TileGroup {
+  key: string;
+  title: string;
+  note?: string;
+  items: ISubcategory[];
+}
+
+function groupDiamondCollections(subs: ISubcategory[]): TileGroup[] {
+  const featured = DIAMOND_FEATURED.map((slug) => subs.find((s) => s.slug === slug)).filter(
+    (s): s is ISubcategory => Boolean(s),
+  );
+  const alternatives = subs.filter((s) => ALTERNATIVE_RE.test(s.slug) || ALTERNATIVE_RE.test(s.name));
+  const used = new Set([...featured, ...alternatives].map((s) => s._id));
+  const colors = subs.filter((s) => !used.has(s._id));
+  return [
+    { key: "featured", title: "Certified & white diamonds", items: featured },
+    { key: "colors", title: "Fancy-color diamonds", items: colors },
+    {
+      key: "alternatives",
+      title: "Diamond alternatives",
+      note: "Lab-created stones, not natural diamonds.",
+      items: alternatives,
+    },
+  ].filter((g) => g.items.length > 0);
+}
+
 // ─── Subcategory Tile (classic catalogue style: square image + caption) ─────
 function SubcategoryCard({
   sub,
   onSelect,
+  featured = false,
 }: {
   sub: ISubcategory;
   onSelect: (sub: ISubcategory) => void;
   index: number;
+  featured?: boolean;
 }) {
   const fallback =
     "https://images.pexels.com/photos/1458867/pexels-photo-1458867.jpeg?auto=compress&cs=tinysrgb&w=400";
 
   return (
     <div
-      className="cat-tile"
+      className={`cat-tile${featured ? " is-featured" : ""}`}
       role="link"
       tabIndex={0}
       onClick={() => onSelect(sub)}
@@ -108,6 +145,10 @@ export default function CategoryClientPage({
     ? cleanDescription.split(/\n\n+/).filter((p) => p.trim().length > 0)
     : [];
 
+  const isDiamonds = mode === "subcategory" && category.slug === "diamonds";
+  // Groups only while browsing; a search shows one flat list of matches.
+  const groups: TileGroup[] | null = isDiamonds && !search ? groupDiamondCollections(filtered) : null;
+
   const collectionNoun = mode === "subsubcategory" ? "Type" : "Collection";
   const collectionNounPlural = mode === "subsubcategory" ? "Types" : "Collections";
 
@@ -152,6 +193,17 @@ export default function CategoryClientPage({
     { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },
   ];
+
+  function diamondLinks(): BannerLink[] {
+    const bySlug = (slug: string) => subcategories.find((x) => x.slug === slug);
+    const links: BannerLink[] = [];
+    const cert = bySlug("certified-diamonds");
+    const white = bySlug("white-diamonds");
+    if (cert) links.push({ label: "Certified diamonds", onClick: () => handleSelectSub(cert), primary: true });
+    if (white) links.push({ label: "White diamonds", onClick: () => handleSelectSub(white) });
+    links.push({ label: "Advanced diamond search", href: "/products/diamonds" });
+    return links;
+  }
 
   return (
     <>
@@ -415,14 +467,18 @@ export default function CategoryClientPage({
 
           {/* ── Main content ── */}
           <section className="cat-main">
-            <h1 className="cat-title">{category.name}</h1>
+            {isDiamonds ? (
+              <DiamondBanner title={category.name} links={diamondLinks()} />
+            ) : (
+              <h1 className="cat-title">{category.name}</h1>
+            )}
 
             {descParagraphs.length > 0 && (
-              <div className="cat-desc">
+              <ReadMore className="cat-desc" lines={isDiamonds ? 2 : 3}>
                 {descParagraphs.map((para, i) => (
                   <p key={i}>{para}</p>
                 ))}
-              </div>
+              </ReadMore>
             )}
 
             <hr className="cat-rule" />
@@ -450,6 +506,26 @@ export default function CategoryClientPage({
               <div className="cat-empty">
                 No {collectionNounPlural.toLowerCase()} found. Try a different search term.
               </div>
+            ) : groups ? (
+              groups.map((g) => (
+                <section key={g.key} className={`cat-group cat-group-${g.key}`} aria-labelledby={`cat-group-${g.key}`}>
+                  <div className="cat-group-head">
+                    <h2 id={`cat-group-${g.key}`} className="cat-group-title">{g.title}</h2>
+                    {g.note && <p className="cat-group-note">{g.note}</p>}
+                  </div>
+                  <div className="cat-grid">
+                    {g.items.map((sub, i) => (
+                      <SubcategoryCard
+                        key={sub._id}
+                        sub={sub}
+                        onSelect={handleSelectSub}
+                        index={i}
+                        featured={g.key === "featured"}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))
             ) : (
               <div className="cat-grid">
                 {filtered.map((sub, i) => (

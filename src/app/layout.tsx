@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { cache } from "react";
 import Providers from "./providers";
 import "./global.css";
+// Polish layer over the classic design; remove this line to roll it back.
+import "./classic-refine.css";
 import CookieConsentLazy from "./CookieConsentLazy";
 import HomeOnlyWidgets from "./HomeOnlyWidgets";
 import { SpeedInsights } from "@vercel/speed-insights/next";

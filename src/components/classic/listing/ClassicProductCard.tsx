@@ -26,6 +26,35 @@ import {
 
 type Product = ProductCardProps["product"] & { legacySku?: string };
 
+const firstStr = (v: unknown): string => {
+  if (Array.isArray(v)) return typeof v[0] === "string" ? v[0] : "";
+  return typeof v === "string" ? v : "";
+};
+const titleCase = (v: string) => v.replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** Short, comparable facts for a stone: "Round, Green, SI2 clarity". */
+function stoneSpecs(p: Record<string, unknown>): string {
+  const shape = firstStr(p.shapeRaw) || firstStr(p.shape);
+  const color = firstStr(p.colorRaw) || firstStr(p.color);
+  const clarity = firstStr(p.clarityRaw) || firstStr(p.clarity);
+  return [
+    shape && shape.toLowerCase() !== "other" ? titleCase(shape) : "",
+    color ? titleCase(color) : "",
+    clarity ? `${clarity.toUpperCase()} clarity` : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+/** Lab names on the stone's certificate, e.g. "GIA" — empty when uncertified. */
+function certLabel(p: Record<string, unknown>): string {
+  const raw = Array.isArray(p.certification) ? p.certification : [p.certification];
+  return raw
+    .filter((c): c is string => typeof c === "string" && c.trim() !== "" && !/^(none|no|n\/a)$/i.test(c.trim()))
+    .map((c) => c.toUpperCase())
+    .join(" / ");
+}
+
 const money = (n: number) =>
   `$${Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -59,6 +88,8 @@ export default function ClassicProductCard({
   const hasMsrp = typeof product.msrp === "number" && product.msrp > product.price;
   const savingsPct = hasMsrp ? Math.round((((product.msrp as number) - product.price) / (product.msrp as number)) * 100) : 0;
   const saved = isInWishlist(product._id);
+  const specs = watch ? "" : stoneSpecs(product as unknown as Record<string, unknown>);
+  const cert = watch ? "" : certLabel(product as unknown as Record<string, unknown>);
 
   const buyNow = async () => {
     if (authLoading || busy || !inStock) return;
@@ -91,7 +122,8 @@ export default function ClassicProductCard({
 
   return (
     <div className={`cpc${compact ? " cpc-compact" : ""}${inStock ? "" : " is-out"}`}>
-      <Link href={href} className="cpc-img" prefetch={false}>
+      {!compact && cert && <span className="cpc-cert">{cert} certified</span>}
+      <Link href={href} className="cpc-img" prefetch={false} tabIndex={-1} aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imgSrc || placeholder}
@@ -102,17 +134,19 @@ export default function ClassicProductCard({
         />
       </Link>
 
-      {!compact && product.legacySku && <div className="cpc-sku">{product.legacySku}</div>}
-
       <Link href={href} className="cpc-name" prefetch={false}>
         {product.name}
       </Link>
+
+      {!compact && specs && <div className="cpc-specs">{specs}</div>}
 
       <div className="cpc-price">
         {hasMsrp && <s>{money(product.msrp as number)}</s>}
         <span>{money(product.price)}</span>
         {hasMsrp && <em> (save {savingsPct}%)</em>}
       </div>
+
+      {!compact && product.legacySku && <div className="cpc-sku">Item {product.legacySku}</div>}
 
       {!compact && (
         <>

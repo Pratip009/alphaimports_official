@@ -37,11 +37,15 @@ interface IPickProduct {
 // ─── Config (edit here) ───────────────────────────────────────────────────────
 /** Set to null to hide the yellow banner. */
 const ANNOUNCEMENT: { text: string; href: string } | null = {
-  text: "EXPLORE OUR OTHER WEBSITE — THE SAME TRUSTED BRAND, QUALITY & SERVICE!",
+  text: "Visit our sister store, AlphaGemstone.com: the same trusted family business, quality and service.",
   href: "https://www.alphagemstone.com",
 };
 
 const TILES_PER_SECTION = 4;
+/** Subcategories always shown first in a category's home-page box (by slug). */
+const PINNED_TILES: Record<string, string[]> = {
+  diamonds: ["certified-diamonds", "white-diamonds"],
+};
 const FALLBACK_IMG =
   "https://images.pexels.com/photos/1458867/pexels-photo-1458867.jpeg?auto=compress&cs=tinysrgb&w=200";
 
@@ -95,7 +99,15 @@ export default function ShopLayout() {
   useEffect(() => {
     const map: Record<string, ISubcategory[]> = {};
     categories.forEach((c) => {
-      map[c._id] = shuffleArray(subsByCat[c._id] ?? []).slice(0, TILES_PER_SECTION);
+      const subs = subsByCat[c._id] ?? [];
+      // Lead with the collections most buyers want (e.g. certified and white
+      // diamonds), then rotate the rest so the home page still feels fresh.
+      const pinnedSlugs = PINNED_TILES[c.slug] ?? [];
+      const pinned = pinnedSlugs
+        .map((slug) => subs.find((s) => s.slug === slug))
+        .filter((s): s is ISubcategory => Boolean(s));
+      const rest = subs.filter((s) => !pinned.includes(s));
+      map[c._id] = [...pinned, ...shuffleArray(rest)].slice(0, TILES_PER_SECTION);
     });
     setShuffled(map);
   }, [categories, subsByCat]);

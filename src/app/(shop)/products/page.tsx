@@ -10,6 +10,7 @@ import ClassicFilterPanel from "@/components/classic/listing/ClassicFilterPanel"
 import ClassicResultsBar from "@/components/classic/listing/ClassicResultsBar";
 import ClassicSearchResults from "@/components/classic/listing/ClassicSearchResults";
 import ShareButton from "@/components/classic/listing/ShareButton";
+import ReadMore from "@/components/classic/ReadMore";
 import { ProductCardStyles } from "@/components/products/ProductCard";
 import { getNavCategories } from "@/lib/getNavCategories";
 import { sanitizeHtml, looksLikeHtml } from "@/lib/sanitizeHtml";
@@ -326,7 +327,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           <h1 className="cl-title-sm">{title}</h1>
 
           {info.description ? (
-            looksLikeHtml(info.description) ? (
+            <ReadMore lines={3}>
+            {looksLikeHtml(info.description) ? (
               // Admin-written rich text (e.g. pasted from Word), cleaned server-side.
               <div
                 className="cl-desc cl-desc-html"
@@ -338,7 +340,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                   <p key={i}>{para}</p>
                 ))}
               </div>
-            )
+            )}
+            </ReadMore>
           ) : null}
 
           <div className="cl-headbar">
